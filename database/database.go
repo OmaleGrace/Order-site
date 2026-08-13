@@ -5,6 +5,18 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func Connect() (9*sql.DB, error) {
-	
+func Connect() (*sql.DB, error) {
+	db, err := sql.Open(
+		"postgres",
+		"host=localhost port=5432 user=food_app password=food_password dbname=food_ordering sslmode=disable",
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
