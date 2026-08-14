@@ -1,11 +1,11 @@
 package main
 
 import (
+	"Order-site/database"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
-	"Order-site/database"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -18,8 +18,40 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func loginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	tmpl := template.Must(template.ParseFiles("templates/login.html"))
+
+	if r.Method == http.MethodPost {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Something went wrong", http.StatusBadRequest)
+			return
+		}
+
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		var userID int
+		var storedPassword string
+
+		err = db.QueryRow(
+			"SELECT id, password FROM users WHERE email = $1",
+			email,
+		).Scan(&userID, &storedPassword)
+
+		if err != nil {
+			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+			return
+		}
+
+		if password != storedPassword {
+			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+			return
+		}
+
+		http.Redirect(w, r, "/menu", http.StatusSeeOther)
+		return
+	}
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
@@ -37,7 +69,38 @@ func signupHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 			http.Error(w, "Something went wrong", http.StatusBadRequest)
 			return
 		}
+
+		name := r.FormValue("name")
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+
+		_, err = db.Exec(
+			"INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
+			name,
+			email,
+			password,
+		)
+		if err != nil {
+			http.Error(w, "Could not create account", http.StatusInternalServerError)
+			return
+		}
+		fmt.Fprint(w, `
+    <html>
+        <body>
+            <h1>Account created successfully!</h1>
+            <p>Redirecting to login...</p>
+
+            <script>
+                setTimeout(function() {
+                    window.location.href = "/login";
+                }, 1500);
+            </script>
+        </body>
+    </html>
+`)
+		return
 	}
+
 	err := tmpl.Execute(w, nil)
 	if err != nil {
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
@@ -50,16 +113,26 @@ func main() {
 	http.Handle("/static", http.StripPrefix("/static/", fs))
 
 	db, err := database.Connect()
-	if err != nil
+	if err != nil {
+		fmt.Println("Database connection failed:", err)
+		return
+	}
+
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/signup",func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		loginHandler(w, r, db)
+	})
+	http.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		signupHandler(w, r, db)
 	})
 
+	http.HandleFunc("/menu", func(w http.ResponseWriter, r *http.Request) {
+    menuHandler(w, r, db)
+})
+
 	fmt.Println("Server Running on https://localhost:8080")
 
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Println(err)
 	}
