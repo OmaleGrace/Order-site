@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Menu - Gracie Ordering App</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <main>
+        <h1>Our Menu</h1>
+
+        {{range .}}
+            <div>
+                <h2>{{.Name}}</h2>
+                <p>{{.Description}}</p>
+                <p>₦{{.PriceKobo}}</p>
+            </div>
+        {{else}}
+            <p>No menu items available.</p>
+        {{end}}
+
+        <a href="/">Back to Home</a>
+    </main>
+</body>
+</html>

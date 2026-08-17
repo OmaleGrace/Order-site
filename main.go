@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"Order-site/menu"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +109,22 @@ func signupHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 }
 
+func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	tmpl := template.Must(template.ParseFiles("templates/menu.html"))
+
+	items, err := menu.GetAll(db)
+	if err != nil {
+		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.Execute(w, items)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+}
+
 func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static", http.StripPrefix("/static/", fs))
@@ -117,6 +134,7 @@ func main() {
 		fmt.Println("Database connection failed:", err)
 		return
 	}
+	defer db.Close()
 
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
