@@ -11,15 +11,21 @@
         <h1>Our Menu</h1>
 
         {{range .}}
+
             <div>
                 <h2>{{.Name}}</h2>
                 <p>{{.Description}}</p>
                 <p>₦{{.PriceKobo}}</p>
+
+                <form action="/cart/add" method="post">
+                    <input type="hidden" name="id" value="{{.ID}}">
+                    <button type="submit">Add to Cart</button>
+                </form>
             </div>
         {{else}}
             <p>No menu items available.</p>
         {{end}}
-
+        
         <a href="/">Back to Home</a>
     </main>
 </body>

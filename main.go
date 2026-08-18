@@ -1,12 +1,14 @@
 package main
 
 import (
+	"Order-site/cart"
 	"Order-site/database"
+	"Order-site/menu"
 	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
-	"Order-site/menu"
+	"strconv"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +52,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 			return
 		}
 
+		http.SetCookie(w, &http.Cookie{
+			Name: "user_id",
+			Value: fmt.Sprintf("%d", userID),
+			Path: "/",
+		})
 		http.Redirect(w, r, "/menu", http.StatusSeeOther)
 		return
 	}
@@ -120,9 +127,37 @@ func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	err = tmpl.Execute(w, items)
 	if err != nil {
+		fmt.Println("Template error:", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
+}
+
+var myCart cart.Cart
+
+func addToCartHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cookie, err := r.Cookie("user_id")
+	if err != nil {
+		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		return
+	}
+
+	userID := cookie.Value
+	id, err := strconv.Atoi(r.FormValue("id"))
+	if err != nil {
+		http.Error(w, "Invalidmitem ID", http.StatusBadRequest)
+		return
+	}
+
+	myCart.Add(id)
+	fmt.Println("User:", userID)
+	fmt.Println("Cart:", myCart.Items)
+	http.Redirect(w, r, "/menu", http.StatusSeeOther)
 }
 
 func main() {
@@ -137,6 +172,7 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/cart/add", addToCartHandler)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		loginHandler(w, r, db)
 	})
@@ -145,8 +181,8 @@ func main() {
 	})
 
 	http.HandleFunc("/menu", func(w http.ResponseWriter, r *http.Request) {
-    menuHandler(w, r, db)
-})
+		menuHandler(w, r, db)
+	})
 
 	fmt.Println("Server Running on https://localhost:8080")
 
