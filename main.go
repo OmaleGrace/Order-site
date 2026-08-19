@@ -11,6 +11,8 @@ import (
 	"strconv"
 )
 
+var carts = make(map[int]*cart.Cart)
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/home.html"))
 
@@ -53,9 +55,9 @@ func loginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name: "user_id",
+			Name:  "user_id",
 			Value: fmt.Sprintf("%d", userID),
-			Path: "/",
+			Path:  "/",
 		})
 		http.Redirect(w, r, "/menu", http.StatusSeeOther)
 		return
@@ -125,15 +127,23 @@ func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	err = tmpl.Execute(w, items)
+	message := r.URL.Query().Get("message")
+
+	data := struct {
+		Items   []menu.MenuItem
+		Message string
+	}{
+		Items:   items,
+		Message: message,
+	}
+
+	err = tmpl.Execute(w, data)
 	if err != nil {
 		fmt.Println("Template error:", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }
-
-var myCart cart.Cart
 
 func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -147,17 +157,33 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := cookie.Value
-	id, err := strconv.Atoi(r.FormValue("id"))
+	userID, err := strconv.Atoi(cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalidmitem ID", http.StatusBadRequest)
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	myCart.Add(id)
-	fmt.Println("User:", userID)
-	fmt.Println("Cart:", myCart.Items)
-	http.Redirect(w, r, "/menu", http.StatusSeeOther)
+	itemID, err := strconv.Atoi(r.FormValue("id"))
+	if err != nil {
+		http.Error(w, "invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	if carts[userID] == nil {
+		carts[userID] = &cart.Cart{}
+	}
+
+	userCart := carts[userID]
+	fmt.Println("User:", userID, "Current cart:", userCart.Items)
+	for _, id := range userCart.Items {
+		if id == itemID {
+			http.Redirect(w, r, "/menu?message=Item%20already%20in%20cart", http.StatusSeeOther)
+			return
+		}
+	}
+
+	userCart.Add(itemID)
+	http.Redirect(w, r, "/menu?message=Successfully%20added%20to%20cart", http.StatusSeeOther)
 }
 
 func main() {

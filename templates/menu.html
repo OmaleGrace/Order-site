@@ -10,7 +10,11 @@
     <main>
         <h1>Our Menu</h1>
 
-        {{range .}}
+        {{if .Message}}
+        <p>{{.Message}}</p>
+        {{end}}
+
+        {{range .Items}}
 
             <div>
                 <h2>{{.Name}}</h2>
