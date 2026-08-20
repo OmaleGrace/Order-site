@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"github.com/joho/godotenv"
 )
 
 var carts = make(map[int]*cart.Cart)
@@ -187,6 +188,11 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("No .env file found, using system environment")
+	}
+	
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static", http.StripPrefix("/static/", fs))
 
