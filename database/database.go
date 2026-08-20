@@ -2,15 +2,15 @@ package database
 
 import (
 	"database/sql"
+	"os"
+
 	_ "github.com/lib/pq"
 )
 
 func Connect() (*sql.DB, error) {
-	db, err := sql.Open(
-		"postgres",
-		"host=127.0.0.1 port=5432 user=food_app password=food_password dbname=food_ordering sslmode=disable",
-	)
+	databaseURL := os.Getenv("postgresql://gracie_ordering_user:fRLnSNI6lM8XacVteOR0AFsTaO0s8LJf@dpg-da3fvbht0dsc73fj80ag-a/gracie_ordering")
 
+	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		return nil, err
 	}
