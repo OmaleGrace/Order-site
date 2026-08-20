@@ -124,6 +124,7 @@ func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	items, err := menu.GetAll(db)
 	if err != nil {
+		fmt.Println("Menu load error", err)
 		http.Error(w, "Could not load menu", http.StatusInternalServerError)
 		return
 	}
@@ -192,7 +193,7 @@ func main() {
 	if err != nil {
 		fmt.Println("No .env file found, using system environment")
 	}
-	
+
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static", http.StripPrefix("/static/", fs))
 
