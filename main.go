@@ -188,6 +188,33 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/menu?message=Successfully%20added%20to%20cart", http.StatusSeeOther)
 }
 
+func cartHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("templates/cart.html"))
+
+	cookie, err := r.Cookie("user_id")
+	if err != nil {
+		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	userCart := carts[userID]
+	if userCart == nil {
+		userCart = &cart.Cart{}
+	}
+
+	err = tmpl.Execute(w, userCart)
+	if err != nil {
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -206,6 +233,7 @@ func main() {
 
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/cart/add", addToCartHandler)
+	http.HandleFunc("/cart", cartHandler)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		loginHandler(w, r, db)
 	})
