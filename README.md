@@ -6,6 +6,8 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 
 🚀 **Live and deployed** at [grace-ordering-site.onrender.com](https://grace-ordering-site.onrender.com) — menu browsing, signup, and login are working in production. Cart, checkout, payments, and order tracking are still to come.
 
+🔧 **Currently hardening the codebase** — working through a list of production-readiness improvements, starting with password hashing.
+
 ## Planned Features
 
 - [x] Public menu browsing
@@ -25,7 +27,7 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - **Config Management:** `.env` file + `godotenv` (git-ignored, never committed)
 - **Hosting:** Render (Web Service)
 - **Frontend:** HTML templates
-- **Styling:** CSS
+- **Styling:** CSS (per-page stylesheets, e.g. `login.css`, `signup.css`)
 - **Payments:** TBD (likely Stripe)
 
 ## Current Progress
@@ -35,9 +37,9 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - [x] Homepage created
 - [x] Restaurant welcome section
 - [x] Food item display
-- [x] Login page
-- [x] Signup page
-- [x] CSS stylesheet linked
+- [x] Login page — with show/hide password toggle
+- [x] Signup page — with show/hide password toggle
+- [x] Dedicated CSS stylesheets linked per page
 - [x] HTML templates connected to Go routes
 
 ### Database Foundation ✅
@@ -60,6 +62,7 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - [x] `.gitignore` added — `.env` never committed
 - [x] Local setup uses `sslmode=disable` (Docker Postgres has no SSL); production uses Render's internal connection with SSL enabled by default
 - [x] Same code works in both environments — only the `DATABASE_URL` value changes per environment
+- [x] Fixed static file serving bug (`/static` → `/static/` prefix mismatch was silently breaking all CSS/JS)
 
 ### Deployment ✅
 
@@ -70,10 +73,17 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - [x] Production menu data seeded
 - [x] Live site verified: menu loads, signup creates real users in the production database
 
-### Known Gaps / Next Up
+### Production Readiness — In Progress 🔧
 
-- [ ] **Passwords are currently stored in plain text** — needs `bcrypt` hashing before this goes further into real use
-- [ ] Cart functionality is in-memory only (`map[int]*cart.Cart` in `main.go`) — not persisted to the database yet, and will reset on every deploy/restart
+- [ ] **Password hashing with bcrypt** *(in progress)* — passwords are currently stored in plain text; `golang.org/x/crypto/bcrypt` has been installed and hashing is being wired into signup/login
+- [ ] Move cart storage from in-memory (`map[int]*cart.Cart` in `main.go`) to the database, so carts survive restarts/redeploys
+- [ ] Split `main.go` into separate handler files (e.g. `handlers/auth.go`, `handlers/menu.go`, `handlers/cart.go`) as the app grows
+- [ ] Add request logging middleware for visibility into production traffic and easier debugging
+- [ ] Audit all static asset paths for consistency now that the `/static/` routing bug is fixed
+- [ ] Add graceful shutdown handling to `http.ListenAndServe`
+
+### Other Known Gaps
+
 - [ ] No checkout or payment flow yet
 - [ ] No order tracking/status system yet
 - [ ] Free-tier Render instance spins down after inactivity (first request after idle can take ~50s)
@@ -88,7 +98,7 @@ food_ordering
 │   ├── id (serial, primary key)
 │   ├── name
 │   ├── email (unique)
-│   └── password (⚠️ currently plain text — hashing planned)
+│   └── password (⚠️ currently plain text — bcrypt hashing in progress)
 │
 └── menu_items
     ├── id (serial, primary key)
