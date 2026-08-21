@@ -1,0 +1,83 @@
+.auth-wrapper {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: #fff;
+}
+
+.auth-wrapper h1 {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-field input {
+    padding-right: 44px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: #555;
+    padding: 4px 6px;
+}
+
+.auth-wrapper button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.auth-wrapper button[type="submit"]:hover {
+    background: #333;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 14px;
+}
+
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 13px;
+}

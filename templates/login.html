@@ -1,31 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Login - Gracie Ordering Site</title>
-        <link rel="stylesheet" href="/static/css/style.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gracie Ordering Site</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
 
-    <body>
-        <main>
-            <h1>Login</h1>
+<body>
+    <main>
+        <div class="auth-wrapper">
+            <h1>Welcome Back</h1>
 
             <form action="/login" method="post">
-                <label for="email">Email:</label>
-                <input type="email" name="email" id="email" required>
-                <br>
-                <label for="password">Password:</label>
-                <input type="password" name="password" id="password" required>
-                <br><br>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" name="email" id="email" required>
+                </div>
+
+                <div class="form-group password-field">
+                    <label for="password">Password</label>
+                    <input type="password" name="password" id="password" required>
+                    <button type="button" class="toggle-password" data-target="password">Show</button>
+                </div>
+
                 <button type="submit">Login</button>
             </form>
 
-            <p>
-                Don't have an account?
-                <a href="/signup">Create Account</a>
+            <p class="auth-footer">
+                Don't have an account? <a href="/signup">Create Account</a>
             </p>
 
-            <a href="/">Back to Home</a>
-        </main>
-    </body>
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </main>
+
+    <script>
+        document.querySelectorAll('.toggle-password').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.dataset.target);
+                var isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                btn.textContent = isHidden ? 'Hide' : 'Show';
+            });
+        });
+    </script>
+</body>
 </html>
