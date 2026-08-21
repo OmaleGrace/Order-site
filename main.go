@@ -210,6 +210,7 @@ func cartHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.Execute(w, userCart)
 	if err != nil {
+			fmt.Println("Cart template error:", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
