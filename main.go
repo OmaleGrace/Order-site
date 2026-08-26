@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+
 	"github.com/joho/godotenv"
 )
 
@@ -119,8 +120,18 @@ func signupHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 }
 
+func naira(kobo int) int {
+	return kobo / 100
+}
+
 func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	tmpl := template.Must(template.ParseFiles("templates/menu.html"))
+	tmpl := template.Must(
+		template.New("menu.html").
+			Funcs(template.FuncMap{
+				"naira": naira,
+			}).
+			ParseFiles("templates/menu.html"),
+	)
 
 	items, err := menu.GetAll(db)
 	if err != nil {
@@ -188,8 +199,14 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/menu?message=Successfully%20added%20to%20cart", http.StatusSeeOther)
 }
 
-func cartHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/cart.html"))
+func cartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	tmpl := template.Must(
+	template.New("cart.html").
+		Funcs(template.FuncMap{
+			"naira": naira,
+		}).
+		ParseFiles("templates/cart.html"),
+)
 
 	cookie, err := r.Cookie("user_id")
 	if err != nil {
@@ -208,12 +225,79 @@ func cartHandler(w http.ResponseWriter, r *http.Request) {
 		userCart = &cart.Cart{}
 	}
 
-	err = tmpl.Execute(w, userCart)
+	allItems, err := menu.GetAll(db)
 	if err != nil {
-			fmt.Println("Cart template error:", err)
+		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		return
+	}
+
+	var cartItems []menu.MenuItem
+	var total int
+
+	for _, cartID := range userCart.Items {
+		for _, item := range allItems {
+			if item.ID == cartID {
+				cartItems = append(cartItems, item)
+				total += item.PriceKobo
+				break
+			}
+		}
+	}
+
+	data := struct {
+		Items []menu.MenuItem
+		Total int
+	}{
+		Items: cartItems,
+		Total: total,
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		fmt.Println("Cart template error:", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
+}
+
+func removeFromCartHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cookie, err := r.Cookie("user_id")
+	if err != nil {
+		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	itemID, err := strconv.Atoi(r.FormValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	userCart := carts[userID]
+
+	if userCart != nil {
+		for i, id := range userCart.Items {
+			if id == itemID {
+				userCart.Items = append(userCart.Items[:i], userCart.Items[i+1:]...)
+				break
+			}
+		}
+	}
+
+	fmt.Println("Removed item:", itemID, "from user:", userID)
+
+	http.Redirect(w, r, "/cart", http.StatusSeeOther)
 }
 
 func main() {
@@ -233,18 +317,20 @@ func main() {
 	defer db.Close()
 
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/cart/add", addToCartHandler)
-	http.HandleFunc("/cart", cartHandler)
 	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		loginHandler(w, r, db)
 	})
 	http.HandleFunc("/signup", func(w http.ResponseWriter, r *http.Request) {
 		signupHandler(w, r, db)
 	})
-
 	http.HandleFunc("/menu", func(w http.ResponseWriter, r *http.Request) {
 		menuHandler(w, r, db)
 	})
+	http.HandleFunc("/cart/add", addToCartHandler)
+	http.HandleFunc("/cart", func(w http.ResponseWriter, r *http.Request) {
+		cartHandler(w, r, db)
+	})
+	http.HandleFunc("/cart/remove", removeFromCartHandler)
 
 	fmt.Println("Server Running on https://localhost:8080")
 

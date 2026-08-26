@@ -1,25 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF_8">
-        <title>Cart-Grace Ordering Site</title>
-        <link rel="stylesheet" href="/static/css/style.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Gracie Ordering Site</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
 
-    <body>
-        <main>
-            <h1>Your Cart</h1>
+<body>
+    <main>
+        <h1>Your Cart</h1>
 
-            {{if .Items}}
+        {{if .Items}}
             {{range .Items}}
-            <p>Item ID: {{.}}</p>
+                <div>
+                    <h2>{{.Name}}</h2>
+                    <p>{{.Description}}</p>
+                    <p>₦{{naira .PriceKobo}}</p>
+                    
+                    <form action="/cart/remove" method="post">
+                        <input type="hidden" name="id" value="{{.ID}}">
+                        <button type="submit">Remove</button>
+                    </form>
+                </div>
             {{end}}
-            {{else}}
+        {{else}}
             <p>Your cart is currently empty.</p>
-            {{end}}
-            <a href="/menu">Back to Menu</a>
-            <br>
-            <a href="/">Back to Home</a>
-        </main>
-        </body>
+        {{end}}
+
+        {{if .Items}}
+            <h2>Total: ₦{{naira .Total}}</h2>
+        {{end}}
+
+        <a href="/menu">Back to Menu</a>
+        <br>
+        <a href="/">Back to Home</a>
+    </main>
+</body>
 </html>

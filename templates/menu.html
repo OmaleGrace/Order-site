@@ -19,7 +19,7 @@
             <div>
                 <h2>{{.Name}}</h2>
                 <p>{{.Description}}</p>
-                <p>₦{{.PriceKobo}}</p>
+                <p>₦{{naira .PriceKobo}}</p>
 
                 <form action="/cart/add" method="post">
                     <input type="hidden" name="id" value="{{.ID}}">
