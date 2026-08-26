@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/joho/godotenv"
 )
 
@@ -51,7 +53,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 			return
 		}
 
-		if password != storedPassword {
+		err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
+		if err != nil {
 			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
@@ -86,11 +89,17 @@ func signupHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Could not create account", http.StatusInternalServerError)
+			return
+		}
+
 		_, err = db.Exec(
 			"INSERT INTO users (name, email, password) VALUES ($1, $2, $3)",
 			name,
 			email,
-			password,
+			string(hashedPassword),
 		)
 		if err != nil {
 			http.Error(w, "Could not create account", http.StatusInternalServerError)
@@ -201,12 +210,12 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 func cartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	tmpl := template.Must(
-	template.New("cart.html").
-		Funcs(template.FuncMap{
-			"naira": naira,
-		}).
-		ParseFiles("templates/cart.html"),
-)
+		template.New("cart.html").
+			Funcs(template.FuncMap{
+				"naira": naira,
+			}).
+			ParseFiles("templates/cart.html"),
+	)
 
 	cookie, err := r.Cookie("user_id")
 	if err != nil {
