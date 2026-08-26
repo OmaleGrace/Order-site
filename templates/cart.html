@@ -14,12 +14,12 @@
         {{if .Items}}
             {{range .Items}}
                 <div>
-                    <h2>{{.Name}}</h2>
+                    <h2>{{.Name}} (x{{.Quantity}})</h2>
                     <p>{{.Description}}</p>
-                    <p>₦{{naira .PriceKobo}}</p>
-                    
+                    <p>₦{{naira .PriceKobo}} each</p>
+
                     <form action="/cart/remove" method="post">
-                        <input type="hidden" name="id" value="{{.ID}}">
+                        <input type="hidden" name="id" value="{{.MenuItemID}}">
                         <button type="submit">Remove</button>
                     </form>
                 </div>

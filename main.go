@@ -15,8 +15,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var carts = make(map[int]*cart.Cart)
-
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/home.html"))
 
@@ -167,7 +165,7 @@ func menuHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 }
 
-func addToCartHandler(w http.ResponseWriter, r *http.Request) {
+func addToCartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -191,21 +189,20 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if carts[userID] == nil {
-		carts[userID] = &cart.Cart{}
+	added, err := cart.AddItem(db, userID, itemID)
+	if err != nil {
+		fmt.Println("Add to cart error:", err)
+		http.Error(w, "Could not add item to cart", http.StatusInternalServerError)
+		return
 	}
 
-	userCart := carts[userID]
-	fmt.Println("User:", userID, "Current cart:", userCart.Items)
-	for _, id := range userCart.Items {
-		if id == itemID {
-			http.Redirect(w, r, "/menu?message=Item%20already%20in%20cart", http.StatusSeeOther)
-			return
-		}
+	if !added {
+		http.Redirect(w, r, "/menu?message=Item%20already%20in%20cart", http.StatusSeeOther)
+		return
 	}
 
-	userCart.Add(itemID)
 	http.Redirect(w, r, "/menu?message=Successfully%20added%20to%20cart", http.StatusSeeOther)
+
 }
 
 func cartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -229,35 +226,23 @@ func cartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	userCart := carts[userID]
-	if userCart == nil {
-		userCart = &cart.Cart{}
-	}
-
-	allItems, err := menu.GetAll(db)
+	items, err := cart.GetItems(db, userID)
 	if err != nil {
-		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		fmt.Println("Cart load error:", err)
+		http.Error(w, "Could not load cart", http.StatusInternalServerError)
 		return
 	}
 
-	var cartItems []menu.MenuItem
 	var total int
-
-	for _, cartID := range userCart.Items {
-		for _, item := range allItems {
-			if item.ID == cartID {
-				cartItems = append(cartItems, item)
-				total += item.PriceKobo
-				break
-			}
-		}
+	for _, item := range items {
+		total += item.PriceKobo * item.Quantity
 	}
 
 	data := struct {
-		Items []menu.MenuItem
+		Items []cart.CartItem
 		Total int
 	}{
-		Items: cartItems,
+		Items: items,
 		Total: total,
 	}
 
@@ -269,7 +254,7 @@ func cartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 }
 
-func removeFromCartHandler(w http.ResponseWriter, r *http.Request) {
+func removeFromCartHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -293,18 +278,10 @@ func removeFromCartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userCart := carts[userID]
-
-	if userCart != nil {
-		for i, id := range userCart.Items {
-			if id == itemID {
-				userCart.Items = append(userCart.Items[:i], userCart.Items[i+1:]...)
-				break
-			}
-		}
+	err = cart.RemoveItem(db, userID, itemID)
+	if err != nil {
+		fmt.Println("Remove from cart error:", err)
 	}
-
-	fmt.Println("Removed item:", itemID, "from user:", userID)
 
 	http.Redirect(w, r, "/cart", http.StatusSeeOther)
 }
@@ -335,11 +312,15 @@ func main() {
 	http.HandleFunc("/menu", func(w http.ResponseWriter, r *http.Request) {
 		menuHandler(w, r, db)
 	})
-	http.HandleFunc("/cart/add", addToCartHandler)
+	http.HandleFunc("/cart/add", func(w http.ResponseWriter, r *http.Request) {
+		addToCartHandler(w, r, db)
+	})
 	http.HandleFunc("/cart", func(w http.ResponseWriter, r *http.Request) {
 		cartHandler(w, r, db)
 	})
-	http.HandleFunc("/cart/remove", removeFromCartHandler)
+	http.HandleFunc("/cart/remove", func(w http.ResponseWriter, r *http.Request) {
+		removeFromCartHandler(w, r, db)
+	})
 
 	fmt.Println("Server Running on https://localhost:8080")
 
