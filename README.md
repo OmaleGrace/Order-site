@@ -4,19 +4,20 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 
 ## Status
 
-🚀 **Live and deployed** at [grace-ordering-site.onrender.com](https://grace-ordering-site.onrender.com) — menu browsing, signup, and login are working in production. Cart, checkout, payments, and order tracking are still to come.
+🚀 **Live and deployed** at [grace-ordering-site.onrender.com](https://grace-ordering-site.onrender.com) — menu browsing, signup, login, cart, and checkout (order creation) are all working in production.
 
-🔧 **Currently hardening the codebase** — working through a list of production-readiness improvements, starting with password hashing.
+✅ **Production-readiness pass complete** — password hashing, persistent cart storage, clean handler structure, request logging, and graceful shutdown are all in place.
 
 ## Planned Features
 
 - [x] Public menu browsing
 - [x] User accounts (signup/login)
-- [ ] Cart and checkout
+- [x] Cart (persisted to database)
+- [x] Checkout — creates a real order and order items in the database
 - [ ] Real payment integration
 - [ ] Order status tracking (pending → preparing → out for delivery → delivered)
 - [x] Deployed publicly (Render, free tier)
-- [ ] Custom domain + HTTPS (currently using Render's default `.onrender.com` domain, which is already HTTPS)
+- [ ] Custom domain (currently using Render's default `.onrender.com` domain, which is already HTTPS)
 
 ## Tech Stack
 
@@ -27,18 +28,19 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - **Config Management:** `.env` file + `godotenv` (git-ignored, never committed)
 - **Hosting:** Render (Web Service)
 - **Frontend:** HTML templates
-- **Styling:** CSS (per-page stylesheets, e.g. `login.css`, `signup.css`)
+- **Styling:** CSS, dedicated stylesheet per page (`home.css`, `login.css`/`auth.css`, `signup.css`/`auth.css`, `style.css` shared base)
 - **Payments:** TBD (likely Stripe)
 
 ## Current Progress
 
 ### Frontend Foundation ✅
 
-- [x] Homepage created
+- [x] Homepage created, with its own dedicated stylesheet (`home.css`) for a proper landing-page feel
 - [x] Restaurant welcome section
 - [x] Food item display
 - [x] Login page — with show/hide password toggle
 - [x] Signup page — with show/hide password toggle
+- [x] Cart page — shows quantity per item and running total, with a checkout button
 - [x] Dedicated CSS stylesheets linked per page
 - [x] HTML templates connected to Go routes
 
@@ -48,8 +50,7 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - [x] PostgreSQL 16 running in Docker for local dev
 - [x] `food_ordering` local database created
 - [x] `food_app` local PostgreSQL user created
-- [x] `users` table created (local + production)
-- [x] `menu_items` table created (local + production)
+- [x] `users`, `menu_items`, `cart_items`, `orders`, and `order_items` tables created (local + production)
 - [x] Sample menu items added (local + production)
 - [x] Practiced basic SQL: `CREATE`, `INSERT`, `SELECT`, `UPDATE`, `DELETE`, `WHERE`, `ORDER BY`
 - [x] PostgreSQL Go driver (`lib/pq`) installed
@@ -71,21 +72,21 @@ A full-stack food ordering website for a single restaurant, built with Go on the
 - [x] `DATABASE_URL` (Internal Render URL) set as environment variable on the web service
 - [x] Production schema applied (dumped from local via `pg_dump`, applied via `psql`)
 - [x] Production menu data seeded
-- [x] Live site verified: menu loads, signup creates real users in the production database
+- [x] Live site verified end-to-end: menu, signup, login, cart, and checkout all confirmed working in production
 
-### Production Readiness — In Progress 🔧
+### Production Readiness ✅ (complete)
 
-- [ ] **Password hashing with bcrypt** *(in progress)* — passwords are currently stored in plain text; `golang.org/x/crypto/bcrypt` has been installed and hashing is being wired into signup/login
-- [ ] Move cart storage from in-memory (`map[int]*cart.Cart` in `main.go`) to the database, so carts survive restarts/redeploys
-- [ ] Split `main.go` into separate handler files (e.g. `handlers/auth.go`, `handlers/menu.go`, `handlers/cart.go`) as the app grows
-- [ ] Add request logging middleware for visibility into production traffic and easier debugging
-- [ ] Audit all static asset paths for consistency now that the `/static/` routing bug is fixed
-- [ ] Add graceful shutdown handling to `http.ListenAndServe`
+- [x] **Password hashing with bcrypt** — passwords are hashed with `golang.org/x/crypto/bcrypt` on signup and verified with `bcrypt.CompareHashAndPassword` on login; no plain-text passwords stored
+- [x] **Cart persisted to the database** — replaced the in-memory `map[int]*cart.Cart` with a `cart_items` table (tracks quantity, price at time of adding, timestamps), so carts survive restarts/redeploys
+- [x] **Split into a `handlers` package** — routing logic now lives in `main.go` only; `homeHandler`, `loginHandler`/`signupHandler`, `menuHandler`, cart handlers, and `checkoutHandler` each moved into their own file under `handlers/`, as methods on a shared `Handlers` struct holding the DB connection
+- [x] **Request logging middleware** — every route is wrapped with a `middleware.Logging` handler that logs method, path, and duration for each request, visible locally and in Render's logs
+- [x] **Static asset paths audited** — confirmed every template's `<link>`/`<script>` tag correctly uses the `/static/...` path
+- [x] **Graceful shutdown** — replaced the blocking `http.ListenAndServe` call with an `http.Server` + signal handling, so the app finishes in-flight requests (up to a 10s timeout) instead of dying instantly on redeploy/restart
 
-### Other Known Gaps
+### Known Gaps
 
-- [ ] No checkout or payment flow yet
-- [ ] No order tracking/status system yet
+- [ ] No real payment integration yet — checkout currently creates an order and order items in the database, but doesn't process actual payment
+- [ ] No order status tracking/updates yet (orders are created with status `pending` and don't move forward)
 - [ ] Free-tier Render instance spins down after inactivity (first request after idle can take ~50s)
 - [ ] Free-tier Render Postgres database has a limited lifespan unless upgraded
 
@@ -98,12 +99,35 @@ food_ordering
 │   ├── id (serial, primary key)
 │   ├── name
 │   ├── email (unique)
-│   └── password (⚠️ currently plain text — bcrypt hashing in progress)
+│   └── password (bcrypt hash)
 │
-└── menu_items
-    ├── id (serial, primary key)
-    ├── name
-    ├── description
+├── menu_items
+│   ├── id (serial, primary key)
+│   ├── name
+│   ├── description
+│   └── price_kobo
+│
+├── cart_items
+│   ├── id (serial, primary key)
+│   ├── user_id → users.id
+│   ├── menu_item_id → menu_items.id
+│   ├── quantity
+│   ├── price_kobo_at_addition
+│   ├── special_instructions
+│   ├── created_at
+│   └── updated_at
+│   (unique per user_id + menu_item_id)
+│
+├── orders
+│   ├── id (serial, primary key)
+│   ├── user_id → users.id
+│   ├── total_kobo
+│   └── status
+│
+└── order_items
+    ├── order_id → orders.id
+    ├── menu_item_id → menu_items.id
+    ├── quantity
     └── price_kobo
 ```
 
@@ -121,6 +145,7 @@ food_ordering
    ```bash
    go run .
    ```
+4. To stop it cleanly, press `Ctrl+C` — the app will finish in-flight requests and shut down gracefully instead of dying instantly.
 
 ## Deployment Notes
 
