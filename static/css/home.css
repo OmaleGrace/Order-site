@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #fafafa;
+    color: #1a1a1a;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 80px;
+    font-size: 36px;
+}
+
+body > p {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-top: 8px;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 32px;
+}
+
+.auth-links a {
+    display: inline-block;
+    padding: 10px 22px;
+    margin: 0 8px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.auth-links a:first-child {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.auth-links a:last-child {
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+}
+
+footer {
+    text-align: center;
+    margin-top: 100px;
+    padding: 20px;
+    font-size: 13px;
+    color: #999;
+}
