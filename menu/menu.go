@@ -7,7 +7,7 @@ type MenuItem struct {
 	Name        string
 	Description string
 	PriceKobo   int
-	ImageURL string
+	ImageURL sql.NullString
 }
 
 func GetAll(db *sql.DB) ([]MenuItem, error) {
