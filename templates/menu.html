@@ -2,35 +2,78 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu - Grace Ordering Site</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-    <main>
-        <h1>Our Menu</h1>
-        <a href="/cart">🛒 View Cart</a>
+
+    <header class="menu-header">
+        <div>
+            <h1>Our Menu</h1>
+            <p>Delicious meals, freshly prepared for you ❤️</p>
+        </div>
+
+        <a href="/cart" class="cart-link">🛒 View Cart</a>
+    </header>
+
+    <main class="menu-container">
+
         {{if .Message}}
-        <p>{{.Message}}</p>
+            <p class="menu-message">{{.Message}}</p>
         {{end}}
 
-        {{range .Items}}
+        <section class="menu-grid">
 
-            <div>
-                <h2>{{.Name}}</h2>
-                <p>{{.Description}}</p>
-                <p>₦{{naira .PriceKobo}}</p>
+            {{range .Items}}
 
-                <form action="/cart/add" method="post">
-                    <input type="hidden" name="id" value="{{.ID}}">
-                    <button type="submit">Add to Cart</button>
-                </form>
-            </div>
-        {{else}}
-            <p>No menu items available.</p>
-        {{end}}
-        
-        <a href="/">Back to Home</a>
+                <article class="food-card">
+
+                    <div class="food-image">
+                        <img src="{{.ImageURL}}" alt="{{.Name}}">
+                    </div>
+
+                    <div class="food-content">
+
+                        <span class="popular-badge">Popular</span>
+
+                        <h2>{{.Name}}</h2>
+
+                        <p class="food-description">
+                            {{.Description}}
+                        </p>
+
+                        <div class="food-bottom">
+
+                            <strong class="food-price">
+                                ₦{{naira .PriceKobo}}
+                            </strong>
+
+                            <form action="/cart/add" method="post">
+                                <input type="hidden" name="id" value="{{.ID}}">
+                                <button type="submit" class="add-cart-btn">
+                                    + Add to Cart
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            {{else}}
+
+                <p class="empty-menu">No menu items available.</p>
+
+            {{end}}
+
+        </section>
+
+        <a href="/" class="back-home">← Back to Home</a>
+
     </main>
+
 </body>
 </html>

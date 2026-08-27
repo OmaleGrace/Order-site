@@ -7,11 +7,12 @@ type MenuItem struct {
 	Name        string
 	Description string
 	PriceKobo   int
+	ImageURL string
 }
 
 func GetAll(db *sql.DB) ([]MenuItem, error) {
 	rows, err := db.Query(`
-	SELECT id, name, description, price_kobo
+	SELECT id, name, description, price_kobo, image_url
 	FROM menu_items
 	ORDER BY id
 	`)
@@ -28,6 +29,7 @@ func GetAll(db *sql.DB) ([]MenuItem, error) {
 			&item.Name,
 			&item.Description,
 			&item.PriceKobo,
+			&item.ImageURL,
 		)
 		if err != nil {
 			return nil, err

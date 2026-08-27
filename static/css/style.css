@@ -1,3 +1,266 @@
+/* ================================
+   MENU PAGE
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, Helvetica, sans-serif;
+    background: #f8f8f8;
+    color: #222;
+}
+
+
+/* ================================
+   HEADER
+================================ */
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 6%;
+    background: #ffffff;
+    border-bottom: 1px solid #eee;
+}
+
+.menu-header h1 {
+    font-size: 32px;
+    margin-bottom: 6px;
+}
+
+.menu-header p {
+    color: #777;
+    font-size: 15px;
+}
+
+.cart-link {
+    text-decoration: none;
+    background: #222;
+    color: white;
+    padding: 11px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.cart-link:hover {
+    background: #444;
+}
+
+
+/* ================================
+   MENU CONTAINER
+================================ */
+
+.menu-container {
+    width: 90%;
+    max-width: 1050px;
+    margin: 35px auto;
+}
+
+
+/* ================================
+   MESSAGE
+================================ */
+
+.menu-message {
+    background: #e8f7e8;
+    color: #267326;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+
+/* ================================
+   FOOD GRID
+================================ */
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+
+/* ================================
+   FOOD CARD
+================================ */
+
+.food-card {
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.food-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+
+/* ================================
+   FOOD IMAGE
+================================ */
+
+.food-image {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+}
+
+.food-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.food-card:hover .food-image img {
+    transform: scale(1.05);
+}
+
+
+/* ================================
+   FOOD CONTENT
+================================ */
+
+.food-content {
+    padding: 16px;
+}
+
+.food-content h2 {
+    font-size: 20px;
+    margin: 8px 0;
+}
+
+.food-description {
+    color: #777;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 42px;
+}
+
+
+/* ================================
+   POPULAR BADGE
+================================ */
+
+.popular-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    background: #fff1d6;
+    color: #a86400;
+    padding: 5px 8px;
+    border-radius: 20px;
+}
+
+
+/* ================================
+   PRICE + BUTTON
+================================ */
+
+.food-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.food-price {
+    font-size: 18px;
+}
+
+.add-cart-btn {
+    border: none;
+    background: #222;
+    color: white;
+    padding: 9px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.add-cart-btn:hover {
+    background: #444;
+}
+
+
+/* ================================
+   EMPTY MENU
+================================ */
+
+.empty-menu {
+    text-align: center;
+    width: 100%;
+    padding: 50px;
+    color: #777;
+}
+
+
+/* ================================
+   BACK HOME
+================================ */
+
+.back-home {
+    display: inline-block;
+    margin-top: 30px;
+    text-decoration: none;
+    color: #222;
+    font-weight: bold;
+}
+
+.back-home:hover {
+    text-decoration: underline;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 900px) {
+    .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 600px) {
+
+    .menu-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .menu-header h1 {
+        font-size: 28px;
+    }
+
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .menu-container {
+        width: 92%;
+    }
+
+    .food-image {
+        height: 210px;
+    }
 }

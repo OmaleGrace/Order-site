@@ -137,15 +137,11 @@ food_ordering
    ```bash
    docker start food-ordering-db
    ```
-2. Ensure `.env` exists in the project root with:
-   ```
-   DATABASE_URL=postgres://food_app:food_password@localhost:5432/food_ordering?sslmode=disable
-   ```
-3. Run the app:
+2. Run the app:
    ```bash
    go run .
    ```
-4. To stop it cleanly, press `Ctrl+C` — the app will finish in-flight requests and shut down gracefully instead of dying instantly.
+3. To stop it cleanly, press `Ctrl+C` — the app will finish in-flight requests and shut down gracefully instead of dying instantly.
 
 ## Deployment Notes
 
