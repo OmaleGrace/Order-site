@@ -14,9 +14,9 @@
         {{if .Items}}
             {{range .Items}}
                 <div>
-                    <h2>{{.Name}} (x{{.Quantity}})</h2>
+                    <h2>{{.Name}}</h2>
                     <p>{{.Description}}</p>
-                    <p>₦{{naira .PriceKobo}} each</p>
+                    <p>₦{{naira .PriceKobo}}</p>
 
                     <form action="/cart/remove" method="post">
                         <input type="hidden" name="id" value="{{.MenuItemID}}">
@@ -32,6 +32,12 @@
             <h2>Total: ₦{{naira .Total}}</h2>
         {{end}}
 
+        {{if .Items}}
+        <form action="/checkout" method="post">
+            <button type="submit">Checkout</button>
+        </form>
+        {{end}}
+        
         <a href="/menu">Back to Menu</a>
         <br>
         <a href="/">Back to Home</a>
