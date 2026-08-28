@@ -23,19 +23,49 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 25px 6%;
+    padding: 22px 6%;
     background: #ffffff;
     border-bottom: 1px solid #eee;
 }
 
-.menu-header h1 {
-    font-size: 32px;
-    margin-bottom: 6px;
+
+/* ================================
+   BRAND
+================================ */
+
+.brand-name {
+    display: block;
+    text-decoration: none;
+    color: #222;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
-.menu-header p {
+.brand p {
     color: #777;
-    font-size: 15px;
+    font-size: 14px;
+}
+
+
+/* ================================
+   NAVIGATION
+================================ */
+
+.menu-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.home-link {
+    text-decoration: none;
+    color: #555;
+    font-weight: bold;
+}
+
+.home-link:hover {
+    color: #222;
 }
 
 .cart-link {
@@ -54,13 +84,40 @@ body {
 
 
 /* ================================
+   MENU INTRO
+================================ */
+
+.menu-intro {
+    width: 90%;
+    max-width: 1050px;
+    margin: 30px auto 25px;
+
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.menu-intro h1 {
+    font-size: 32px;
+    white-space: nowrap;
+}
+
+.menu-intro p {
+    color: #777;
+    font-size: 15px;
+    border-left: 1px solid #ddd;
+    padding-left: 25px;
+}
+
+
+/* ================================
    MENU CONTAINER
 ================================ */
 
 .menu-container {
     width: 90%;
     max-width: 1050px;
-    margin: 35px auto;
+    margin: 0 auto 35px;
 }
 
 
@@ -230,6 +287,7 @@ body {
 ================================ */
 
 @media (max-width: 900px) {
+
     .menu-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -248,8 +306,25 @@ body {
         gap: 18px;
     }
 
-    .menu-header h1 {
+    .menu-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .menu-intro {
+        width: 92%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .menu-intro h1 {
         font-size: 28px;
+    }
+
+    .menu-intro p {
+        border-left: none;
+        padding-left: 0;
     }
 
     .menu-grid {

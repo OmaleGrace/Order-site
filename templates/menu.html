@@ -4,19 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu - Grace Ordering Site</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/menu.css">
 </head>
 
 <body>
 
     <header class="menu-header">
-        <div>
-            <h1>Our Menu</h1>
-            <p>Delicious meals, freshly prepared for you ❤️</p>
-        </div>
 
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 Grace's Kitchen</a>
+        <p>Fresh meals. Great taste. Made for you ❤️</p>
+    </div>
+
+    <nav class="menu-nav">
+        <a href="/" class="home-link">Home</a>
         <a href="/cart" class="cart-link">🛒 View Cart</a>
-    </header>
+    </nav>
+
+</header>
+
+<section class="menu-intro">
+    <h1>Our Menu</h1>
+    <p>Choose from our delicious selection of freshly prepared meals.</p>
+</section>
 
     <main class="menu-container">
 
@@ -70,8 +80,6 @@
             {{end}}
 
         </section>
-
-        <a href="/" class="back-home">← Back to Home</a>
 
     </main>
 
