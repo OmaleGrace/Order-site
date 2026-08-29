@@ -42,6 +42,8 @@ func main() {
 	http.HandleFunc("/cart", middleware.Logging(h.Cart))
 	http.HandleFunc("/cart/remove", middleware.Logging(h.RemoveFromCart))
 	http.HandleFunc("/checkout", middleware.Logging(h.Checkout))
+	http.HandleFunc("/payment/callback", middleware.Logging(h.PaymentCallback))
+	http.HandleFunc("/order-success", middleware.Logging(h.OrderSuccess))
 
 	srv := &http.Server{
 		Addr: ":8080",
