@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"Order-site/cart"
 )
@@ -102,8 +103,8 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	paystackData := map[string]interface{}{
 		"email":        email,
 		"amount":       totalKobo,
-		"reference":    fmt.Sprintf("ORDER-%d", orderID),
-		"callback_url": "https://grace-ordering-site.onrender.com/payment/callback",
+		"reference":    fmt.Sprintf("ORDER-%d-%d", orderID, time.Now().UnixNano()),
+		"callback_url": os.Getenv("PAYSTACK_CALLBACK_URL"),
 	}
 
 	requestBody, err := json.Marshal(paystackData)
