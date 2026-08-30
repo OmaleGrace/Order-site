@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Orders - Gracie Ordering Site</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+<main>
+
+    <h1>Admin Order Dashboard</h1>
+
+    <p>Manage customer orders from here.</p>
+
+    {{if .}}
+
+        {{range .}}
+
+            <div>
+                <hr>
+
+                <h2>Order #{{.ID}}</h2>
+
+                <p>
+                    <strong>Customer:</strong>
+                    {{.Name}}
+                </p>
+
+                <p>
+                    <strong>Email:</strong>
+                    {{.Email}}
+                </p>
+
+                <p>
+                    <strong>Total:</strong>
+                    ₦{{naira .TotalKobo}}
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    {{.Status}}
+                </p>
+
+                <p>
+                    <strong>Date:</strong>
+                    {{.CreatedAt}}
+                </p>
+
+            </div>
+
+        {{end}}
+
+    {{else}}
+
+        <p>No orders yet.</p>
+
+    {{end}}
+
+    <br>
+
+    <a href="/menu">Back to Menu</a>
+
+</main>
+
+</body>
+</html>

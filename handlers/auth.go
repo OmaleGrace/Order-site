@@ -23,18 +23,23 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		var storedPassword string
+		var isAdmin bool
 
 		err = h.DB.QueryRow(
-			"SELECT id, password FROM users WHERE email = $1",
+			"SELECT id, password, is_admin FROM users WHERE email = $1",
 			email,
-		).Scan(&userID, &storedPassword)
+		).Scan(&userID, &storedPassword, &isAdmin)
 
 		if err != nil {
 			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password))
+		err = bcrypt.CompareHashAndPassword(
+			[]byte(storedPassword),
+			[]byte(password),
+		)
+
 		if err != nil {
 			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
@@ -45,6 +50,14 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			Value: fmt.Sprintf("%d", userID),
 			Path:  "/",
 		})
+
+		// Automatically redirect admins to the admin dashboard
+		if isAdmin {
+			http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)
+			return
+		}
+
+		// Normal users go to the menu
 		http.Redirect(w, r, "/menu", http.StatusSeeOther)
 		return
 	}

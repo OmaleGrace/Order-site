@@ -65,3 +65,12 @@ func GetItems(db *sql.DB, userID int) ([]CartItem, error) {
 	}
 	return items, nil
 }
+
+func ClearCart(db *sql.DB, userID int) error {
+	_, err := db.Exec(`
+		DELETE FROM cart_items
+		WHERE user_id = $1
+	`, userID)
+
+	return err
+}

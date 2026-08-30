@@ -72,5 +72,14 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Add admin role to users
+_, err = db.Exec(`
+	ALTER TABLE users
+	ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE
+`)
+if err != nil {
+	return nil, err
+}
+
 	return db, nil
 }

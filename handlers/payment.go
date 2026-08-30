@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"Order-site/cart"
 )
 
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
@@ -56,19 +58,63 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Make sure Paystack says the payment was successful
 	if !paystackResponse.Status ||
 		strings.ToLower(paystackResponse.Data.Status) != "success" {
+		fmt.Println("Paystack payment failed:", paystackResponse.Message)
 		http.Error(w, "Payment was not successful", http.StatusBadRequest)
 		return
 	}
 
-	// Mark order as paid
+	// Get the order from our database
+	var orderID int
+	var userID int
+	var orderTotal int
+	var orderStatus string
+
+	err = h.DB.QueryRow(`
+		SELECT id, user_id, total_kobo, status
+		FROM orders
+		WHERE payment_reference = $1
+	`, paystackResponse.Data.Reference).Scan(
+		&orderID,
+		&userID,
+		&orderTotal,
+		&orderStatus,
+	)
+
+	if err != nil {
+		fmt.Println("Get order error:", err)
+		http.Error(w, "Could not find order", http.StatusInternalServerError)
+		return
+	}
+
+	// Don't process an already completed order again
+	if orderStatus == "paid" {
+		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		return
+	}
+
+	// Verify that the amount paid matches the order amount
+	if paystackResponse.Data.Amount != orderTotal {
+		fmt.Printf(
+			"Payment amount mismatch for order %d: expected %d, received %d\n",
+			orderID,
+			orderTotal,
+			paystackResponse.Data.Amount,
+		)
+
+		http.Error(w, "Payment amount does not match order", http.StatusBadRequest)
+		return
+	}
+
+	// Mark the order as paid
 	_, err = h.DB.Exec(`
 		UPDATE orders
 		SET status = 'paid'
-		WHERE payment_reference = $1
+		WHERE id = $1
 		AND status = 'pending'
-	`, paystackResponse.Data.Reference)
+	`, orderID)
 
 	if err != nil {
 		fmt.Println("Update order error:", err)
@@ -76,27 +122,8 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the order's user
-	var userID int
-
-	err = h.DB.QueryRow(`
-		SELECT user_id
-		FROM orders
-		WHERE payment_reference = $1
-	`, paystackResponse.Data.Reference).Scan(&userID)
-
-	if err != nil {
-		fmt.Println("Get order user error:", err)
-		http.Error(w, "Could not find order", http.StatusInternalServerError)
-		return
-	}
-
 	// Clear the user's cart
-	_, err = h.DB.Exec(`
-		DELETE FROM cart_items
-		WHERE user_id = $1
-	`, userID)
-
+	err = cart.ClearCart(h.DB, userID)
 	if err != nil {
 		fmt.Println("Clear cart error:", err)
 		http.Error(w, "Could not clear cart", http.StatusInternalServerError)
