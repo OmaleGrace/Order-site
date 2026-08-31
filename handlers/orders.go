@@ -3,57 +3,61 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 )
 
-type AdminOrderItem struct {
+type CustomerOrderItem struct {
 	Name      string
 	Quantity  int
 	PriceKobo int
 }
 
-type AdminOrder struct {
+type CustomerOrder struct {
 	ID        int
-	Name      string
-	Email     string
 	TotalKobo int
 	Status    string
 	CreatedAt string
-	Items     []AdminOrderItem
+	Items     []CustomerOrderItem
 }
 
-func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	cookie, err := r.Cookie("user_id")
+	if err != nil {
+		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(cookie.Value)
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
 	rows, err := h.DB.Query(`
-		SELECT
-			o.id,
-			u.name,
-			u.email,
-			o.total_kobo,
-			o.status,
-			o.created_at
-		FROM orders o
-		JOIN users u ON u.id = o.user_id
-		ORDER BY o.created_at DESC
-	`)
+		SELECT id, total_kobo, status, created_at
+		FROM orders
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+	`, userID)
+
 	if err != nil {
 		http.Error(w, "Could not load orders", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var orders []AdminOrder
+	var orders []CustomerOrder
 
 	for rows.Next() {
-		var order AdminOrder
+		var order CustomerOrder
 
 		err := rows.Scan(
 			&order.ID,
-			&order.Name,
-			&order.Email,
 			&order.TotalKobo,
 			&order.Status,
 			&order.CreatedAt,
@@ -80,7 +84,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for itemRows.Next() {
-			var item AdminOrderItem
+			var item CustomerOrderItem
 
 			err := itemRows.Scan(
 				&item.Name,
@@ -108,13 +112,13 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl := template.Must(
-		template.New("admin-orders.html").
+		template.New("orders.html").
 			Funcs(template.FuncMap{
 				"naira": func(kobo int) int {
 					return kobo / 100
 				},
 			}).
-			ParseFiles("templates/admin-orders.html"),
+			ParseFiles("templates/orders.html"),
 	)
 
 	err = tmpl.Execute(w, orders)

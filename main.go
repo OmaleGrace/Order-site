@@ -36,6 +36,7 @@ func main() {
 
 	http.HandleFunc("/", middleware.Logging(h.Home))
 	http.HandleFunc("/login", middleware.Logging(h.Login))
+	http.HandleFunc("/logout", middleware.Logging(h.Logout))
 	http.HandleFunc("/signup", middleware.Logging(h.Signup))
 
 	http.HandleFunc("/menu", middleware.Logging(h.Menu))
@@ -70,7 +71,6 @@ func main() {
 		middleware.Logging(h.OrderSuccess),
 	)
 
-	// Admin dashboard
 	http.HandleFunc(
 		"/admin/orders",
 		middleware.Logging(
@@ -78,11 +78,16 @@ func main() {
 		),
 	)
 
-	// Admin order status update
 	http.HandleFunc(
 		"/admin/orders/status",
 		middleware.Logging(
 			middleware.Admin(db, h.UpdateOrderStatus),
+		),
+	)
+
+	http.HandleFunc("/orders",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.MyOrders),
 		),
 	)
 

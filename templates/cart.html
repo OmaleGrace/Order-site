@@ -3,43 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cart - Gracie Ordering Site</title>
+    <title>Cart - Grace's Kitchen</title>
+    <link rel="stylesheet" href="/static/css/cart.css">
 </head>
 
 <body>
-    <main>
-        <h1>Your Cart</h1>
 
-        {{if .Items}}
+<header class="cart-header">
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 Grace's Kitchen</a>
+        <p>Fresh meals. Great taste. Made for you ❤️</p>
+    </div>
+
+    <nav>
+        <a href="/menu">Menu</a>
+        <a href="/orders">My Orders</a>
+        <a href="/logout">Logout</a>
+    </nav>
+</header>
+
+<main class="cart-container">
+
+    <div class="cart-title">
+        <h1>Your Cart</h1>
+        <p>Review your items before placing your order.</p>
+    </div>
+
+    {{if .Items}}
+
+        <section class="cart-items">
+
             {{range .Items}}
-                <div>
-                    <h2>{{.Name}}</h2>
-                    <p>{{.Description}}</p>
-                    <p>₦{{naira .PriceKobo}}</p>
+
+                <article class="cart-item">
+
+                    <div class="item-info">
+                        <h2>{{.Name}}</h2>
+                        <p>{{.Description}}</p>
+                        <strong>₦{{naira .PriceKobo}}</strong>
+                    </div>
 
                     <form action="/cart/remove" method="post">
                         <input type="hidden" name="id" value="{{.MenuItemID}}">
-                        <button type="submit">Remove</button>
+                        <button type="submit" class="remove-btn">
+                            Remove
+                        </button>
                     </form>
-                </div>
+
+                </article>
+
             {{end}}
-        {{else}}
-            <p>Your cart is currently empty.</p>
-        {{end}}
 
-        {{if .Items}}
-            <h2>Total: ₦{{naira .Total}}</h2>
-        {{end}}
+        </section>
 
-        {{if .Items}}
-        <form action="/checkout" method="post">
-            <button type="submit">Checkout</button>
-        </form>
-        {{end}}
-        
-        <a href="/menu">Back to Menu</a>
-        <br>
+        <section class="cart-summary">
+
+            <div class="total-row">
+                <span>Total</span>
+                <strong>₦{{naira .Total}}</strong>
+            </div>
+
+            <form action="/checkout" method="post">
+                <button type="submit" class="checkout-btn">
+                    Proceed to Checkout
+                </button>
+            </form>
+
+        </section>
+
+    {{else}}
+
+        <section class="empty-cart">
+
+            <div class="empty-icon">🛒</div>
+
+            <h2>Your cart is empty</h2>
+
+            <p>Add some delicious meals from our menu to get started.</p>
+
+            <a href="/menu" class="menu-btn">
+                Browse Menu
+            </a>
+
+        </section>
+
+    {{end}}
+
+    <div class="cart-links">
+        <a href="/menu">← Back to Menu</a>
         <a href="/">Back to Home</a>
-    </main>
+    </div>
+
+</main>
+
 </body>
 </html>

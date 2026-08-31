@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 30px;
+            background: #f5f5f5;
+        }
+
+        main {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .order {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+        }
+
+        .order h2 {
+            margin-top: 0;
+        }
+
+        .items {
+            padding-left: 20px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f1f1f1;
+        }
+
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px 5px;
+            border-radius: 6px;
+            background: #ddd;
+            font-size: 14px;
+        }
+
+        .step.active {
+            background: #222;
+            color: white;
+        }
+
+        .step.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+    <h1>My Orders</h1>
+
+    {{if not .}}
+        <p>You haven't placed any orders yet.</p>
+    {{end}}
+
+    {{range .}}
+
+        <section class="order">
+
+            <h2>Order #{{.ID}}</h2>
+
+            <h3>Items</h3>
+
+            <ul class="items">
+                {{range .Items}}
+                    <li>
+                        {{.Name}} × {{.Quantity}}
+                        — ₦{{naira .PriceKobo}}
+                    </li>
+                {{end}}
+            </ul>
+
+            <p>
+                <strong>Total:</strong>
+                ₦{{naira .TotalKobo}}
+            </p>
+
+            <div class="status">
+
+                <div class="status-title">
+                    Order Status: {{.Status}}
+                </div>
+
+                <div class="steps">
+
+    <div class="step
+        {{if eq .Status "paid"}}active{{end}}
+        {{if or (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}completed{{end}}">
+        Paid
+    </div>
+
+    <div class="step
+        {{if eq .Status "preparing"}}active{{end}}
+        {{if or (eq .Status "ready") (eq .Status "completed")}}completed{{end}}">
+        Preparing
+    </div>
+
+    <div class="step
+        {{if eq .Status "ready"}}active{{end}}
+        {{if eq .Status "completed"}}completed{{end}}">
+        Ready
+    </div>
+
+    <div class="step
+        {{if eq .Status "completed"}}active{{end}}">
+        Completed
+    </div>
+
+</div>
+
+            </div>
+
+            <p class="date">
+                Order date: {{.CreatedAt}}
+            </p>
+
+            <hr>
+
+        </section>
+
+    {{end}}
+
+    <a class="back" href="/menu">Back to Menu</a>
+
+</main>
+<script>
+    setTimeout(function () {
+        window.location.reload();
+    }, 10000);
+</script>
+</body>
+</html>

@@ -10,8 +10,10 @@
 </head>
 
 <body>
-
-<main>
+        <a href="/" class="home-link">Home</a>
+        <a href="/menu" class="menu-link">Back to Menu</a>
+        
+        <main>
 
     <h1>Admin Order Dashboard</h1>
 
@@ -26,31 +28,81 @@
 
                 <h2>Order #{{.ID}}</h2>
 
-                <p>
-                    <strong>Customer:</strong>
-                    {{.Name}}
-                </p>
+<p>
+    <strong>Customer:</strong>
+    {{.Name}}
+</p>
 
-                <p>
-                    <strong>Email:</strong>
-                    {{.Email}}
-                </p>
+<p>
+    <strong>Email:</strong>
+    {{.Email}}
+</p>
 
-                <p>
-                    <strong>Total:</strong>
-                    ₦{{naira .TotalKobo}}
-                </p>
+<h3>Items</h3>
 
-                <p>
-                    <strong>Status:</strong>
-                    {{.Status}}
-                </p>
+<ul>
+    {{range .Items}}
+        <li>
+            {{.Name}} × {{.Quantity}}
+            — ₦{{naira .PriceKobo}}
+        </li>
+    {{end}}
+</ul>
 
-                <p>
-                    <strong>Date:</strong>
-                    {{.CreatedAt}}
-                </p>
+<p>
+    <strong>Total:</strong>
+    ₦{{naira .TotalKobo}}
+</p>
 
+<p>
+    <strong>Status:</strong>
+    {{.Status}}
+</p>
+
+<p>
+    <strong>Date:</strong>
+    {{.CreatedAt}}
+</p>
+
+<form action="/admin/orders/status" method="post">
+
+    <input
+        type="hidden"
+        name="order_id"
+        value="{{.ID}}"
+    >
+
+    <select name="status">
+        <option value="pending" {{if eq .Status "pending"}}selected{{end}}>
+            Pending
+        </option>
+
+        <option value="paid" {{if eq .Status "paid"}}selected{{end}}>
+            Paid
+        </option>
+
+        <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>
+            Preparing
+        </option>
+
+        <option value="ready" {{if eq .Status "ready"}}selected{{end}}>
+            Ready
+        </option>
+
+        <option value="completed" {{if eq .Status "completed"}}selected{{end}}>
+            Completed
+        </option>
+
+        <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>
+            Cancelled
+        </option>
+    </select>
+
+    <button type="submit">Update Status</button>
+
+</form>
+
+<hr>
             </div>
 
         {{end}}
@@ -62,8 +114,6 @@
     {{end}}
 
     <br>
-
-    <a href="/menu">Back to Menu</a>
 
 </main>
 
