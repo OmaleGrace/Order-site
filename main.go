@@ -71,6 +71,11 @@ func main() {
 	)
 
 	http.HandleFunc(
+		"/payment/webhook",
+		middleware.Logging(h.PaymentWebhook),
+	)
+
+	http.HandleFunc(
 		"/order-success",
 		middleware.Logging(h.OrderSuccess),
 	)

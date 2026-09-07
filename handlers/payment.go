@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -149,4 +153,118 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+}
+
+func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Could not read webhook", http.StatusBadRequest)
+		return
+	}
+
+	signature := r.Header.Get("x-paystack-signature")
+	if signature == "" {
+		http.Error(w, "Missing signature", http.StatusUnauthorized)
+		return
+	}
+
+	hash := hmac.New(sha512.New, []byte(os.Getenv("PAYSTACK_SECRET_KEY")))
+	hash.Write(body)
+
+	expectedSignature := hex.EncodeToString(hash.Sum(nil))
+
+	if !hmac.Equal(
+		[]byte(signature),
+		[]byte(expectedSignature),
+	) {
+		http.Error(w, "Invalid signature", http.StatusUnauthorized)
+		return
+	}
+
+	var event struct {
+		Event string `json:"event"`
+		Data  struct {
+			Status    string `json:"status"`
+			Reference string `json:"reference"`
+			Amount    int    `json:"amount"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &event); err != nil {
+		http.Error(w, "Invalid webhook payload", http.StatusBadRequest)
+		return
+	}
+
+	// We only process successful transactions.
+	if event.Event != "charge.success" ||
+		strings.ToLower(event.Data.Status) != "success" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	var orderID int
+	var userID int
+	var orderTotal int
+	var orderStatus string
+
+	err = h.DB.QueryRow(`
+		SELECT id, user_id, total_kobo, status
+		FROM orders
+		WHERE payment_reference = $1
+	`, event.Data.Reference).Scan(
+		&orderID,
+		&userID,
+		&orderTotal,
+		&orderStatus,
+	)
+
+	if err != nil {
+		fmt.Println("Webhook order lookup error:", err)
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	if event.Data.Amount != orderTotal {
+		fmt.Printf(
+			"Webhook amount mismatch for order %d: expected %d, received %d\n",
+			orderID,
+			orderTotal,
+			event.Data.Amount,
+		)
+
+		http.Error(w, "Payment amount mismatch", http.StatusBadRequest)
+		return
+	}
+
+	// Prevent duplicate fulfillment.
+	if orderStatus == "paid" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	_, err = h.DB.Exec(`
+		UPDATE orders
+		SET status = 'paid'
+		WHERE id = $1
+		AND status = 'pending'
+	`, orderID)
+
+	if err != nil {
+		fmt.Println("Webhook update order error:", err)
+		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		return
+	}
+
+	if err := cart.ClearCart(h.DB, userID); err != nil {
+		fmt.Println("Webhook clear cart error:", err)
+		http.Error(w, "Could not clear cart", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
