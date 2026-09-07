@@ -11,6 +11,7 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 - User registration
 - Secure password hashing with bcrypt
 - User login and logout
+- Server-side session authentication
 - Restaurant menu
 - Food images
 - Add items to cart
@@ -36,6 +37,7 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 ## Tech Stack
 
 ### Backend
+
 - Go
 - net/http
 - PostgreSQL
@@ -43,16 +45,19 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 - bcrypt
 
 ### Frontend
+
 - HTML
 - CSS
 - Go Templates
 - JavaScript
 
 ### APIs & Services
+
 - Paystack API
 - Render
 
 ### Development Tools
+
 - Git
 - GitHub
 - GitHub Codespaces
@@ -90,6 +95,7 @@ The application uses PostgreSQL with tables for:
 - Cart items
 - Orders
 - Order items
+- Sessions
 
 Order creation uses a database transaction so an order and its items are saved together.
 
@@ -98,14 +104,18 @@ Order creation uses a database transaction so an order and its items are saved t
 The application includes:
 
 - Password hashing with bcrypt
+- Server-side session authentication
+- Random session tokens
+- HTTP-only authentication cookies
+- Secure cookies
+- SameSite cookie protection
 - Login-protected customer routes
 - Admin-only routes
-- HTTP-only authentication cookies
-- SameSite cookie protection
 - Server-side payment verification
 - Paystack amount verification
 - Unique payment references
 - Server-side order totals
+- Environment-based configuration for sensitive credentials
 
 ## Deployment
 
@@ -123,13 +133,23 @@ Sensitive credentials are not stored in the source code.
 
 🚀 Core functionality completed and deployed.
 
-The application has been tested locally and on the deployed Render version, including the customer ordering flow, Paystack test payment flow, order tracking, admin dashboard, and menu images.
+The application has been tested locally and on the deployed Render version, including:
+
+- Customer registration and login
+- Menu and food images
+- Cart functionality
+- Checkout
+- Paystack test payment flow
+- Payment verification
+- Order tracking
+- Admin dashboard
+- Admin order management
+- Server-side authentication sessions
 
 ## Future Improvements
 
 Possible future improvements include:
 
-- Server-side session tokens
 - Paystack webhooks
 - Email order notifications
 - Better automated test coverage
