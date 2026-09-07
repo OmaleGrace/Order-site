@@ -74,9 +74,21 @@ func Connect() (*sql.DB, error) {
 
 	// Add admin role to users
 	_, err = db.Exec(`
-	ALTER TABLE users
-	ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE
-`)
+		ALTER TABLE users
+		ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE
+	`)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create sessions table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS sessions (
+			token TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			expires_at TIMESTAMP NOT NULL
+		)
+	`)
 	if err != nil {
 		return nil, err
 	}

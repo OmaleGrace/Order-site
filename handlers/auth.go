@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 
+	"Order-site/middleware"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -45,9 +47,16 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Create a secure server-side session
+		token, err := middleware.CreateSession(h.DB, userID)
+		if err != nil {
+			http.Error(w, "Could not create session", http.StatusInternalServerError)
+			return
+		}
+
 		http.SetCookie(w, &http.Cookie{
-			Name:     "user_id",
-			Value:    fmt.Sprintf("%d", userID),
+			Name:     "session_token",
+			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
@@ -87,7 +96,10 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword(
+			[]byte(password),
+			bcrypt.DefaultCost,
+		)
 		if err != nil {
 			http.Error(w, "Could not create account", http.StatusInternalServerError)
 			return
@@ -103,6 +115,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not create account", http.StatusInternalServerError)
 			return
 		}
+
 		fmt.Fprint(w, `
     <html>
         <body>

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"Order-site/cart"
+	"Order-site/middleware"
 )
 
 func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
@@ -15,15 +16,15 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("user_id")
+	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		http.Error(w, "You must be logged in", http.StatusUnauthorized)
 		return
 	}
 
-	userID, err := strconv.Atoi(cookie.Value)
+	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 
@@ -57,15 +58,15 @@ func (h *Handlers) Cart(w http.ResponseWriter, r *http.Request) {
 			ParseFiles("templates/cart.html"),
 	)
 
-	cookie, err := r.Cookie("user_id")
+	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		http.Error(w, "You must be logged in", http.StatusUnauthorized)
 		return
 	}
 
-	userID, err := strconv.Atoi(cookie.Value)
+	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 
@@ -103,15 +104,15 @@ func (h *Handlers) RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("user_id")
+	cookie, err := r.Cookie("session_token")
 	if err != nil {
 		http.Error(w, "You must be logged in", http.StatusUnauthorized)
 		return
 	}
 
-	userID, err := strconv.Atoi(cookie.Value)
+	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 

@@ -3,21 +3,19 @@ package middleware
 import (
 	"database/sql"
 	"net/http"
-	"strconv"
 )
 
 func Admin(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		cookie, err := r.Cookie("user_id")
-		if err != nil {
-			http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		cookie, err := r.Cookie("session_token")
+		if err != nil || cookie.Value == "" {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
-		userID, err := strconv.Atoi(cookie.Value)
+		userID, err := GetUserID(db, cookie.Value)
 		if err != nil {
-			http.Error(w, "Invalid user ID", http.StatusBadRequest)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
