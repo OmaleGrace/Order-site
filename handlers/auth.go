@@ -46,9 +46,13 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:  "user_id",
-			Value: fmt.Sprintf("%d", userID),
-			Path:  "/",
+			Name:     "user_id",
+			Value:    fmt.Sprintf("%d", userID),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   60 * 60 * 24,
 		})
 
 		// Automatically redirect admins to the admin dashboard

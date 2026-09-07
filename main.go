@@ -41,24 +41,28 @@ func main() {
 
 	http.HandleFunc("/menu", middleware.Logging(h.Menu))
 
-	http.HandleFunc(
-		"/cart/add",
-		middleware.Logging(h.AddToCart),
+	http.HandleFunc("/cart/add",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.AddToCart),
+		),
 	)
 
-	http.HandleFunc(
-		"/cart",
-		middleware.Logging(h.Cart),
+	http.HandleFunc("/cart",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.Cart),
+		),
 	)
 
-	http.HandleFunc(
-		"/cart/remove",
-		middleware.Logging(h.RemoveFromCart),
+	http.HandleFunc("/cart/remove",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.RemoveFromCart),
+		),
 	)
 
-	http.HandleFunc(
-		"/checkout",
-		middleware.Logging(h.Checkout),
+	http.HandleFunc("/checkout",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.Checkout),
+		),
 	)
 
 	http.HandleFunc(

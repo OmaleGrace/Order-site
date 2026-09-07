@@ -66,10 +66,28 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var orderTotal int
+
+	err = h.DB.QueryRow(`
+    SELECT total_kobo
+    FROM orders
+    WHERE payment_reference = $1
+`, paystackResponse.Data.Reference).Scan(&orderTotal)
+
+	if err != nil {
+		fmt.Println("Get order total error:", err)
+		http.Error(w, "Could not find order", http.StatusInternalServerError)
+		return
+	}
+
+	if paystackResponse.Data.Amount != orderTotal {
+		http.Error(w, "Payment amount does not match order", http.StatusBadRequest)
+		return
+	}
+
 	// Get the order from our database
 	var orderID int
 	var userID int
-	var orderTotal int
 	var orderStatus string
 
 	err = h.DB.QueryRow(`

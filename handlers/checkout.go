@@ -64,14 +64,21 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		totalKobo += item.PriceKobo * item.Quantity
 	}
 
-	// Create pending order
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Error(w, "Could not start order", http.StatusInternalServerError)
+		return
+	}
+
+	defer tx.Rollback()
+
 	var orderID int
 
-	err = h.DB.QueryRow(`
-		INSERT INTO orders (user_id, total_kobo, status)
-		VALUES ($1, $2, 'pending')
-		RETURNING id
-	`, userID, totalKobo).Scan(&orderID)
+	err = tx.QueryRow(`
+	INSERT INTO orders (user_id, total_kobo, status)
+	VALUES ($1, $2, 'pending')
+	RETURNING id
+`, userID, totalKobo).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)
@@ -79,13 +86,12 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save order items
 	for _, item := range items {
-		_, err = h.DB.Exec(`
-			INSERT INTO order_items
-			(order_id, menu_item_id, quantity, price_kobo)
-			VALUES ($1, $2, $3, $4)
-		`,
+		_, err = tx.Exec(`
+		INSERT INTO order_items
+		(order_id, menu_item_id, quantity, price_kobo)
+		VALUES ($1, $2, $3, $4)
+	`,
 			orderID,
 			item.MenuItemID,
 			item.Quantity,
@@ -97,6 +103,12 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not create order items", http.StatusInternalServerError)
 			return
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		fmt.Println("Commit order error:", err)
+		http.Error(w, "Could not save order", http.StatusInternalServerError)
+		return
 	}
 
 	// Paystack request

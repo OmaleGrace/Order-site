@@ -1,0 +1,307 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    color: #222;
+}
+
+/* Header */
+
+.admin-header {
+    background: #111;
+    color: white;
+    padding: 20px 7%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+}
+
+.brand-name {
+    display: block;
+    color: white;
+    text-decoration: none;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+.brand span {
+    display: block;
+    margin-top: 5px;
+    color: #bbb;
+    font-size: 13px;
+}
+
+.admin-header nav {
+    display: flex;
+    gap: 20px;
+}
+
+.admin-header nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.admin-header nav a:hover {
+    text-decoration: underline;
+}
+
+/* Main */
+
+.admin-container {
+    width: 90%;
+    max-width: 1100px;
+    margin: 45px auto;
+}
+
+.page-heading {
+    margin-bottom: 30px;
+}
+
+.page-heading h1 {
+    margin: 0 0 8px;
+    font-size: 36px;
+}
+
+.page-heading p {
+    margin: 0;
+    color: #666;
+}
+
+/* Order card */
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-card {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.07);
+}
+
+/* Top */
+
+.order-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 18px;
+}
+
+.order-top h2 {
+    margin: 0 0 6px;
+}
+
+.order-date {
+    color: #777;
+    font-size: 13px;
+}
+
+/* Status */
+
+.status {
+    padding: 7px 13px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-paid {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-preparing {
+    background: #cff4fc;
+    color: #055160;
+}
+
+.status-ready {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.status-completed {
+    background: #212529;
+    color: white;
+}
+
+.status-cancelled {
+    background: #f8d7da;
+    color: #842029;
+}
+
+/* Customer */
+
+.customer-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    padding: 20px 0;
+}
+
+.customer-info div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.label {
+    color: #888;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* Items */
+
+.order-items {
+    border-top: 1px solid #eee;
+    padding-top: 18px;
+}
+
+.order-items h3 {
+    margin-top: 0;
+}
+
+.order-items ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.order-items li {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* Bottom */
+
+.order-bottom {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.total {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.total span {
+    color: #777;
+    font-size: 13px;
+}
+
+.total strong {
+    font-size: 24px;
+}
+
+/* Status form */
+
+.status-form {
+    display: flex;
+    gap: 10px;
+}
+
+.status-form select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    background: white;
+}
+
+.status-form button {
+    border: none;
+    background: #111;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.status-form button:hover {
+    background: #333;
+}
+
+/* Empty */
+
+.empty-orders {
+    background: white;
+    padding: 70px 25px;
+    text-align: center;
+    border-radius: 14px;
+}
+
+.empty-orders div {
+    font-size: 45px;
+}
+
+.empty-orders h2 {
+    margin-bottom: 8px;
+}
+
+.empty-orders p {
+    color: #777;
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+    .admin-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .admin-header nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .customer-info {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .order-bottom {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .status-form {
+        flex-direction: column;
+    }
+
+    .status-form select,
+    .status-form button {
+        width: 100%;
+    }
+
+    .order-top {
+        flex-direction: column;
+    }
+}

@@ -4,116 +4,197 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Admin Orders - Gracie Ordering Site</title>
+    <title>Admin Orders - Grace's Kitchen</title>
 
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin-orders.css">
 </head>
 
 <body>
-        <a href="/" class="home-link">Home</a>
-        <a href="/menu" class="menu-link">Back to Menu</a>
-        
-        <main>
 
-    <h1>Admin Order Dashboard</h1>
+<header class="admin-header">
 
-    <p>Manage customer orders from here.</p>
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 Grace's Kitchen</a>
+        <span>Admin Dashboard</span>
+    </div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/menu">Menu</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+</header>
+
+
+<main class="admin-container">
+
+    <div class="page-heading">
+        <div>
+            <h1>Order Dashboard</h1>
+            <p>Manage and track customer orders.</p>
+        </div>
+    </div>
+
 
     {{if .}}
 
-        {{range .}}
+        <section class="orders-list">
 
-            <div>
-                <hr>
+            {{range .}}
 
-                <h2>Order #{{.ID}}</h2>
+                <article class="order-card">
 
-<p>
-    <strong>Customer:</strong>
-    {{.Name}}
-</p>
+                    <div class="order-top">
 
-<p>
-    <strong>Email:</strong>
-    {{.Email}}
-</p>
+                        <div>
+                            <h2>Order #{{.ID}}</h2>
 
-<h3>Items</h3>
+                            <span class="order-date">
+                                {{.CreatedAt}}
+                            </span>
+                        </div>
 
-<ul>
-    {{range .Items}}
-        <li>
-            {{.Name}} × {{.Quantity}}
-            — ₦{{naira .PriceKobo}}
-        </li>
-    {{end}}
-</ul>
+                        <span class="status status-{{.Status}}">
+                            {{.Status}}
+                        </span>
 
-<p>
-    <strong>Total:</strong>
-    ₦{{naira .TotalKobo}}
-</p>
+                    </div>
 
-<p>
-    <strong>Status:</strong>
-    {{.Status}}
-</p>
 
-<p>
-    <strong>Date:</strong>
-    {{.CreatedAt}}
-</p>
+                    <div class="customer-info">
 
-<form action="/admin/orders/status" method="post">
+                        <div>
+                            <span class="label">Customer</span>
+                            <strong>{{.Name}}</strong>
+                        </div>
 
-    <input
-        type="hidden"
-        name="order_id"
-        value="{{.ID}}"
-    >
+                        <div>
+                            <span class="label">Email</span>
+                            <strong>{{.Email}}</strong>
+                        </div>
 
-    <select name="status">
-        <option value="pending" {{if eq .Status "pending"}}selected{{end}}>
-            Pending
-        </option>
+                    </div>
 
-        <option value="paid" {{if eq .Status "paid"}}selected{{end}}>
-            Paid
-        </option>
 
-        <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>
-            Preparing
-        </option>
+                    <div class="order-items">
 
-        <option value="ready" {{if eq .Status "ready"}}selected{{end}}>
-            Ready
-        </option>
+                        <h3>Items</h3>
 
-        <option value="completed" {{if eq .Status "completed"}}selected{{end}}>
-            Completed
-        </option>
+                        <ul>
+                            {{range .Items}}
+                                <li>
+                                    <span>
+                                        {{.Name}} × {{.Quantity}}
+                                    </span>
 
-        <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>
-            Cancelled
-        </option>
-    </select>
+                                    <strong>
+                                        ₦{{naira .PriceKobo}}
+                                    </strong>
+                                </li>
+                            {{end}}
+                        </ul>
 
-    <button type="submit">Update Status</button>
+                    </div>
 
-</form>
 
-<hr>
-            </div>
+                    <div class="order-bottom">
 
-        {{end}}
+                        <div class="total">
+                            <span>Total</span>
+                            <strong>
+                                ₦{{naira .TotalKobo}}
+                            </strong>
+                        </div>
+
+
+                        <form
+                            action="/admin/orders/status"
+                            method="post"
+                            class="status-form"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="order_id"
+                                value="{{.ID}}"
+                            >
+
+                            <select name="status">
+
+                                <option
+                                    value="pending"
+                                    {{if eq .Status "pending"}}selected{{end}}
+                                >
+                                    Pending
+                                </option>
+
+                                <option
+                                    value="paid"
+                                    {{if eq .Status "paid"}}selected{{end}}
+                                >
+                                    Paid
+                                </option>
+
+                                <option
+                                    value="preparing"
+                                    {{if eq .Status "preparing"}}selected{{end}}
+                                >
+                                    Preparing
+                                </option>
+
+                                <option
+                                    value="ready"
+                                    {{if eq .Status "ready"}}selected{{end}}
+                                >
+                                    Ready
+                                </option>
+
+                                <option
+                                    value="completed"
+                                    {{if eq .Status "completed"}}selected{{end}}
+                                >
+                                    Completed
+                                </option>
+
+                                <option
+                                    value="cancelled"
+                                    {{if eq .Status "cancelled"}}selected{{end}}
+                                >
+                                    Cancelled
+                                </option>
+
+                            </select>
+
+                            <button type="submit">
+                                Update Status
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </article>
+
+            {{end}}
+
+        </section>
 
     {{else}}
 
-        <p>No orders yet.</p>
+        <section class="empty-orders">
+
+            <div>📦</div>
+
+            <h2>No orders yet</h2>
+
+            <p>
+                Customer orders will appear here when they are placed.
+            </p>
+
+        </section>
 
     {{end}}
-
-    <br>
 
 </main>
 
