@@ -7,6 +7,8 @@ import (
 
 	"Order-site/middleware"
 
+	emailer "Order-site/email"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -115,6 +117,12 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not create account", http.StatusInternalServerError)
 			return
 		}
+
+		go emailer.Send(
+			email,
+			"Welcome to Grace's Kitchen!",
+			fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name),
+		)
 
 		fmt.Fprint(w, `
     <html>

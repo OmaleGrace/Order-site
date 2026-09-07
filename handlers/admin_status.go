@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"Order-site/email"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -34,14 +36,29 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = h.DB.Exec(`
-		UPDATE orders
-		SET status = $1
-		WHERE id = $2
-	`, status, orderID)
+	UPDATE orders
+	SET status = $1
+	WHERE id = $2
+`, status, orderID)
 
 	if err != nil {
 		http.Error(w, "Could not update order", http.StatusInternalServerError)
 		return
+	}
+
+	var userEmail string
+	h.DB.QueryRow(`
+	SELECT u.email FROM orders o
+	JOIN users u ON u.id = o.user_id
+	WHERE o.id = $1
+`, orderID).Scan(&userEmail)
+
+	if userEmail != "" {
+		go email.Send(
+			userEmail,
+			"Order Update - Order #"+strconv.Itoa(orderID),
+			fmt.Sprintf("<h1>Order status updated</h1><p>Your order #%d is now: <strong>%s</strong>.</p>", orderID, status),
+		)
 	}
 
 	http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)

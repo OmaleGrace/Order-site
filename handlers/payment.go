@@ -9,9 +9,11 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"Order-site/cart"
+	"Order-site/email"
 )
 
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +154,16 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userEmail string
+	h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail)
+	if userEmail != "" {
+		go email.Send(
+			userEmail,
+			"Payment Confirmed - Order #"+strconv.Itoa(orderID),
+			fmt.Sprintf("<h1>Payment received!</h1><p>Your payment for order #%d has been confirmed. We're preparing your meal now.</p>", orderID),
+		)
+	}
+
 	http.Redirect(w, r, "/order-success", http.StatusSeeOther)
 }
 
@@ -264,6 +276,16 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Webhook clear cart error:", err)
 		http.Error(w, "Could not clear cart", http.StatusInternalServerError)
 		return
+	}
+
+	var userEmail string
+	h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail)
+	if userEmail != "" {
+		go email.Send(
+			userEmail,
+			"Payment Confirmed - Order #"+strconv.Itoa(orderID),
+			fmt.Sprintf("<h1>Payment received!</h1><p>Your payment for order #%d has been confirmed. We're preparing your meal now.</p>", orderID),
+		)
 	}
 
 	w.WriteHeader(http.StatusOK)
