@@ -105,7 +105,7 @@ func main() {
 	}
 
 	go func() {
-		fmt.Println("Server Running on https://localhost:8080")
+		fmt.Println("Server Running on http://localhost:8080")
 
 		if err := srv.ListenAndServe(); err != nil &&
 			err != http.ErrServerClosed {
