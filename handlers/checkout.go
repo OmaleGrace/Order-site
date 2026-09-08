@@ -13,6 +13,8 @@ import (
 	"Order-site/middleware"
 )
 
+var httpClient = &http.Client{}
+
 func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -139,9 +141,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+os.Getenv("PAYSTACK_SECRET_KEY"))
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		fmt.Println("Paystack request error:", err)
 		http.Error(w, "Could not connect to payment service", http.StatusInternalServerError)

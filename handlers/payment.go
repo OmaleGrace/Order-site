@@ -16,6 +16,7 @@ import (
 	"Order-site/email"
 )
 
+var paymentHTTPClient = http.DefaultClient
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	reference := r.URL.Query().Get("reference")
 
@@ -40,7 +41,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		"Bearer "+os.Getenv("PAYSTACK_SECRET_KEY"),
 	)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := paymentHTTPClient.Do(req)
 	if err != nil {
 		fmt.Println("Paystack verification error:", err)
 		http.Error(w, "Could not verify payment", http.StatusInternalServerError)
