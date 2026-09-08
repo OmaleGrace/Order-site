@@ -118,11 +118,11 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		go emailer.Send(
-			email,
-			"Welcome to Grace's Kitchen!",
-			fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name),
-		)
+		go func() {
+	if err := emailer.Send(email, "Welcome to Grace's Kitchen!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
+		fmt.Println("Welcome email error:", err)
+	}
+}()
 
 		fmt.Fprint(w, `
     <html>
