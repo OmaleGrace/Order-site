@@ -32,6 +32,10 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := middleware.CleanupExpiredSessions(db); err != nil {
+		fmt.Println("Session cleanup failed:", err)
+	}
+
 	h := handlers.New(db)
 
 	http.HandleFunc("/", middleware.Logging(h.Home))

@@ -41,3 +41,12 @@ func GetUserID(db *sql.DB, token string) (int, error) {
 
 	return userID, err
 }
+
+func CleanupExpiredSessions(db *sql.DB) error {
+	_, err := db.Exec(`
+		DELETE FROM sessions
+		WHERE expires_at <= NOW()
+	`)
+
+	return err
+}

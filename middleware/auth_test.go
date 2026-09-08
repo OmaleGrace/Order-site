@@ -245,3 +245,50 @@ func TestRequireLoginWithExpiredSession(t *testing.T) {
 		t.Fatal("expected protected handler not to be called")
 	}
 }
+
+func TestCleanupExpiredSessions(t *testing.T) {
+	db := setupMiddlewareTestDB(t)
+	defer db.Close()
+
+	var userID int
+
+	err := db.QueryRow(`
+		INSERT INTO users (name, email, password)
+		VALUES ($1, $2, $3)
+		RETURNING id
+	`, "Test User", "cleanup@example.com", "hashed-password").Scan(&userID)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec(`
+		INSERT INTO sessions (token, user_id, expires_at)
+		VALUES ($1, $2, $3)
+	`, "expired-token", userID, time.Now().Add(-time.Hour))
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = CleanupExpiredSessions(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var count int
+
+	err = db.QueryRow(`
+		SELECT COUNT(*)
+		FROM sessions
+		WHERE token = $1
+	`, "expired-token").Scan(&count)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if count != 0 {
+		t.Fatal("expected expired session to be deleted")
+	}
+}
