@@ -134,12 +134,12 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + port,
 		Handler: middleware.SecurityHeaders(mux),
 	}
 
 	go func() {
-		fmt.Println("Server Running on http://localhost:8080")
+		fmt.Println("Server Running on port", port)
 
 		if err := srv.ListenAndServe(); err != nil &&
 			err != http.ErrServerClosed {

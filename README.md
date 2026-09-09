@@ -1,176 +1,250 @@
-# Grace's Kitchen – Full-Stack Food Ordering App
+# Grace's Kitchen — Full-Stack Food Ordering App
 
-A full-stack food ordering website for a restaurant, built with Go and PostgreSQL.
+A full-stack food ordering web application for a single restaurant, built with Go and PostgreSQL. The application supports customer accounts, menu browsing, cart management, Paystack payments, order tracking, and protected admin order management.
 
-Customers can create an account, browse the menu, add meals to their cart, make payments through Paystack, and track their orders. Customers also receive email notifications at key points in their order journey. An admin dashboard allows authorized users to view and manage customer orders.
+## Live Project
+
+**Production:** Deployed on Render
 
 ## Features
 
-### Customer Features
+### Customer
 
-- User registration
-- Secure password hashing with bcrypt
-- User login and logout
-- Server-side session authentication
-- Restaurant menu
-- Food images
-- Add items to cart
-- Remove items from cart
-- Checkout
-- Paystack payment integration
-- Payment verification
-- Order history
-- Order status tracking
-- Automatic order-status updates
-- Email notifications (welcome email on signup, payment confirmation, order status updates)
+* Create an account and log in securely
+* Password hashing with bcrypt
+* Browse the restaurant menu
+* View food images, descriptions, and prices
+* Add menu items to a cart
+* Increase or decrease item quantities
+* Remove items from the cart
+* Checkout and create orders
+* Pay using Paystack test-mode payments
+* Server-side payment verification
+* View previous orders
+* Track order status
+* Secure logout
 
-### Admin Features
+### Admin
 
-- Automatic admin detection after login
-- Admin-only order dashboard
-- View customer information
-- View ordered items
-- View order totals
-- View order dates
-- Update order status
-- Protected admin routes
-- Order status updates automatically notify the customer by email
+* Automatic admin detection after login
+* Protected admin-only dashboard
+* View customer information and orders
+* View ordered items and quantities
+* View order totals and dates
+* Update order status
 
 ## Tech Stack
 
 ### Backend
 
-- Go
-- net/http
-- PostgreSQL
-- database/sql
-- bcrypt
+* Go
+* `net/http`
+* `database/sql`
+* HTML templates
+
+### Database
+
+* PostgreSQL
 
 ### Frontend
 
-- HTML
-- CSS
-- Go Templates
-- JavaScript
+* HTML5
+* CSS3
+* Go templates
+* Responsive design
 
-### APIs & Services
+### Payments
 
-- Paystack API
-- Brevo (transactional email API)
-- Render
+* Paystack API
+* Payment callback verification
+* Payment webhook verification
+* Server-side amount validation
 
-### Development Tools
+### Security
 
-- Git
-- GitHub
-- GitHub Codespaces
+* bcrypt password hashing
+* Server-side session tokens
+* Secure, HttpOnly cookies
+* SameSite cookie protection
+* Protected customer routes
+* Protected admin routes
+* Security headers
+* HTTP method-specific routing
 
-## Payment Flow
+### Deployment & Tools
 
-1. Customer adds meals to the cart.
-2. Customer proceeds to checkout.
-3. The server creates the order and order items.
-4. Paystack payment is initialized.
-5. Customer completes payment through Paystack.
-6. The server verifies the transaction.
-7. The payment amount is checked against the order total.
-8. The order is marked as paid.
-9. The customer's cart is cleared.
-10. A payment confirmation email is sent to the customer.
-11. The customer can view and track the order.
+* Render
+* Docker
+* Git
+* GitHub
+* Linux
+* GitHub Codespaces
 
-## Order Statuses
+## Application Flow
 
-Orders can move through the following statuses:
+```text
+Customer
+   │
+   ├── Sign Up
+   │
+   ├── Login
+   │
+   ├── Browse Menu
+   │
+   ├── Add Items to Cart
+   │
+   ├── Manage Quantities
+   │
+   ├── Checkout
+   │
+   ├── Pay with Paystack
+   │
+   ├── Payment Verification
+   │
+   └── Track Orders
 
-- Pending
-- Paid
-- Preparing
-- Ready
-- Completed
-- Cancelled
 
-Each time an admin updates an order's status, the customer receives an email notification with the new status.
+Admin
+   │
+   ├── Login
+   │
+   ├── Automatic Admin Detection
+   │
+   ├── View Orders
+   │
+   └── Update Order Status
+```
 
-## Email Notifications
+## Database Structure
 
-The application sends transactional emails via the Brevo API at three points:
+The application uses PostgreSQL with separate tables for the main application data:
 
-- **Signup** — a welcome email is sent to the customer's registered email address after successful account creation
-- **Payment confirmation** — sent once a payment is verified (via Paystack callback or webhook) and the order is marked as paid
-- **Order status updates** — sent whenever an admin changes an order's status from the admin dashboard
+* `users`
+* `menu_items`
+* `cart_items`
+* `orders`
+* `order_items`
+* `sessions`
 
-Emails are sent asynchronously (in a background goroutine) so a slow or failed email delivery never blocks or delays the underlying signup, payment, or status-update action. Send failures are logged server-side rather than surfaced to the user.
+Orders and order items are stored separately so that an order keeps a record of the items and prices associated with that purchase.
 
-## Database
+## Authentication & Sessions
 
-The application uses PostgreSQL with tables for:
+User passwords are hashed with bcrypt before being stored.
 
-- Users
-- Menu items
-- Cart items
-- Orders
-- Order items
-- Sessions
+After login, the application creates a random server-side session token. The browser receives the token through a secure cookie, while the actual user identity remains stored on the server.
 
-Order creation uses a database transaction so an order and its items are saved together.
+Sessions also have an expiration time and expired sessions are cleaned up.
 
-## Security
+## Payment Processing
 
-The application includes:
+The application integrates Paystack for payment processing.
 
-- Password hashing with bcrypt
-- Server-side session authentication
-- Random session tokens
-- HTTP-only authentication cookies
-- Secure cookies
-- SameSite cookie protection
-- Login-protected customer routes
-- Admin-only routes
-- Server-side payment verification
-- Paystack amount verification
-- Unique payment references
-- Server-side order totals
-- Environment-based configuration for sensitive credentials
+The payment flow includes:
+
+1. Create a pending order.
+2. Generate a unique payment reference.
+3. Initialize the Paystack transaction.
+4. Redirect the customer to Paystack.
+5. Receive the payment callback.
+6. Verify the transaction server-side.
+7. Confirm the payment amount matches the order total.
+8. Mark the order as paid.
+9. Clear the customer's cart.
+
+A Paystack webhook is also implemented for payment event handling.
+
+## Testing
+
+The project includes automated tests covering major application areas, including:
+
+* Authentication
+* Signup
+* Login
+* Logout
+* Sessions
+* Admin authorization
+* Cart operations
+* Menu loading
+* Checkout
+* Payment callbacks
+* Payment webhooks
+* Orders
+* Admin order management
+* HTTP handlers
+* Middleware
+
+Run the complete test suite with:
+
+```bash
+go test ./...
+```
+
+Run static analysis with:
+
+```bash
+go vet ./...
+```
+
+## Local Development
+
+### 1. Clone the repository
+
+```bash
+git clone <https://github.com/OmaleGrace/Order-site>
+cd Order-site
+```
+
+
+### 2. Run the application
+
+```bash
+go run .
+```
+
+The server runs locally on:
+
+```text
+http://localhost:8080
+```
+
 
 ## Deployment
 
-The application is deployed using Render.
+The application is deployed on Render with:
 
-The production application uses environment variables for sensitive configuration such as:
+* Production PostgreSQL
+* Environment-based configuration
+* Render-provided `PORT`
+* HTTPS
+* Paystack integration
+* Production menu data
+* Remote food image URLs
 
-- `DATABASE_URL`
-- `PAYSTACK_SECRET_KEY`
-- `PAYSTACK_CALLBACK_URL`
-- `BREVO_API_KEY`
-
-Sensitive credentials are not stored in the source code.
+The same Go application can run locally or in production through environment-based configuration.
 
 ## Project Status
 
-🚀 Core functionality completed and deployed, including email notifications.
+**Completed and deployed.**
 
-The application has been tested locally and on the deployed Render version, including:
+The core customer ordering flow, payment processing, order tracking, admin management, authentication, security improvements, testing, and production deployment are implemented.
 
-- Customer registration and login
-- Menu and food images
-- Cart functionality
-- Checkout
-- Paystack test payment flow
-- Payment verification
-- Order tracking
-- Admin dashboard
-- Admin order management
-- Server-side authentication sessions
-- Email notifications (signup, payment confirmation, order status updates) — verified in both local and production environments
+## What I Learned
 
-## Future Improvements
+This project provided hands-on experience with:
 
-Possible future improvements include:
-
-- Better automated test coverage
-- Advanced admin analytics
-- Order search and filtering
-- Database migrations
-- Improved error pages
-- Production payment mode
+* Building web applications with Go
+* HTTP routing and middleware
+* PostgreSQL database design
+* SQL queries and relationships
+* Authentication and session management
+* Password hashing
+* Payment API integration
+* Webhooks
+* Transactional order creation
+* Automated testing
+* Docker-based development
+* Environment configuration
+* Cloud deployment with Render
+* Debugging production issues
+* Basic web application security

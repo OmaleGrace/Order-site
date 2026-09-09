@@ -30,10 +30,15 @@ func Send(toEmail, subject, htmlContent string) error {
 		return fmt.Errorf("BREVO_API_KEY not set")
 	}
 
+	senderEmail := os.Getenv("BREVO_SENDER_EMAIL")
+	if senderEmail == "" {
+		return fmt.Errorf("BREVO_SENDER_EMAIL not set")
+	}
+
 	reqBody := emailRequest{
 		Sender: sender{
 			Name:  "Grace's Kitchen",
-			Email: "omalegrace2009@gmail.com",
+			Email: senderEmail,
 		},
 		To: []recipient{
 			{Email: toEmail},

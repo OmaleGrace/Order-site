@@ -17,6 +17,7 @@ import (
 )
 
 var paymentHTTPClient = http.DefaultClient
+
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	reference := r.URL.Query().Get("reference")
 
@@ -134,16 +135,27 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mark the order as paid
-	_, err = h.DB.Exec(`
-		UPDATE orders
-		SET status = 'paid'
-		WHERE id = $1
-		AND status = 'pending'
-	`, orderID)
+	result, err := h.DB.Exec(`
+	UPDATE orders
+	SET status = 'paid'
+	WHERE id = $1
+	AND status = 'pending'
+`, orderID)
 
 	if err != nil {
 		fmt.Println("Update order error:", err)
 		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
 		return
 	}
 
@@ -260,16 +272,27 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.DB.Exec(`
-		UPDATE orders
-		SET status = 'paid'
-		WHERE id = $1
-		AND status = 'pending'
-	`, orderID)
+	result, err := h.DB.Exec(`
+	UPDATE orders
+	SET status = 'paid'
+	WHERE id = $1
+	AND status = 'pending'
+`, orderID)
 
 	if err != nil {
 		fmt.Println("Webhook update order error:", err)
 		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
