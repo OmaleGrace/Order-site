@@ -193,7 +193,6 @@ func TestGetItems(t *testing.T) {
 	}
 
 	item := items[0]
-
 	if item.MenuItemID != menuItemID {
 		t.Fatalf("expected menu item ID %d, got %d", menuItemID, item.MenuItemID)
 	}

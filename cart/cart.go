@@ -12,28 +12,39 @@ type CartItem struct {
 
 func AddItem(db *sql.DB, userID, menuItemID int) (bool, error) {
 	var exists bool
+
 	err := db.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM cart_items WHERE user_id = $1 AND menu_item_id = $2)",
 		userID, menuItemID,
 	).Scan(&exists)
+
 	if err != nil {
 		return false, err
 	}
 
+	// Item is already in the cart.
+	// Don't increase the quantity.
 	if exists {
 		return false, nil
 	}
 
 	var priceKobo int
-	err = db.QueryRow("SELECT price_kobo FROM menu_items WHERE id = $1", menuItemID).Scan(&priceKobo)
+
+	err = db.QueryRow(
+		"SELECT price_kobo FROM menu_items WHERE id = $1",
+		menuItemID,
+	).Scan(&priceKobo)
+
 	if err != nil {
 		return false, err
 	}
 
 	_, err = db.Exec(`
-		INSERT INTO cart_items (user_id, menu_item_id, quantity, price_kobo_at_addition)
+		INSERT INTO cart_items
+		(user_id, menu_item_id, quantity, price_kobo_at_addition)
 		VALUES ($1, $2, 1, $3)
 	`, userID, menuItemID, priceKobo)
+
 	return true, err
 }
 

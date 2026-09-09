@@ -29,6 +29,12 @@
         <p>Review your items before placing your order.</p>
     </div>
 
+    {{if .Message}}
+    <div class="cart-message">
+        {{.Message}}
+    </div>
+{{end}}
+
     {{if .Items}}
 
         <section class="cart-items">
@@ -37,20 +43,43 @@
 
                 <article class="cart-item">
 
-                    <div class="item-info">
-                        <h2>{{.Name}}</h2>
-                        <p>{{.Description}}</p>
-                        <strong>₦{{naira .PriceKobo}}</strong>
-                    </div>
+    <div class="item-info">
+        <h2>{{.Name}}</h2>
+        <p>{{.Description}}</p>
 
-                    <form action="/cart/remove" method="post">
-                        <input type="hidden" name="id" value="{{.MenuItemID}}">
-                        <button type="submit" class="remove-btn">
-                            Remove
-                        </button>
-                    </form>
+        <div class="quantity-controls">
 
-                </article>
+            <form action="/cart/update" method="post">
+                <input type="hidden" name="id" value="{{.MenuItemID}}">
+                <input type="hidden" name="action" value="decrease">
+                <button type="submit" class="qty-btn">−</button>
+            </form>
+
+            <span class="quantity">{{.Quantity}}</span>
+
+            <form action="/cart/update" method="post">
+                <input type="hidden" name="id" value="{{.MenuItemID}}">
+                <input type="hidden" name="action" value="increase">
+                <button type="submit" class="qty-btn">+</button>
+            </form>
+
+        </div>
+
+        <strong>₦{{naira .PriceKobo}} each</strong>
+
+        <p class="item-subtotal">
+            Subtotal: ₦{{naira (multiply .PriceKobo .Quantity)}}
+        </p>
+    </div>
+
+    <form action="/cart/remove" method="post">
+        <input type="hidden" name="id" value="{{.MenuItemID}}">
+        <button type="submit" class="remove-btn">
+            Remove
+        </button>
+    </form>
+
+</article>
 
             {{end}}
 

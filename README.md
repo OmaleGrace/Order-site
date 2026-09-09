@@ -2,7 +2,7 @@
 
 A full-stack food ordering website for a restaurant, built with Go and PostgreSQL.
 
-Customers can create an account, browse the menu, add meals to their cart, make payments through Paystack, and track their orders. An admin dashboard allows authorized users to view and manage customer orders.
+Customers can create an account, browse the menu, add meals to their cart, make payments through Paystack, and track their orders. Customers also receive email notifications at key points in their order journey. An admin dashboard allows authorized users to view and manage customer orders.
 
 ## Features
 
@@ -22,6 +22,7 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 - Order history
 - Order status tracking
 - Automatic order-status updates
+- Email notifications (welcome email on signup, payment confirmation, order status updates)
 
 ### Admin Features
 
@@ -33,6 +34,7 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 - View order dates
 - Update order status
 - Protected admin routes
+- Order status updates automatically notify the customer by email
 
 ## Tech Stack
 
@@ -54,6 +56,7 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 ### APIs & Services
 
 - Paystack API
+- Brevo (transactional email API)
 - Render
 
 ### Development Tools
@@ -73,7 +76,8 @@ Customers can create an account, browse the menu, add meals to their cart, make 
 7. The payment amount is checked against the order total.
 8. The order is marked as paid.
 9. The customer's cart is cleared.
-10. The customer can view and track the order.
+10. A payment confirmation email is sent to the customer.
+11. The customer can view and track the order.
 
 ## Order Statuses
 
@@ -85,6 +89,18 @@ Orders can move through the following statuses:
 - Ready
 - Completed
 - Cancelled
+
+Each time an admin updates an order's status, the customer receives an email notification with the new status.
+
+## Email Notifications
+
+The application sends transactional emails via the Brevo API at three points:
+
+- **Signup** — a welcome email is sent to the customer's registered email address after successful account creation
+- **Payment confirmation** — sent once a payment is verified (via Paystack callback or webhook) and the order is marked as paid
+- **Order status updates** — sent whenever an admin changes an order's status from the admin dashboard
+
+Emails are sent asynchronously (in a background goroutine) so a slow or failed email delivery never blocks or delays the underlying signup, payment, or status-update action. Send failures are logged server-side rather than surfaced to the user.
 
 ## Database
 
@@ -126,12 +142,13 @@ The production application uses environment variables for sensitive configuratio
 - `DATABASE_URL`
 - `PAYSTACK_SECRET_KEY`
 - `PAYSTACK_CALLBACK_URL`
+- `BREVO_API_KEY`
 
 Sensitive credentials are not stored in the source code.
 
 ## Project Status
 
-🚀 Core functionality completed and deployed.
+🚀 Core functionality completed and deployed, including email notifications.
 
 The application has been tested locally and on the deployed Render version, including:
 
@@ -145,13 +162,12 @@ The application has been tested locally and on the deployed Render version, incl
 - Admin dashboard
 - Admin order management
 - Server-side authentication sessions
+- Email notifications (signup, payment confirmation, order status updates) — verified in both local and production environments
 
 ## Future Improvements
 
 Possible future improvements include:
 
-- Paystack webhooks
-- Email order notifications
 - Better automated test coverage
 - Advanced admin analytics
 - Order search and filtering

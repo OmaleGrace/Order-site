@@ -63,7 +63,7 @@ func TestLogout(t *testing.T) {
 		)
 	}
 
-	if location := w.Header().Get("Location"); location != "/" {
+	if location := w.Header().Get("Location"); location != "/login" {
 		t.Fatalf(
 			"expected redirect to /, got %s",
 			location,
