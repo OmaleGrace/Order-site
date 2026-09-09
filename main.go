@@ -128,6 +128,11 @@ func main() {
 	)
 
 	// HTTP server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: middleware.SecurityHeaders(mux),
