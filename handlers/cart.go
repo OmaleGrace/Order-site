@@ -214,3 +214,4 @@ func (h *Handlers) UpdateCartQuantity(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/cart", http.StatusSeeOther)
 }
+

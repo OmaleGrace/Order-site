@@ -18,6 +18,7 @@ import (
 
 func main() {
 	err := godotenv.Load()
+	fmt.Println("Google redirect URL:", os.Getenv("GOOGLE_REDIRECT_URL"))
 	if err != nil {
 		fmt.Println("No .env file found, using system environment")
 	}
@@ -127,6 +128,17 @@ func main() {
 		),
 	)
 
+	mux.HandleFunc(
+		"/auth/google",
+		middleware.Logging(h.GoogleLogin),
+	)
+
+	mux.HandleFunc(
+		"/auth/google/callback",
+		middleware.Logging(
+			h.GoogleCallback,
+		),
+	)
 	// HTTP server
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -147,7 +159,6 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown signal
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
