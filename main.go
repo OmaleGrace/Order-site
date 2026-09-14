@@ -18,7 +18,6 @@ import (
 
 func main() {
 	err := godotenv.Load()
-	fmt.Println("Google redirect URL:", os.Getenv("GOOGLE_REDIRECT_URL"))
 	if err != nil {
 		fmt.Println("No .env file found, using system environment")
 	}

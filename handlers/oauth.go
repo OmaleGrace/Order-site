@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	emailer "Order-site/email"
 	"Order-site/middleware"
@@ -40,14 +42,17 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := googleOAuthConfig().Exchange(r.Context(), code)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+
+	token, err := googleOAuthConfig().Exchange(ctx, code)
 	if err != nil {
 		fmt.Println("Google token exchange error:", err)
 		http.Error(w, "Could not authenticate with Google", http.StatusInternalServerError)
 		return
 	}
 
-	client := googleOAuthConfig().Client(r.Context(), token)
+	client := googleOAuthConfig().Client(ctx, token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
 		fmt.Println("Google userinfo error:", err)
