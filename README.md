@@ -228,21 +228,7 @@ go vet ./...
 git clone https://github.com/OmaleGrace/Order-site
 cd Order-site
 ```
-
-### 2. Set up environment variables
-
-Create a `.env` file with:
-
-```
-DATABASE_URL=postgres://food_app:food_password@localhost:5432/food_ordering?sslmode=disable
-PAYSTACK_SECRET_KEY=your_paystack_secret_key
-PAYSTACK_CALLBACK_URL=http://localhost:8080/payment/callback
-BREVO_API_KEY=your_brevo_api_key
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_REDIRECT_URL=http://localhost:8080/auth/google/callback
-```
-
+b 
 ### 3. Run the application
 
 ```bash

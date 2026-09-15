@@ -138,6 +138,12 @@ func main() {
 			h.GoogleCallback,
 		),
 	)
+
+	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))
+mux.HandleFunc("POST /forgot-password", middleware.Logging(h.ForgotPassword))
+mux.HandleFunc("GET /reset-password", middleware.Logging(h.ResetPassword))
+mux.HandleFunc("POST /reset-password", middleware.Logging(h.ResetPassword))
+
 	// HTTP server
 	port := os.Getenv("PORT")
 	if port == "" {

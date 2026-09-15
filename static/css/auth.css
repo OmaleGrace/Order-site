@@ -127,3 +127,16 @@
     width: 18px;
     height: 18px;
 }
+
+.auth-subtext {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.forgot-password-link {
+    text-align: right;
+    font-size: 13px;
+    margin: -10px 0 16px;
+}
