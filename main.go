@@ -139,6 +139,16 @@ func main() {
 		),
 	)
 
+	mux.HandleFunc(
+		"/account",
+		middleware.Logging(h.Account),
+	)
+
+	mux.HandleFunc(
+		"/account/edit",
+		middleware.Logging(h.EditProfile),
+	)
+
 	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))
 	mux.HandleFunc("POST /forgot-password", middleware.Logging(h.ForgotPassword))
 	mux.HandleFunc("GET /reset-password", middleware.Logging(h.ResetPassword))

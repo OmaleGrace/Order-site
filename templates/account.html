@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Account - Grace's Kitchen</title>
+
+    <link rel="stylesheet" href="/static/css/account.css">
+</head>
+
+<body>
+
+<header class="account-header">
+    <div class="header-inner">
+
+        <a href="/menu" class="logo">
+            Grace's Kitchen
+        </a>
+
+        <nav>
+            <a href="/menu">Menu</a>
+            <a href="/cart">Cart</a>
+            <a href="/orders">Orders</a>
+            <a href="/account" class="active">Account</a>
+            <a href="/logout">Logout</a>
+        </nav>
+
+    </div>
+</header>
+
+
+<main class="account-container">
+
+    <section class="account-card">
+
+        <div class="account-heading">
+            {{if .ProfilePicture}}
+    <img
+        src="{{.ProfilePicture}}"
+        alt="Profile picture"
+        class="profile-image"
+    >
+{{else}}
+    <div class="profile-icon">
+        👤
+    </div>
+{{end}}
+
+            <div>
+                <h1>My Account</h1>
+                <p>Manage your account and view your information.</p>
+            </div>
+        </div>
+
+
+        <div class="account-info">
+
+            <div class="info-row">
+                <span class="label">Name</span>
+                <span class="value">{{.Name}}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Email</span>
+                <span class="value">{{.Email}}</span>
+            </div>
+
+            <div class="info-row">
+                <span class="label">Login method</span>
+
+                <span class="value provider">
+                    {{if eq .AuthProvider "google"}}
+                        Google
+                    {{else if eq .AuthProvider "facebook"}}
+                        Facebook
+                    {{else}}
+                        Email & Password
+                    {{end}}
+                </span>
+            </div>
+
+        </div>
+
+        <a href="/account/edit" class="account-button">
+    ✏️ Edit Profile
+</a>
+
+
+        <div class="account-actions">
+
+            <a href="/orders" class="account-button">
+                📦 My Orders
+            </a>
+
+            <a href="/cart" class="account-button">
+                🛒 My Cart
+            </a>
+
+        </div>
+
+
+        <a href="/logout" class="logout-button">
+            Logout
+        </a>
+
+    </section>
+
+</main>
+
+</body>
+</html>
