@@ -5,9 +5,9 @@ import (
 	"html/template"
 	"net/http"
 
-	"Order-site/middleware"
-
 	emailer "Order-site/email"
+	"Order-site/middleware"
+	"Order-site/errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,7 +18,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusBadRequest)
+			errors.Render(w, "Something went wrong", http.StatusBadRequest)
 			return
 		}
 
@@ -35,7 +35,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		).Scan(&userID, &storedPassword, &isAdmin)
 
 		if err != nil {
-			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+			errors.Render(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
 
@@ -45,14 +45,14 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
+			errors.Render(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
 
 		// Create a secure server-side session
 		token, err := middleware.CreateSession(h.DB, userID)
 		if err != nil {
-			http.Error(w, "Could not create session", http.StatusInternalServerError)
+			errors.Render(w, "Could not create session", http.StatusInternalServerError)
 			return
 		}
 
@@ -79,7 +79,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }
@@ -90,7 +90,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusBadRequest)
+			errors.Render(w, "Something went wrong", http.StatusBadRequest)
 			return
 		}
 
@@ -103,7 +103,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			bcrypt.DefaultCost,
 		)
 		if err != nil {
-			http.Error(w, "Could not create account", http.StatusInternalServerError)
+			errors.Render(w, "Could not create account", http.StatusInternalServerError)
 			return
 		}
 
@@ -114,15 +114,15 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			string(hashedPassword),
 		)
 		if err != nil {
-			http.Error(w, "Could not create account", http.StatusInternalServerError)
+			errors.Render(w, "Could not create account", http.StatusInternalServerError)
 			return
 		}
 
 		go func() {
-	if err := emailer.Send(email, "Welcome to Grace's Kitchen!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
-		fmt.Println("Welcome email error:", err)
-	}
-}()
+			if err := emailer.Send(email, "Welcome to Grace's Kitchen!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
+				fmt.Println("Welcome email error:", err)
+			}
+		}()
 
 		fmt.Fprint(w, `
     <html>
@@ -143,7 +143,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	emailer "Order-site/email"
+	"Order-site/errors"
 	"Order-site/middleware"
 
 	"golang.org/x/oauth2"
@@ -38,7 +39,7 @@ type googleUserInfo struct {
 func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
-		http.Error(w, "Missing authorization code", http.StatusBadRequest)
+		errors.Render(w, "Missing authorization code", http.StatusBadRequest)
 		return
 	}
 
@@ -48,7 +49,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	token, err := googleOAuthConfig().Exchange(ctx, code)
 	if err != nil {
 		fmt.Println("Google token exchange error:", err)
-		http.Error(w, "Could not authenticate with Google", http.StatusInternalServerError)
+		errors.Render(w, "Could not authenticate with Google", http.StatusInternalServerError)
 		return
 	}
 
@@ -56,19 +57,19 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
 		fmt.Println("Google userinfo error:", err)
-		http.Error(w, "Could not fetch Google profile", http.StatusInternalServerError)
+		errors.Render(w, "Could not fetch Google profile", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
 	var userInfo googleUserInfo
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		http.Error(w, "Could not read Google profile", http.StatusInternalServerError)
+		errors.Render(w, "Could not read Google profile", http.StatusInternalServerError)
 		return
 	}
 
 	if userInfo.Email == "" {
-		http.Error(w, "Google account has no email", http.StatusBadRequest)
+		errors.Render(w, "Google account has no email", http.StatusBadRequest)
 		return
 	}
 
@@ -90,7 +91,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println("Create Google user error:", err)
-			http.Error(w, "Could not create account", http.StatusInternalServerError)
+			errors.Render(w, "Could not create account", http.StatusInternalServerError)
 			return
 		}
 
@@ -105,7 +106,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	sessionToken, err := middleware.CreateSession(h.DB, userID)
 	if err != nil {
-		http.Error(w, "Could not create session", http.StatusInternalServerError)
+		errors.Render(w, "Could not create session", http.StatusInternalServerError)
 		return
 	}
 

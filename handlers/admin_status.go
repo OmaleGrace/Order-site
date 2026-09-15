@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"Order-site/email"
+	"Order-site/errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -9,13 +10,13 @@ import (
 
 func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	orderID, err := strconv.Atoi(r.FormValue("order_id"))
 	if err != nil {
-		http.Error(w, "Invalid order ID", http.StatusBadRequest)
+		errors.Render(w, "Invalid order ID", http.StatusBadRequest)
 		return
 	}
 
@@ -31,7 +32,7 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validStatuses[status] {
-		http.Error(w, "Invalid order status", http.StatusBadRequest)
+		errors.Render(w, "Invalid order status", http.StatusBadRequest)
 		return
 	}
 
@@ -42,7 +43,7 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 `, status, orderID)
 
 	if err != nil {
-		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		errors.Render(w, "Could not update order", http.StatusInternalServerError)
 		return
 	}
 

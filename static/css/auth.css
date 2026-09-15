@@ -47,9 +47,14 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 13px;
-    color: #555;
-    padding: 4px 6px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.toggle-password:hover {
+    color: #1a1a1a;
 }
 
 .auth-wrapper button[type="submit"] {

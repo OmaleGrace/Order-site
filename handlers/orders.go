@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/errors"
 	"Order-site/middleware"
 	"html/template"
 	"net/http"
@@ -22,19 +23,19 @@ type CustomerOrder struct {
 
 func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
-		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
 		return
 	}
 
 	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid session", http.StatusUnauthorized)
+		errors.Render(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 
@@ -46,7 +47,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	`, userID)
 
 	if err != nil {
-		http.Error(w, "Could not load orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not load orders", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -64,7 +65,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			http.Error(w, "Could not read orders", http.StatusInternalServerError)
+			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 			return
 		}
 
@@ -79,7 +80,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		`, order.ID)
 
 		if err != nil {
-			http.Error(w, "Could not load order items", http.StatusInternalServerError)
+			errors.Render(w, "Could not load order items", http.StatusInternalServerError)
 			return
 		}
 
@@ -94,7 +95,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				itemRows.Close()
-				http.Error(w, "Could not read order items", http.StatusInternalServerError)
+				errors.Render(w, "Could not read order items", http.StatusInternalServerError)
 				return
 			}
 
@@ -107,7 +108,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
-		http.Error(w, "Could not read orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 		return
 	}
 
@@ -123,7 +124,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.Execute(w, orders)
 	if err != nil {
-		http.Error(w, "Could not display orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not display orders", http.StatusInternalServerError)
 		return
 	}
 }

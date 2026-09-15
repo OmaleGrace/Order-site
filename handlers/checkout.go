@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"Order-site/cart"
+	"Order-site/errors"
 	"Order-site/middleware"
 )
 
@@ -17,19 +18,19 @@ var httpClient = &http.Client{}
 
 func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	cookie, err := r.Cookie("session_token")
 	if err != nil {
-		http.Error(w, "You must be logged in", http.StatusUnauthorized)
+		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
 		return
 	}
 
 	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Error(w, "Invalid session", http.StatusUnauthorized)
+		errors.Render(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 
@@ -43,19 +44,19 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Get user email error:", err)
-		http.Error(w, "Could not get user information", http.StatusInternalServerError)
+		errors.Render(w, "Could not get user information", http.StatusInternalServerError)
 		return
 	}
 
 	// Get cart items
 	items, err := cart.GetItems(h.DB, userID)
 	if err != nil {
-		http.Error(w, "Could not load cart", http.StatusInternalServerError)
+		errors.Render(w, "Could not load cart", http.StatusInternalServerError)
 		return
 	}
 
 	if len(items) == 0 {
-		http.Error(w, "Your cart is empty", http.StatusBadRequest)
+		errors.Render(w, "Your cart is empty", http.StatusBadRequest)
 		return
 	}
 
@@ -68,7 +69,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	tx, err := h.DB.Begin()
 	if err != nil {
-		http.Error(w, "Could not start order", http.StatusInternalServerError)
+		errors.Render(w, "Could not start order", http.StatusInternalServerError)
 		return
 	}
 
@@ -84,7 +85,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Create order error:", err)
-		http.Error(w, "Could not create order", http.StatusInternalServerError)
+		errors.Render(w, "Could not create order", http.StatusInternalServerError)
 		return
 	}
 
@@ -102,14 +103,14 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			fmt.Println("Create order item error:", err)
-			http.Error(w, "Could not create order items", http.StatusInternalServerError)
+			errors.Render(w, "Could not create order items", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
 		fmt.Println("Commit order error:", err)
-		http.Error(w, "Could not save order", http.StatusInternalServerError)
+		errors.Render(w, "Could not save order", http.StatusInternalServerError)
 		return
 	}
 
@@ -123,7 +124,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	requestBody, err := json.Marshal(paystackData)
 	if err != nil {
-		http.Error(w, "Could not prepare payment", http.StatusInternalServerError)
+		errors.Render(w, "Could not prepare payment", http.StatusInternalServerError)
 		return
 	}
 
@@ -134,7 +135,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "Could not create payment request", http.StatusInternalServerError)
+		errors.Render(w, "Could not create payment request", http.StatusInternalServerError)
 		return
 	}
 
@@ -144,7 +145,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		fmt.Println("Paystack request error:", err)
-		http.Error(w, "Could not connect to payment service", http.StatusInternalServerError)
+		errors.Render(w, "Could not connect to payment service", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
@@ -161,13 +162,13 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(resp.Body).Decode(&paystackResponse)
 	if err != nil {
-		http.Error(w, "Could not read payment response", http.StatusInternalServerError)
+		errors.Render(w, "Could not read payment response", http.StatusInternalServerError)
 		return
 	}
 
 	if !paystackResponse.Status {
 		fmt.Println("Paystack error:", paystackResponse.Message)
-		http.Error(w, "Could not initialize payment", http.StatusInternalServerError)
+		errors.Render(w, "Could not initialize payment", http.StatusInternalServerError)
 		return
 	}
 
@@ -183,7 +184,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Save payment reference error:", err)
-		http.Error(w, "Could not save payment information", http.StatusInternalServerError)
+		errors.Render(w, "Could not save payment information", http.StatusInternalServerError)
 		return
 	}
 
@@ -203,7 +204,7 @@ func (h *Handlers) OrderSuccess(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }

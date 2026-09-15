@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"Order-site/errors"
 	"database/sql"
 	"net/http"
 )
@@ -27,12 +28,12 @@ func Admin(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 		).Scan(&isAdmin)
 
 		if err != nil {
-			http.Error(w, "User not found", http.StatusUnauthorized)
+			errors.Render(w, "User not found", http.StatusUnauthorized)
 			return
 		}
 
 		if !isAdmin {
-			http.Error(w, "Access denied", http.StatusForbidden)
+			errors.Render(w, "Access denied", http.StatusForbidden)
 			return
 		}
 

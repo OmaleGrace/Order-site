@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/errors"
 	"html/template"
 	"net/http"
 )
@@ -10,7 +11,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Something went Wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went Wrong", http.StatusInternalServerError)
 		return
 	}
 }

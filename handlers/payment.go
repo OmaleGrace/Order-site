@@ -14,6 +14,7 @@ import (
 
 	"Order-site/cart"
 	"Order-site/email"
+	"Order-site/errors"
 )
 
 var paymentHTTPClient = http.DefaultClient
@@ -22,18 +23,17 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	reference := r.URL.Query().Get("reference")
 
 	if reference == "" {
-		http.Error(w, "Payment reference missing", http.StatusBadRequest)
+		errors.Render(w, "Payment reference missing", http.StatusBadRequest)
 		return
 	}
 
-	// Verify transaction with Paystack
 	req, err := http.NewRequest(
 		http.MethodGet,
 		"https://api.paystack.co/transaction/verify/"+reference,
 		nil,
 	)
 	if err != nil {
-		http.Error(w, "Could not create verification request", http.StatusInternalServerError)
+		errors.Render(w, "Could not create verification request", http.StatusInternalServerError)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	resp, err := paymentHTTPClient.Do(req)
 	if err != nil {
 		fmt.Println("Paystack verification error:", err)
-		http.Error(w, "Could not verify payment", http.StatusInternalServerError)
+		errors.Render(w, "Could not verify payment", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
@@ -62,7 +62,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewDecoder(resp.Body).Decode(&paystackResponse)
 	if err != nil {
-		http.Error(w, "Could not read payment response", http.StatusInternalServerError)
+		errors.Render(w, "Could not read payment response", http.StatusInternalServerError)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	if !paystackResponse.Status ||
 		strings.ToLower(paystackResponse.Data.Status) != "success" {
 		fmt.Println("Paystack payment failed:", paystackResponse.Message)
-		http.Error(w, "Payment was not successful", http.StatusBadRequest)
+		errors.Render(w, "Payment was not successful", http.StatusBadRequest)
 		return
 	}
 
@@ -84,12 +84,12 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Get order total error:", err)
-		http.Error(w, "Could not find order", http.StatusInternalServerError)
+		errors.Render(w, "Could not find order", http.StatusInternalServerError)
 		return
 	}
 
 	if paystackResponse.Data.Amount != orderTotal {
-		http.Error(w, "Payment amount does not match order", http.StatusBadRequest)
+		errors.Render(w, "Payment amount does not match order", http.StatusBadRequest)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Get order error:", err)
-		http.Error(w, "Could not find order", http.StatusInternalServerError)
+		errors.Render(w, "Could not find order", http.StatusInternalServerError)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 			paystackResponse.Data.Amount,
 		)
 
-		http.Error(w, "Payment amount does not match order", http.StatusBadRequest)
+		errors.Render(w, "Payment amount does not match order", http.StatusBadRequest)
 		return
 	}
 
@@ -144,13 +144,13 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Update order error:", err)
-		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		errors.Render(w, "Could not update order", http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		http.Error(w, "Could not confirm payment", http.StatusInternalServerError)
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
 	}
 
@@ -163,7 +163,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	err = cart.ClearCart(h.DB, userID)
 	if err != nil {
 		fmt.Println("Clear cart error:", err)
-		http.Error(w, "Could not clear cart", http.StatusInternalServerError)
+		errors.Render(w, "Could not clear cart", http.StatusInternalServerError)
 		return
 	}
 
@@ -182,19 +182,19 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Could not read webhook", http.StatusBadRequest)
+		errors.Render(w, "Could not read webhook", http.StatusBadRequest)
 		return
 	}
 
 	signature := r.Header.Get("x-paystack-signature")
 	if signature == "" {
-		http.Error(w, "Missing signature", http.StatusUnauthorized)
+		errors.Render(w, "Missing signature", http.StatusUnauthorized)
 		return
 	}
 
@@ -207,7 +207,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		[]byte(signature),
 		[]byte(expectedSignature),
 	) {
-		http.Error(w, "Invalid signature", http.StatusUnauthorized)
+		errors.Render(w, "Invalid signature", http.StatusUnauthorized)
 		return
 	}
 
@@ -221,7 +221,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(body, &event); err != nil {
-		http.Error(w, "Invalid webhook payload", http.StatusBadRequest)
+		errors.Render(w, "Invalid webhook payload", http.StatusBadRequest)
 		return
 	}
 
@@ -250,7 +250,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Webhook order lookup error:", err)
-		http.Error(w, "Order not found", http.StatusNotFound)
+		errors.Render(w, "Order not found", http.StatusNotFound)
 		return
 	}
 
@@ -262,7 +262,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 			event.Data.Amount,
 		)
 
-		http.Error(w, "Payment amount mismatch", http.StatusBadRequest)
+		errors.Render(w, "Payment amount mismatch", http.StatusBadRequest)
 		return
 	}
 
@@ -281,13 +281,13 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		fmt.Println("Webhook update order error:", err)
-		http.Error(w, "Could not update order", http.StatusInternalServerError)
+		errors.Render(w, "Could not update order", http.StatusInternalServerError)
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		http.Error(w, "Could not confirm payment", http.StatusInternalServerError)
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
 	}
 
@@ -298,7 +298,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if err := cart.ClearCart(h.DB, userID); err != nil {
 		fmt.Println("Webhook clear cart error:", err)
-		http.Error(w, "Could not clear cart", http.StatusInternalServerError)
+		errors.Render(w, "Could not clear cart", http.StatusInternalServerError)
 		return
 	}
 

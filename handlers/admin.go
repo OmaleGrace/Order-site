@@ -3,6 +3,7 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"Order-site/errors"
 )
 
 type AdminOrderItem struct {
@@ -23,7 +24,7 @@ type AdminOrder struct {
 
 func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -40,7 +41,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		ORDER BY o.created_at DESC
 	`)
 	if err != nil {
-		http.Error(w, "Could not load orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not load orders", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -60,7 +61,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			http.Error(w, "Could not read orders", http.StatusInternalServerError)
+			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 			return
 		}
 
@@ -75,7 +76,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		`, order.ID)
 
 		if err != nil {
-			http.Error(w, "Could not load order items", http.StatusInternalServerError)
+			errors.Render(w, "Could not load order items", http.StatusInternalServerError)
 			return
 		}
 
@@ -90,7 +91,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				itemRows.Close()
-				http.Error(w, "Could not read order items", http.StatusInternalServerError)
+				errors.Render(w, "Could not read order items", http.StatusInternalServerError)
 				return
 			}
 
@@ -103,7 +104,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
-		http.Error(w, "Could not read orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 		return
 	}
 
@@ -119,7 +120,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.Execute(w, orders)
 	if err != nil {
-		http.Error(w, "Could not display orders", http.StatusInternalServerError)
+		errors.Render(w, "Could not display orders", http.StatusInternalServerError)
 		return
 	}
 }

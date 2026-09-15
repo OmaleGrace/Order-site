@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"Order-site/errors"
 	"Order-site/menu"
 )
 
@@ -24,7 +25,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	items, err := menu.GetAll(h.DB)
 	if err != nil {
 		fmt.Println("Menu load error", err)
-		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		errors.Render(w, "Could not load menu", http.StatusInternalServerError)
 		return
 	}
 
@@ -41,7 +42,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		fmt.Println("Template error:", err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }

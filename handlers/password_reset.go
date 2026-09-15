@@ -10,6 +10,7 @@ import (
 	"time"
 
 	emailer "Order-site/email"
+	"Order-site/errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,7 +29,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusBadRequest)
+			errors.Render(w, "Something went wrong", http.StatusBadRequest)
 			return
 		}
 
@@ -43,7 +44,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			token, err := generateToken()
 			if err != nil {
 				fmt.Println("Generate token error:", err)
-				http.Error(w, "Something went wrong", http.StatusInternalServerError)
+				errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 				return
 			}
 
@@ -54,7 +55,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				fmt.Println("Save reset token error:", err)
-				http.Error(w, "Something went wrong", http.StatusInternalServerError)
+				errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 				return
 			}
 
@@ -81,7 +82,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }
@@ -92,7 +93,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Something went wrong", http.StatusBadRequest)
+			errors.Render(w, "Something went wrong", http.StatusBadRequest)
 			return
 		}
 
@@ -107,25 +108,25 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		`, token).Scan(&userID, &expiresAt)
 
 		if err != nil {
-			http.Error(w, "This reset link is invalid or has already been used", http.StatusBadRequest)
+			errors.Render(w, "This reset link is invalid or has already been used", http.StatusBadRequest)
 			return
 		}
 
 		if time.Now().After(expiresAt) {
-			http.Error(w, "This reset link has expired", http.StatusBadRequest)
+			errors.Render(w, "This reset link has expired", http.StatusBadRequest)
 			return
 		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 		if err != nil {
-			http.Error(w, "Could not reset password", http.StatusInternalServerError)
+			errors.Render(w, "Could not reset password", http.StatusInternalServerError)
 			return
 		}
 
 		_, err = h.DB.Exec("UPDATE users SET password = $1 WHERE id = $2", string(hashedPassword), userID)
 		if err != nil {
 			fmt.Println("Update password error:", err)
-			http.Error(w, "Could not reset password", http.StatusInternalServerError)
+			errors.Render(w, "Could not reset password", http.StatusInternalServerError)
 			return
 		}
 
@@ -151,7 +152,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	token := r.URL.Query().Get("token")
 	if token == "" {
-		http.Error(w, "Missing reset token", http.StatusBadRequest)
+		errors.Render(w, "Missing reset token", http.StatusBadRequest)
 		return
 	}
 
@@ -163,7 +164,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpl.Execute(w, data)
 	if err != nil {
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }

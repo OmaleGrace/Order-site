@@ -1,0 +1,42 @@
+.error-wrapper {
+    max-width: 420px;
+    margin: 100px auto;
+    padding: 40px 32px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    text-align: center;
+}
+
+.error-code {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ccc;
+    margin-bottom: 8px;
+}
+
+.error-wrapper h1 {
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+
+.error-wrapper p {
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.error-home-link {
+    display: inline-block;
+    padding: 10px 24px;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.error-home-link:hover {
+    background: #333;
+}

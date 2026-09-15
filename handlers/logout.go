@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/errors"
 	"net/http"
 )
 
@@ -14,7 +15,7 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 		)
 
 		if err != nil {
-			http.Error(
+			errors.Render(
 				w,
 				"Could not log out",
 				http.StatusInternalServerError,
