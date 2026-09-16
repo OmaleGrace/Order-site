@@ -250,7 +250,7 @@ nav a.active {
     border-radius: 50%;
     object-fit: cover;
     display: block;
-}
+} 
 
 .profile-placeholder {
     display: flex;
