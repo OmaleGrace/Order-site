@@ -19,15 +19,16 @@ func setupMenuTestDB(t *testing.T) *sql.DB {
 	}
 
 	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS menu_items (
+		DROP TABLE IF EXISTS menu_items CASCADE;
+
+		CREATE TABLE menu_items (
 			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL,
 			description TEXT NOT NULL,
 			price_kobo INTEGER NOT NULL,
-			image_url TEXT
+			image_url TEXT,
+			category TEXT
 		);
-
-		DELETE FROM menu_items;
 	`)
 	if err != nil {
 		db.Close()
@@ -36,24 +37,23 @@ func setupMenuTestDB(t *testing.T) *sql.DB {
 
 	return db
 }
-
 func TestGetAll(t *testing.T) {
 	db := setupMenuTestDB(t)
 	defer db.Close()
 
 	_, err := db.Exec(`
 		INSERT INTO menu_items
-			(name, description, price_kobo, image_url)
+			(name, description, price_kobo, image_url, category)
 		VALUES
 			('Jollof Rice', 'Delicious jollof rice', 350000,
-			 'https://example.com/jollof.jpg'),
-			('Fried Rice', 'Tasty fried rice', 300000, NULL)
+			 'https://example.com/jollof.jpg', 'Rice & Swallow'),
+			('Fried Rice', 'Tasty fried rice', 300000, NULL, 'Rice & Swallow')
 	`)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	items, err := GetAll(db)
+	items, err := GetAll(db, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestGetAllReturnsItemsInIDOrder(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	items, err := GetAll(db)
+	items, err := GetAll(db, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,5 +122,101 @@ func TestGetAllReturnsItemsInIDOrder(t *testing.T) {
 
 	if items[2].Name != "Third Item" {
 		t.Fatalf("expected Third Item, got %q", items[2].Name)
+	}
+}
+
+func TestGetAllFiltersBySearch(t *testing.T) {
+	db := setupMenuTestDB(t)
+	defer db.Close()
+
+	_, err := db.Exec(`
+		INSERT INTO menu_items
+			(name, description, price_kobo, category)
+		VALUES
+			('Jollof Rice', 'Delicious jollof rice', 350000, 'Rice & Swallow'),
+			('Fried Rice', 'Tasty fried rice', 300000, 'Rice & Swallow'),
+			('Chapman', 'Classic non-alcoholic cocktail', 120000, 'Drinks')
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	items, err := GetAll(db, "rice", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(items) != 2 {
+		t.Fatalf("expected 2 menu items matching 'rice', got %d", len(items))
+	}
+
+	for _, item := range items {
+		if item.Name != "Jollof Rice" && item.Name != "Fried Rice" {
+			t.Fatalf("unexpected item in search results: %q", item.Name)
+		}
+	}
+}
+
+func TestGetAllFiltersByCategory(t *testing.T) {
+	db := setupMenuTestDB(t)
+	defer db.Close()
+
+	_, err := db.Exec(`
+		INSERT INTO menu_items
+			(name, description, price_kobo, category)
+		VALUES
+			('Jollof Rice', 'Delicious jollof rice', 350000, 'Rice & Swallow'),
+			('Chapman', 'Classic non-alcoholic cocktail', 120000, 'Drinks'),
+			('Zobo', 'Chilled hibiscus drink', 80000, 'Drinks')
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	items, err := GetAll(db, "", "Drinks")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(items) != 2 {
+		t.Fatalf("expected 2 menu items in Drinks category, got %d", len(items))
+	}
+
+	for _, item := range items {
+		if !item.Category.Valid || item.Category.String != "Drinks" {
+			t.Fatalf("unexpected category for item %q: %v", item.Name, item.Category)
+		}
+	}
+}
+
+func TestGetAllFiltersBySearchAndCategory(t *testing.T) {
+	db := setupMenuTestDB(t)
+	defer db.Close()
+
+	_, err := db.Exec(`
+		INSERT INTO menu_items
+			(name, description, price_kobo, category)
+		VALUES
+			('Jollof Rice', 'Delicious jollof rice', 350000, 'Rice & Swallow'),
+			('Fried Rice', 'Tasty fried rice', 300000, 'Rice & Swallow'),
+			('Chapman', 'Rice-free classic cocktail', 120000, 'Drinks')
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	items, err := GetAll(db, "rice", "Rice & Swallow")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(items) != 2 {
+		t.Fatalf("expected 2 menu items, got %d", len(items))
+	}
+
+	for _, item := range items {
+		if !item.Category.Valid || item.Category.String != "Rice & Swallow" {
+			t.Fatalf("unexpected category for item %q: %v", item.Name, item.Category)
+		}
 	}
 }

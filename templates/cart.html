@@ -43,6 +43,8 @@
 
                 <article class="cart-item">
 
+    <img src="{{.ImageURL}}" alt="{{.Name}}" class="item-image">
+
     <div class="item-info">
         <h2>{{.Name}}</h2>
         <p>{{.Description}}</p>
@@ -72,7 +74,7 @@
         </p>
     </div>
 
-    <form action="/cart/remove" method="post">
+    <form action="/cart/remove" method="post" class="remove-form">
         <input type="hidden" name="id" value="{{.MenuItemID}}">
         <button type="submit" class="remove-btn">
             Remove

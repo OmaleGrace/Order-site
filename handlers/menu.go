@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"net/http"
 
-	"Order-site/errors"
 	"Order-site/menu"
 )
 
@@ -22,27 +21,34 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 			ParseFiles("templates/menu.html"),
 	)
 
-	items, err := menu.GetAll(h.DB)
+	search := r.URL.Query().Get("search")
+	category := r.URL.Query().Get("category")
+
+	items, err := menu.GetAll(h.DB, search, category)
 	if err != nil {
 		fmt.Println("Menu load error", err)
-		errors.Render(w, "Could not load menu", http.StatusInternalServerError)
+		http.Error(w, "Could not load menu", http.StatusInternalServerError)
 		return
 	}
 
 	message := r.URL.Query().Get("message")
 
 	data := struct {
-		Items   []menu.MenuItem
-		Message string
+		Items    []menu.MenuItem
+		Message  string
+		Search   string
+		Category string
 	}{
-		Items:   items,
-		Message: message,
+		Items:    items,
+		Message:  message,
+		Search:   search,
+		Category: category,
 	}
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		fmt.Println("Template error:", err)
-		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
 }

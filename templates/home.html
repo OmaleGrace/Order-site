@@ -1,23 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Grace Ordering Site</title>
-        <link rel="stylesheet" href="/static/css/home.css">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grace's Kitchen</title>
+    <link rel="stylesheet" href="/static/css/home.css">
+</head>
 
-  <body>
-    <h1>Welcome to Grace Ordering Site</h1>
+<body>
 
-    <p>Order delicious meals from the comfort of your home.</p>
-
-    <div class="auth-links">
-        <a href="/login">Login</a> OR <a href="/signup">Create Account</a>
+<header class="site-header">
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 Grace's Kitchen</a>
     </div>
 
-    <footer>
-        <p>&copy; 2026 Food Ordering App</p>
-    </footer>
+    <nav>
+        <a href="/menu">Menu</a>
+        <a href="/login">Login</a>
+        <a href="/signup" class="signup-link">Sign Up</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1>Fresh Meals, Made With Love</h1>
+        <p>Order delicious home-cooked meals delivered straight to your door.</p>
+
+        <div class="hero-actions">
+            <a href="/menu" class="btn-primary">View Menu</a>
+            <a href="/signup" class="btn-secondary">Create Account</a>
+        </div>
+    </div>
+</section>
+
+{{if .Preview}}
+<section class="preview-section">
+    <h2>Popular Dishes</h2>
+
+    <div class="preview-grid">
+        {{range .Preview}}
+        <article class="preview-card">
+            <div class="preview-image">
+                <img src="{{.ImageURL.String}}" alt="{{.Name}}">
+            </div>
+            <div class="preview-info">
+                <h3>{{.Name}}</h3>
+                <strong>₦{{naira .PriceKobo}}</strong>
+            </div>
+        </article>
+        {{end}}
+    </div>
+
+    <div class="preview-cta">
+        <a href="/menu" class="btn-outline">See Full Menu →</a>
+    </div>
+</section>
+{{end}}
+
+<footer class="site-footer">
+    <div class="footer-links">
+        <a href="/menu">Menu</a>
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+    </div>
+    <p>&copy; 2026 Grace's Kitchen</p>
+</footer>
+
 </body>
 </html>

@@ -8,6 +8,7 @@ type CartItem struct {
 	Description string
 	Quantity    int
 	PriceKobo   int
+	ImageURL    string
 }
 
 func AddItem(db *sql.DB, userID, menuItemID int) (bool, error) {
@@ -55,7 +56,7 @@ func RemoveItem(db *sql.DB, userID, menuItemID int) error {
 
 func GetItems(db *sql.DB, userID int) ([]CartItem, error) {
 	rows, err := db.Query(`
-		SELECT ci.menu_item_id, ci.quantity, ci.price_kobo_at_addition, m.name, m.description
+		SELECT ci.menu_item_id, ci.quantity, ci.price_kobo_at_addition, m.name, m.description, m.image_url
 		FROM cart_items ci
 		JOIN menu_items m ON m.id = ci.menu_item_id
 		WHERE ci.user_id = $1
@@ -68,7 +69,7 @@ func GetItems(db *sql.DB, userID int) ([]CartItem, error) {
 	var items []CartItem
 	for rows.Next() {
 		var item CartItem
-		err := rows.Scan(&item.MenuItemID, &item.Quantity, &item.PriceKobo, &item.Name, &item.Description)
+		err := rows.Scan(&item.MenuItemID, &item.Quantity, &item.PriceKobo, &item.Name, &item.Description, &item.ImageURL)
 		if err != nil {
 			return nil, err
 		}

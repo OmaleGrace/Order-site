@@ -32,6 +32,24 @@
     <p>Choose from our delicious selection of freshly prepared meals.</p>
 </section>
 
+<section class="menu-filters">
+
+    <form action="/menu" method="get" class="search-form">
+        <input type="text" name="search" placeholder="Search meals..." value="{{.Search}}">
+        {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="category-filters">
+        <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}">All</a>
+        <a href="/menu?category=Rice+%26+Swallow{{if .Search}}&search={{.Search}}{{end}}" class="category-btn {{if eq .Category "Rice & Swallow"}}active{{end}}">Rice & Swallow</a>
+        <a href="/menu?category=Proteins+%26+Sides{{if .Search}}&search={{.Search}}{{end}}" class="category-btn {{if eq .Category "Proteins & Sides"}}active{{end}}">Proteins & Sides</a>
+        <a href="/menu?category=Soups+%26+Stews{{if .Search}}&search={{.Search}}{{end}}" class="category-btn {{if eq .Category "Soups & Stews"}}active{{end}}">Soups & Stews</a>
+        <a href="/menu?category=Drinks{{if .Search}}&search={{.Search}}{{end}}" class="category-btn {{if eq .Category "Drinks"}}active{{end}}">Drinks</a>
+    </div>
+
+</section>
+
     <main class="menu-container">
 
         {{if .Message}}

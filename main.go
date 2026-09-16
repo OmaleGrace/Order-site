@@ -54,7 +54,12 @@ func main() {
 
 	mux.HandleFunc("GET /logout", middleware.Logging(h.Logout))
 
-	mux.HandleFunc("GET /menu", middleware.Logging(h.Menu))
+	mux.HandleFunc(
+	"GET /menu",
+	middleware.Logging(
+		middleware.RequireLogin(db, h.Menu),
+	),
+)
 
 	mux.HandleFunc(
 		"POST /cart/add",

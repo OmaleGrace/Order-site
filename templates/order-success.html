@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Successful - Gracie Ordering Site</title>
+    <title>Order Successful - Grace's Kitchen</title>
+    <link rel="stylesheet" href="/static/css/order-success.css">
 </head>
 
 <body>
     <main>
-        <h1>Order Placed Successfully! 🎉</h1>
+        <div class="success-wrapper">
+            <div class="success-icon">🎉</div>
 
-        <p>Your payment was successful and your order has been received.</p>
+            <h1>Order Placed Successfully!</h1>
 
-        <p>Thank you for ordering from Gracie Ordering Site.</p>
+            <p>Your payment was successful and your order has been received.</p>
+            <p class="thanks">Thank you for ordering from Grace's Kitchen.</p>
 
-        <a href="/menu">Continue Shopping</a>
-        <br>
-        <a href="/">Back to Home</a>
+            <div class="success-actions">
+                <a href="/orders" class="btn-primary">Track My Order</a>
+                <a href="/menu" class="btn-outline">Continue Shopping</a>
+            </div>
+
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
     </main>
 </body>
 </html>

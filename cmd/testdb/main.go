@@ -14,7 +14,7 @@ func main() {
 	}
 	defer db.Close()
 
-	items, err := menu.GetAll(db)
+	items, err := menu.GetAll(db, "", "")
 	if err != nil {
 		fmt.Println("Failed to get menu:", err)
 		return
