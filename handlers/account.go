@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -14,6 +13,11 @@ type AccountPageData struct {
 	Email          string
 	AuthProvider   string
 	ProfilePicture string
+	Phone          string
+	MemberSince    string
+	OrderCount     int
+	TotalSpentKobo int
+	Updated        bool
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -30,34 +34,53 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data AccountPageData
+	var phone *string
 
 	err = h.DB.QueryRow(`
-    SELECT name, email, auth_provider, COALESCE(profile_picture, '')
-    FROM users
-    WHERE id = $1
-`, userID).Scan(
+		SELECT name, email, auth_provider, COALESCE(profile_picture, ''),
+		       phone, TO_CHAR(created_at, 'FMMonth YYYY')
+		FROM users
+		WHERE id = $1
+	`, userID).Scan(
 		&data.Name,
 		&data.Email,
 		&data.AuthProvider,
 		&data.ProfilePicture,
+		&phone,
+		&data.MemberSince,
 	)
 
 	if err != nil {
-		fmt.Println("Account query error:", err)
 		errors.Render(w, "Could not load account", http.StatusInternalServerError)
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/account.html")
+	if phone != nil {
+		data.Phone = *phone
+	}
+
+	err = h.DB.QueryRow(`
+		SELECT COUNT(*), COALESCE(SUM(total_kobo), 0)
+		FROM orders
+		WHERE user_id = $1 AND status != 'pending'
+	`, userID).Scan(&data.OrderCount, &data.TotalSpentKobo)
+
 	if err != nil {
-		fmt.Println("Account template parse error:", err)
-		errors.Render(w, "Could not load account page", http.StatusInternalServerError)
+		errors.Render(w, "Could not load account", http.StatusInternalServerError)
 		return
 	}
 
+	data.Updated = r.URL.Query().Get("updated") == "true"
+
+	tmpl := template.Must(
+		template.New("account.html").
+			Funcs(template.FuncMap{
+				"naira": naira,
+			}).
+			ParseFiles("templates/account.html"),
+	)
+
 	if err := tmpl.Execute(w, data); err != nil {
-		fmt.Println("Account render error:", err)
 		errors.Render(w, "Could not render account page", http.StatusInternalServerError)
-		return
 	}
 }

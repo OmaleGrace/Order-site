@@ -32,6 +32,12 @@
 
 <main class="account-container">
 
+    {{if .Updated}}
+    <div class="update-banner">
+        ✅ Profile updated successfully!
+    </div>
+    {{end}}
+
     <section class="account-card">
 
         <div class="account-heading">
@@ -53,6 +59,20 @@
             </div>
         </div>
 
+        <div class="stat-row">
+            <div class="stat">
+                <span class="stat-value">{{.OrderCount}}</span>
+                <span class="stat-label">Orders</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">₦{{naira .TotalSpentKobo}}</span>
+                <span class="stat-label">Spent</span>
+            </div>
+            <div class="stat">
+                <span class="stat-value">{{.MemberSince}}</span>
+                <span class="stat-label">Member Since</span>
+            </div>
+        </div>
 
         <div class="account-info">
 
@@ -65,6 +85,13 @@
                 <span class="label">Email</span>
                 <span class="value">{{.Email}}</span>
             </div>
+
+            {{if .Phone}}
+            <div class="info-row">
+                <span class="label">Phone</span>
+                <span class="value">{{.Phone}}</span>
+            </div>
+            {{end}}
 
             <div class="info-row">
                 <span class="label">Login method</span>
