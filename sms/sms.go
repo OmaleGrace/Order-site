@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 )
@@ -61,14 +62,27 @@ func SendOTP(phone string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	var result sendOTPResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
+	bodyBytes, _ := io.ReadAll(resp.Body)
 
-	if result.PinID == "" {
-		return "", fmt.Errorf("termii did not return a pin ID")
-	}
+fmt.Println("Termii status:", resp.Status)
+fmt.Println("Termii send OTP raw response:", string(bodyBytes))
+
+if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+    return "", fmt.Errorf(
+        "termii returned HTTP %s: %s",
+        resp.Status,
+        string(bodyBytes),
+    )
+}
+
+var result sendOTPResponse
+if err := json.Unmarshal(bodyBytes, &result); err != nil {
+    return "", err
+}
+
+if result.PinID == "" {
+    return "", fmt.Errorf("termii did not return a pin ID")
+}
 
 	return result.PinID, nil
 }
@@ -110,8 +124,11 @@ func VerifyOTP(pinID, code string) (bool, error) {
 	}
 	defer resp.Body.Close()
 
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	fmt.Println("Termii verify OTP raw response:", string(bodyBytes))
+
 	var result verifyOTPResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return false, err
 	}
 

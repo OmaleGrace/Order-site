@@ -31,10 +31,12 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 
 	phone := strings.TrimSpace(r.FormValue("phone"))
 
-	if phone == "" {
-		errors.Render(w, "Phone number is required", http.StatusBadRequest)
-		return
-	}
+if phone == "" {
+	errors.Render(w, "Phone number is required", http.StatusBadRequest)
+	return
+}
+
+phone = normalizePhone(phone)
 
 	// Make sure this phone isn't already used by another account
 	var existingCount int
@@ -118,4 +120,21 @@ func (h *Handlers) VerifyPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/account?updated=true", http.StatusSeeOther)
+}
+
+func normalizePhone(phone string) string {
+	phone = strings.TrimSpace(phone)
+	phone = strings.ReplaceAll(phone, " ", "")
+	phone = strings.ReplaceAll(phone, "-", "")
+
+	if strings.HasPrefix(phone, "+234") {
+		return phone[1:]
+	}
+	if strings.HasPrefix(phone, "234") {
+		return phone
+	}
+	if strings.HasPrefix(phone, "0") {
+		return "234" + phone[1:]
+	}
+	return phone
 }
