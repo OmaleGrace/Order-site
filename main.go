@@ -159,6 +159,19 @@ func main() {
 	mux.HandleFunc("GET /reset-password", middleware.Logging(h.ResetPassword))
 	mux.HandleFunc("POST /reset-password", middleware.Logging(h.ResetPassword))
 
+	mux.HandleFunc(
+	"POST /account/phone/send-otp",
+	middleware.Logging(
+		middleware.RequireLogin(db, h.SendPhoneOTP),
+	),
+)
+
+mux.HandleFunc(
+	"POST /account/phone/verify-otp",
+	middleware.Logging(
+		middleware.RequireLogin(db, h.VerifyPhoneOTP),
+	),
+)
 	// HTTP server
 	port := os.Getenv("PORT")
 	if port == "" {

@@ -340,3 +340,37 @@ nav a.active {
         flex: 1 1 30%;
     }
 }
+
+.verify-subtext {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.phone-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.phone-form input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.send-code-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.send-code-btn:hover {
+    background: #333;
+}

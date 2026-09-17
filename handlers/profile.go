@@ -117,13 +117,6 @@ func (h *Handlers) updateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	phone := strings.TrimSpace(r.FormValue("phone"))
-
-	if len(phone) > 20 {
-		errors.Render(w, "Phone number is too long", http.StatusBadRequest)
-		return
-	}
-
 	profilePicture := ""
 
 	file, header, err := r.FormFile("profile_picture")
@@ -180,16 +173,16 @@ func (h *Handlers) updateProfile(w http.ResponseWriter, r *http.Request) {
 
 	if profilePicture != "" {
 		_, err = h.DB.Exec(`
-			UPDATE users
-			SET name = $1, profile_picture = $2, phone = $3
-			WHERE id = $4
-		`, name, profilePicture, phone, userID)
+		UPDATE users
+		SET name = $1, profile_picture = $2
+		WHERE id = $3
+	`, name, profilePicture, userID)
 	} else {
 		_, err = h.DB.Exec(`
-			UPDATE users
-			SET name = $1, phone = $2
-			WHERE id = $3
-		`, name, phone, userID)
+		UPDATE users
+		SET name = $1
+		WHERE id = $2
+	`, name, userID)
 	}
 
 	if err != nil {

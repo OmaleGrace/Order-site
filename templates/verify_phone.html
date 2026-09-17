@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Phone - Grace's Kitchen</title>
+    <link rel="stylesheet" href="/static/css/account.css">
+</head>
+
+<body>
+
+<header class="account-header">
+    <div class="header-inner">
+        <a href="/menu" class="logo">Grace's Kitchen</a>
+        <nav>
+            <a href="/menu">Menu</a>
+            <a href="/cart">Cart</a>
+            <a href="/orders">Orders</a>
+            <a href="/account">Account</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="account-container">
+
+    <section class="account-card">
+
+        <h1>Verify Your Phone</h1>
+        <p class="verify-subtext">We sent a 6-digit code to <strong>{{.Phone}}</strong>. Enter it below to confirm.</p>
+
+        <form action="/account/phone/verify-otp" method="post" class="profile-form">
+            <input type="hidden" name="phone" value="{{.Phone}}">
+            <input type="hidden" name="pin_id" value="{{.PinID}}">
+
+            <label for="code">Verification Code</label>
+            <input type="text" id="code" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus>
+
+            <div class="profile-buttons">
+                <button type="submit">Verify & Save</button>
+                <a href="/account/edit">Cancel</a>
+            </div>
+        </form>
+
+    </section>
+
+</main>
+
+</body>
+</html>
