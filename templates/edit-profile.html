@@ -104,32 +104,6 @@
             </small>
 
 
-            <label for="current-phone">
-    Phone Number
-</label>
-
-<input
-    type="tel"
-    id="current-phone"
-    value="{{.Phone}}"
-    disabled
-    placeholder="No phone number set"
->
-
-<small>To add or change your phone number, verify a new one below.</small>
-
-<form action="/account/phone/send-otp" method="post" class="phone-form">
-    <input
-        type="tel"
-        name="phone"
-        maxlength="20"
-        placeholder="e.g. 08012345678"
-        required
-    >
-    <button type="submit" class="send-code-btn">Send Code</button>
-</form>
-
-
             <div class="profile-buttons">
 
                 <button type="submit">
@@ -143,6 +117,35 @@
             </div>
 
         </form>
+
+        <div class="phone-section">
+
+            <label for="current-phone">
+                Phone Number
+            </label>
+
+            <input
+                type="tel"
+                id="current-phone"
+                value="{{.Phone}}"
+                disabled
+                placeholder="No phone number set"
+            >
+
+            <small>To add or change your phone number, verify a new one below.</small>
+
+            <form action="/account/phone/send-otp" method="post" class="phone-form">
+                <input
+                    type="tel"
+                    name="phone"
+                    maxlength="20"
+                    placeholder="e.g. 08012345678"
+                    required
+                >
+                <button type="submit" class="send-code-btn">Send Code</button>
+            </form>
+
+        </div>
 
     </section>
 

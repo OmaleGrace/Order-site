@@ -374,3 +374,30 @@ nav a.active {
 .send-code-btn:hover {
     background: #333;
 }
+
+.phone-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.phone-section label {
+    font-weight: 600;
+}
+
+.phone-section input[type="tel"]:disabled {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f3f3f3;
+    color: #777;
+    margin-top: 6px;
+}
+
+.phone-section small {
+    display: block;
+    color: #777;
+    font-size: 13px;
+    margin: 6px 0 10px;
+}
