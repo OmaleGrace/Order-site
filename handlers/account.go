@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -42,17 +43,20 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+		fmt.Println("Account query error:", err)
 		errors.Render(w, "Could not load account", http.StatusInternalServerError)
 		return
 	}
 
 	tmpl, err := template.ParseFiles("templates/account.html")
 	if err != nil {
+		fmt.Println("Account template parse error:", err)
 		errors.Render(w, "Could not load account page", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
+		fmt.Println("Account render error:", err)
 		errors.Render(w, "Could not render account page", http.StatusInternalServerError)
 		return
 	}
