@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -50,6 +51,7 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 
 	pinID, err := sms.SendOTP(phone)
 	if err != nil {
+		fmt.Println("Send OTP error:", err)
 		errors.Render(w, "Could not send verification code. Please check the number and try again.", http.StatusInternalServerError)
 		return
 	}
