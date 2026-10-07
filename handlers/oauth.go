@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"Order-site/brand"
 	emailer "Order-site/email"
 	"Order-site/errors"
 	"Order-site/middleware"
@@ -99,7 +100,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 		go emailer.Send(
 			userInfo.Email,
-			"Welcome to Grace's Kitchen!",
+			"Welcome to "+brand.Name()+"!",
 			fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully via Google. Start browsing our menu and place your first order today.</p>", userInfo.Name),
 		)
 	}

@@ -1,6 +1,7 @@
 package email
 
 import (
+	"Order-site/brand"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -37,7 +38,7 @@ func Send(toEmail, subject, htmlContent string) error {
 
 	reqBody := emailRequest{
 		Sender: sender{
-			Name:  "Grace's Kitchen",
+			Name:  brand.Name(),
 			Email: senderEmail,
 		},
 		To: []recipient{

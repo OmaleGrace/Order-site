@@ -1,9 +1,10 @@
 package handlers
 
 import (
+	"Order-site/brand"
+	"Order-site/errors"
 	"html/template"
 	"net/http"
-	"Order-site/errors"
 )
 
 type AdminOrderItem struct {
@@ -115,6 +116,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 					return kobo / 100
 				},
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/admin-orders.html"),
 	)
 

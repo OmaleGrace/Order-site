@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"Order-site/brand"
 	"Order-site/menu"
 )
 
@@ -13,6 +14,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 			Funcs(template.FuncMap{
 				"naira": naira,
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/home.html"),
 	)
 

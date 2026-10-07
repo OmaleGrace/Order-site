@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 	"html/template"
@@ -119,6 +120,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 					return kobo / 100
 				},
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/orders.html"),
 	)
 

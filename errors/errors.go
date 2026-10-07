@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"html/template"
+	"Order-site/brand"
 	"net/http"
 )
 
@@ -19,7 +19,7 @@ func Render(w http.ResponseWriter, message string, code int) {
 		title = "Something Went Wrong"
 	}
 
-	tmpl, err := template.ParseFiles("templates/error.html")
+	tmpl, err := brand.ParseE("templates/error.html")
 	if err != nil {
 		http.Error(w, message, code)
 		return

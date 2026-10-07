@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 
@@ -73,7 +73,7 @@ func (h *Handlers) showEditProfile(w http.ResponseWriter, r *http.Request) {
 		Phone:          phoneValue,
 	}
 
-	tmpl, err := template.ParseFiles("templates/edit-profile.html")
+	tmpl, err := brand.ParseE("templates/edit-profile.html")
 	if err != nil {
 		errors.Render(w, "Could not load profile page", http.StatusInternalServerError)
 		return

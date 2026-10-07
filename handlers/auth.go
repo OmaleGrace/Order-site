@@ -2,19 +2,19 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
+	"Order-site/brand"
 	emailer "Order-site/email"
-	"Order-site/middleware"
 	"Order-site/errors"
+	"Order-site/middleware"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/login.html"))
+	tmpl := brand.Parse("templates/login.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -86,7 +86,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/signup.html"))
+	tmpl := brand.Parse("templates/signup.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -95,7 +95,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-				name := strings.TrimSpace(r.FormValue("name"))
+		name := strings.TrimSpace(r.FormValue("name"))
 		email := strings.TrimSpace(r.FormValue("email"))
 		password := r.FormValue("password")
 
@@ -133,7 +133,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		go func() {
-			if err := emailer.Send(email, "Welcome to Grace's Kitchen!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
+			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
 				fmt.Println("Welcome email error:", err)
 			}
 		}()

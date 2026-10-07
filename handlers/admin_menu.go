@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"math"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"Order-site/brand"
 	"Order-site/errors"
 )
 
@@ -60,7 +60,7 @@ func (h *Handlers) AdminMenu(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/admin-menu.html")
+	tmpl, err := brand.ParseE("templates/admin-menu.html")
 	if err != nil {
 		log.Printf("admin menu: template failed: %v", err)
 		errors.Render(w, "Could not display menu", http.StatusInternalServerError)

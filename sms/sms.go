@@ -1,6 +1,7 @@
 package sms
 
 import (
+	"Order-site/brand"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -43,7 +44,7 @@ func SendOTP(phone string) (string, error) {
 		PinTimeToLive:  10,
 		PinLength:      6,
 		PinPlaceholder: "< 123456 >",
-		MessageText:    "Your Grace's Kitchen verification code is < 123456 >",
+		MessageText:    "Your " + brand.Name() + " verification code is < 123456 >",
 		PinType:        "NUMERIC",
 	}
 
@@ -64,25 +65,25 @@ func SendOTP(phone string) (string, error) {
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
 
-fmt.Println("Termii status:", resp.Status)
-fmt.Println("Termii send OTP raw response:", string(bodyBytes))
+	fmt.Println("Termii status:", resp.Status)
+	fmt.Println("Termii send OTP raw response:", string(bodyBytes))
 
-if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-    return "", fmt.Errorf(
-        "termii returned HTTP %s: %s",
-        resp.Status,
-        string(bodyBytes),
-    )
-}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return "", fmt.Errorf(
+			"termii returned HTTP %s: %s",
+			resp.Status,
+			string(bodyBytes),
+		)
+	}
 
-var result sendOTPResponse
-if err := json.Unmarshal(bodyBytes, &result); err != nil {
-    return "", err
-}
+	var result sendOTPResponse
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+		return "", err
+	}
 
-if result.PinID == "" {
-    return "", fmt.Errorf("termii did not return a pin ID")
-}
+	if result.PinID == "" {
+		return "", fmt.Errorf("termii did not return a pin ID")
+	}
 
 	return result.PinID, nil
 }

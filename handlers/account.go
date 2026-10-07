@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"html/template"
-	"net/http"
 	"log"
+	"net/http"
 
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 )
@@ -79,6 +80,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 			Funcs(template.FuncMap{
 				"naira": naira,
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/account.html"),
 	)
 

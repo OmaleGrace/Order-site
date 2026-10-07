@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"Order-site/brand"
 	"Order-site/menu"
 )
 
@@ -18,6 +19,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 			Funcs(template.FuncMap{
 				"naira": naira,
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/menu.html"),
 	)
 
@@ -25,7 +27,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 
 	items, err := menu.GetAll(h.DB, search, category)
-		categories := []string{}
+	categories := []string{}
 	catRows, err := h.DB.Query(`
 		SELECT DISTINCT category FROM menu_items
 		WHERE category <> '' ORDER BY category
@@ -50,7 +52,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 
 	message := r.URL.Query().Get("message")
 
-		data := struct {
+	data := struct {
 		Items      []menu.MenuItem
 		Message    string
 		Search     string

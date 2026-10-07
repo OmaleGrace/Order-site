@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"Order-site/brand"
 	"Order-site/cart"
 	"Order-site/errors"
 	"Order-site/middleware"
@@ -59,6 +60,7 @@ func (h *Handlers) Cart(w http.ResponseWriter, r *http.Request) {
 					return price * quantity
 				},
 			}).
+			Funcs(brand.Funcs()).
 			ParseFiles("templates/cart.html"),
 	)
 

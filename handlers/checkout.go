@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"Order-site/brand"
 	"Order-site/cart"
 	"Order-site/errors"
 	"Order-site/middleware"
@@ -199,7 +200,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) OrderSuccess(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(
-		template.ParseFiles("templates/order-success.html"),
+		brand.ParseE("templates/order-success.html"),
 	)
 
 	err := tmpl.Execute(w, nil)

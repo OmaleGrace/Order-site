@@ -4,12 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
-	"time"
 	"strings"
+	"time"
 
+	"Order-site/brand"
 	emailer "Order-site/email"
 	"Order-site/errors"
 
@@ -25,7 +25,7 @@ func generateToken() (string, error) {
 }
 
 func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/forgot-password.html"))
+	tmpl := brand.Parse("templates/forgot-password.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -34,7 +34,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-			email := strings.TrimSpace(r.FormValue("email"))
+		email := strings.TrimSpace(r.FormValue("email"))
 		if err := validateEmail(email); err != nil {
 			errors.Render(w, err.Error(), http.StatusBadRequest)
 			return
@@ -93,7 +93,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/reset-password.html"))
+	tmpl := brand.Parse("templates/reset-password.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -104,7 +104,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 		token := r.FormValue("token")
 		newPassword := r.FormValue("password")
-			if err := validatePassword(newPassword); err != nil {
+		if err := validatePassword(newPassword); err != nil {
 			errors.Render(w, err.Error(), http.StatusBadRequest)
 			return
 		}

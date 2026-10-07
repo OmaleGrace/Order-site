@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strings"
 
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/sms"
@@ -31,12 +31,12 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 
 	phone := strings.TrimSpace(r.FormValue("phone"))
 
-if phone == "" {
-	errors.Render(w, "Phone number is required", http.StatusBadRequest)
-	return
-}
+	if phone == "" {
+		errors.Render(w, "Phone number is required", http.StatusBadRequest)
+		return
+	}
 
-phone = normalizePhone(phone)
+	phone = normalizePhone(phone)
 
 	// Make sure this phone isn't already used by another account
 	var existingCount int
@@ -58,7 +58,7 @@ phone = normalizePhone(phone)
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/verify-phone.html")
+	tmpl, err := brand.ParseE("templates/verify-phone.html")
 	if err != nil {
 		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
