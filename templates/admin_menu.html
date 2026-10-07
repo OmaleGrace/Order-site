@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Menu - Admin</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: #f6f6f4; color: #222; }
+        header { background: #fff; border-bottom: 1px solid #ddd; padding: 14px 20px; display: flex; gap: 20px; align-items: center; }
+        header h1 { font-size: 1.1rem; margin: 0; flex: 1; }
+        header a { color: #1a5f3c; text-decoration: none; font-weight: 600; }
+        main { max-width: 900px; margin: 20px auto; padding: 0 16px; }
+        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; }
+        .card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+        .card h2 { margin: 0 0 12px; font-size: 1rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .full { grid-column: 1 / -1; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 4px; color: #555; }
+        input, textarea { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 6px; font: inherit; }
+        textarea { resize: vertical; min-height: 60px; }
+        .actions { margin-top: 12px; display: flex; gap: 10px; }
+        button { padding: 9px 16px; border: 0; border-radius: 6px; font: inherit; font-weight: 600; cursor: pointer; background: #1a5f3c; color: #fff; }
+        button.secondary { background: #e4e4e0; color: #222; }
+        button.danger { background: #c0392b; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+        th { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        td.row-actions { white-space: nowrap; }
+        td.row-actions form { display: inline; }
+        td.row-actions button { padding: 6px 12px; font-size: 0.85rem; }
+        .muted { color: #777; font-size: 0.85rem; }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Manage Menu</h1>
+        <a href="/admin/orders">Orders</a>
+        <a href="/">View site</a>
+    </header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <div class="card">
+            <h2 id="form-title">Add a menu item</h2>
+            <form action="/admin/menu/save" method="post" id="item-form">
+                <input type="hidden" name="id" id="item-id">
+                <div class="grid">
+                    <div>
+                        <label for="name">Name</label>
+                        <input type="text" name="name" id="name" required>
+                    </div>
+                    <div>
+                        <label for="price">Price (₦)</label>
+                        <input type="number" name="price" id="price" min="1" step="0.01" required>
+                    </div>
+                    <div>
+                        <label for="category">Category</label>
+                        <input type="text" name="category" id="category" placeholder="e.g. Rice, Drinks">
+                    </div>
+                    <div>
+                        <label for="image_url">Image URL (optional)</label>
+                        <input type="text" name="image_url" id="image_url">
+                    </div>
+                    <div class="full">
+                        <label for="description">Description</label>
+                        <textarea name="description" id="description"></textarea>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="submit" id="save-btn">Add item</button>
+                    <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel edit</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Menu items ({{len .Items}})</h2>
+            {{if .Items}}
+            <table>
+                <thead>
+                    <tr><th>Item</th><th>Category</th><th>Price</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {{range .Items}}
+                    <tr>
+                        <td>
+                            <strong>{{.Name}}</strong>
+                            {{if .Description}}<div class="muted">{{.Description}}</div>{{end}}
+                        </td>
+                        <td>{{if .Category}}{{.Category}}{{else}}<span class="muted">none</span>{{end}}</td>
+                        <td>₦{{.PriceNaira}}</td>
+                        <td class="row-actions">
+                            <button type="button" class="secondary edit-btn"
+                                data-id="{{.ID}}"
+                                data-name="{{.Name}}"
+                                data-price="{{.PriceNaira}}"
+                                data-category="{{.Category}}"
+                                data-image="{{.ImageURL}}"
+                                data-description="{{.Description}}">Edit</button>
+                            <form action="/admin/menu/delete" method="post"
+                                  onsubmit="return confirm('Delete {{.Name}}?');">
+                                <input type="hidden" name="id" value="{{.ID}}">
+                                <button type="submit" class="danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <p class="muted">No items yet. Add your first one above.</p>
+            {{end}}
+        </div>
+    </main>
+
+    <script>
+    (function () {
+        var form = document.getElementById('item-form');
+        var title = document.getElementById('form-title');
+        var saveBtn = document.getElementById('save-btn');
+        var cancelBtn = document.getElementById('cancel-btn');
+        var f = {
+            id: document.getElementById('item-id'),
+            name: document.getElementById('name'),
+            price: document.getElementById('price'),
+            category: document.getElementById('category'),
+            image: document.getElementById('image_url'),
+            description: document.getElementById('description')
+        };
+
+        function resetForm() {
+            form.reset();
+            f.id.value = '';
+            title.textContent = 'Add a menu item';
+            saveBtn.textContent = 'Add item';
+            cancelBtn.style.display = 'none';
+        }
+
+        document.querySelectorAll('.edit-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                f.id.value = btn.dataset.id;
+                f.name.value = btn.dataset.name;
+                f.price.value = btn.dataset.price;
+                f.category.value = btn.dataset.category;
+                f.image.value = btn.dataset.image;
+                f.description.value = btn.dataset.description;
+                title.textContent = 'Edit menu item';
+                saveBtn.textContent = 'Save changes';
+                cancelBtn.style.display = 'inline-block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                f.name.focus();
+            });
+        });
+
+        cancelBtn.addEventListener('click', resetForm);
+    })();
+    </script>
+</body>
+</html>

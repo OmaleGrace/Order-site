@@ -132,6 +132,10 @@ func main() {
 		),
 	)
 
+		mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))
+	mux.HandleFunc("POST /admin/menu/save", middleware.Logging(middleware.Admin(db, h.AdminMenuSave)))
+	mux.HandleFunc("POST /admin/menu/delete", middleware.Logging(middleware.Admin(db, h.AdminMenuDelete)))
+	
 	mux.HandleFunc(
 		"/auth/google",
 		middleware.Logging(h.GoogleLogin),
