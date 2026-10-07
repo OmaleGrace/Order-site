@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	emailer "Order-site/email"
 	"Order-site/middleware"
@@ -94,9 +95,22 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		name := r.FormValue("name")
-		email := r.FormValue("email")
+				name := strings.TrimSpace(r.FormValue("name"))
+		email := strings.TrimSpace(r.FormValue("email"))
 		password := r.FormValue("password")
+
+		if err := validateName(name); err != nil {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validateEmail(email); err != nil {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validatePassword(password); err != nil {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword(
 			[]byte(password),
