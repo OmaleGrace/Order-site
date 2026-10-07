@@ -3,6 +3,7 @@ package handlers
 import (
 	"html/template"
 	"net/http"
+	"log"
 
 	"Order-site/errors"
 	"Order-site/middleware"
@@ -52,6 +53,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		errors.Render(w, "Could not load account", http.StatusInternalServerError)
+		log.Printf("account: query failed: %v", err)
 		return
 	}
 
