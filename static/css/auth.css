@@ -145,3 +145,7 @@
     font-size: 13px;
     margin: -10px 0 16px;
 }
+
+.field-error { color: #c0392b; font-size: 0.85rem; margin: 4px 0 0; min-height: 1.1em; }
+input.invalid { border-color: #c0392b; }
+form button[type="submit"]:disabled { opacity: 0.5; cursor: not-allowed; }

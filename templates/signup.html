@@ -9,34 +9,37 @@
 
 <body>
     <main>
-        
+
         <div class="auth-wrapper">
             <h1>Create Your Account</h1>
 
-            <form action="/signup" method="post">
+            <form action="/signup" method="post" novalidate>
                 <div class="form-group">
                     <label for="name">Name</label>
                     <input type="text" id="name" name="name" required>
+                    <p class="field-error" id="name-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
+                    <p class="field-error" id="email-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group password-field">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                     <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
-    <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-    </svg>
-    <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
-        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-        <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-</button>
+                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </button>
+                    <p class="field-error" id="password-error" aria-live="polite"></p>
                 </div>
 
                 <button type="submit">Create Account</button>
@@ -63,16 +66,65 @@
             var input = document.getElementById(btn.dataset.target);
             var isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
-
-            var openEye = btn.querySelector('.eye-open');
-            var closedEye = btn.querySelector('.eye-closed');
-            openEye.style.display = isHidden ? 'none' : 'block';
-            closedEye.style.display = isHidden ? 'block' : 'none';
-
+            btn.querySelector('.eye-open').style.display = isHidden ? 'none' : 'block';
+            btn.querySelector('.eye-closed').style.display = isHidden ? 'block' : 'none';
             btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
     });
-</script>
+
+    (function () {
+        var nameEl = document.getElementById('name');
+        var emailEl = document.getElementById('email');
+        var passEl = document.getElementById('password');
+        var submitBtn = document.querySelector('form button[type="submit"]');
+
+        function checkName(v) {
+            var words = v.trim().split(/\s+/).filter(Boolean);
+            if (words.length < 2) return 'Enter your full name, with words separated by a space';
+            for (var i = 0; i < words.length; i++) {
+                if ([...words[i]].length < 3) return 'Each part of your name must be at least 3 letters';
+            }
+            return '';
+        }
+
+        function checkEmail(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Enter a valid email address';
+        }
+
+        function checkPassword(v) {
+            if ([...v].length < 8) return 'Password must be at least 8 characters';
+            if (!/\p{Lu}/u.test(v)) return 'Add a capital letter';
+            if (!/\p{Ll}/u.test(v)) return 'Add a lowercase letter';
+            if (!/\p{Nd}/u.test(v)) return 'Add a number';
+            if (!/[^\p{L}\p{N}\s]/u.test(v)) return 'Add a special character, like ! @ # $';
+            return '';
+        }
+
+        var fields = [
+            { el: nameEl, check: checkName, msg: document.getElementById('name-error') },
+            { el: emailEl, check: checkEmail, msg: document.getElementById('email-error') },
+            { el: passEl, check: checkPassword, msg: document.getElementById('password-error') }
+        ];
+
+        function update(f) {
+            var err = f.check(f.el.value);
+            f.msg.textContent = err;
+            f.el.classList.toggle('invalid', err !== '');
+        }
+
+        function refreshSubmit() {
+            submitBtn.disabled = !fields.every(function (f) {
+                return f.check(f.el.value) === '';
+            });
+        }
+
+        fields.forEach(function (f) {
+            f.el.addEventListener('input', function () { update(f); refreshSubmit(); });
+            f.el.addEventListener('blur', function () { if (f.el.value !== '') update(f); });
+        });
+
+        submitBtn.disabled = true;
+    })();
     </script>
 </body>
 </html>
