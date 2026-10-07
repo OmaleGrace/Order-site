@@ -12,29 +12,30 @@
         <div class="auth-wrapper">
             <h1>Welcome Back</h1>
 
-            <form action="/login" method="post">
+            <form action="/login" method="post" novalidate>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" name="email" id="email" required>
+                    <p class="field-error" id="email-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group password-field">
                     <label for="password">Password</label>
                     <input type="password" name="password" id="password" required>
                     <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
-    <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-    </svg>
-    <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
-        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-        <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-</button>
+                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <p class="forgot-password-link"><a href="/forgot-password">Forgot password?</a></p>
-                
+
                 <button type="submit">Login</button>
             </form>
 
@@ -59,15 +60,42 @@
             var input = document.getElementById(btn.dataset.target);
             var isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
-
-            var openEye = btn.querySelector('.eye-open');
-            var closedEye = btn.querySelector('.eye-closed');
-            openEye.style.display = isHidden ? 'none' : 'block';
-            closedEye.style.display = isHidden ? 'block' : 'none';
-
+            btn.querySelector('.eye-open').style.display = isHidden ? 'none' : 'block';
+            btn.querySelector('.eye-closed').style.display = isHidden ? 'block' : 'none';
             btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
     });
-</script>
+
+    (function () {
+        var emailEl = document.getElementById('email');
+        var passEl = document.getElementById('password');
+        var emailMsg = document.getElementById('email-error');
+        var submitBtn = document.querySelector('form button[type="submit"]');
+
+        function emailOk(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+        }
+
+        function showEmail() {
+            var bad = emailEl.value !== '' && !emailOk(emailEl.value);
+            emailMsg.textContent = bad ? 'Enter a valid email address' : '';
+            emailEl.classList.toggle('invalid', bad);
+        }
+
+        function refresh() {
+            submitBtn.disabled = !(emailOk(emailEl.value) && passEl.value.length > 0);
+        }
+
+        emailEl.addEventListener('input', function () { showEmail(); refresh(); });
+        emailEl.addEventListener('blur', showEmail);
+        passEl.addEventListener('input', refresh);
+        emailEl.addEventListener('change', refresh);
+        passEl.addEventListener('change', refresh);
+
+        // Browsers can autofill saved logins without firing input events
+        refresh();
+        setTimeout(refresh, 300);
+    })();
+    </script>
 </body>
 </html>

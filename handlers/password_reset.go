@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"strings"
 
 	emailer "Order-site/email"
 	"Order-site/errors"
@@ -33,7 +34,11 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		email := r.FormValue("email")
+			email := strings.TrimSpace(r.FormValue("email"))
+		if err := validateEmail(email); err != nil {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		var userID int
 		err = h.DB.QueryRow("SELECT id FROM users WHERE email = $1", email).Scan(&userID)
@@ -99,6 +104,10 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 		token := r.FormValue("token")
 		newPassword := r.FormValue("password")
+			if err := validatePassword(newPassword); err != nil {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
 		var userID int
 		var expiresAt time.Time
