@@ -11,7 +11,9 @@ import (
 
 	"Order-site/database"
 	"Order-site/handlers"
+	"Order-site/errors"
 	"Order-site/middleware"
+	
 
 	"github.com/joho/godotenv"
 )
@@ -176,6 +178,10 @@ mux.HandleFunc(
 		middleware.RequireLogin(db, h.VerifyPhoneOTP),
 	),
 )
+	// Any address that matches no other route gets the styled 404 page
+	mux.HandleFunc("/", middleware.Logging(func(w http.ResponseWriter, r *http.Request) {
+		errors.Render(w, "We couldn't find the page you were looking for.", http.StatusNotFound)
+	}))
 	// HTTP server
 	port := os.Getenv("PORT")
 	if port == "" {
