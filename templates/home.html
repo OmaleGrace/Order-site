@@ -22,6 +22,42 @@
     </nav>
 </header>
 
+<section class="home-search-strip">
+    <form action="/menu" method="get" class="home-search">
+        <span class="home-search-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search meals..." aria-label="Search meals">
+        <button type="submit">Search</button>
+    </form>
+</section>
+<section class="banner-wrap">
+    <div class="banner-track" id="banner-track">
+        <a href="/menu" class="banner banner-green">
+            <div class="banner-text">
+                <h2>Hungry? Order in minutes</h2>
+                <p>Browse the menu and pay securely online.</p>
+                <span class="banner-btn">View menu →</span>
+            </div>
+            <div class="banner-emoji">🍲</div>
+        </a>
+        <a href="/menu?category=Drinks" class="banner banner-red">
+            <div class="banner-text">
+                <h2>Cold drinks, hot meals</h2>
+                <p>Add a drink to any order.</p>
+                <span class="banner-btn">See drinks →</span>
+            </div>
+            <div class="banner-emoji">🥤</div>
+        </a>
+        <a href="/orders" class="banner banner-gold">
+            <div class="banner-text">
+                <h2>Track every order</h2>
+                <p>Watch it go from paid to ready.</p>
+                <span class="banner-btn">My orders →</span>
+            </div>
+            <div class="banner-emoji">📦</div>
+        </a>
+    </div>
+    <div class="banner-dots" id="banner-dots"></div>
+</section>
 <section class="hero">
     <div class="hero-content">
         <h1>Fresh Meals, Made With Love</h1>
@@ -40,22 +76,65 @@
     </div>
 </section>
 
-{{if .Preview}}
-<section class="preview-section">
-    <h2>Popular Dishes</h2>
-    <div class="preview-grid">
-        {{range .Preview}}
-        <article class="preview-card">
-            <div class="preview-image">
-                {{if .ImageURL.String}}
-                <img src="{{.ImageURL.String}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+{{if .Categories}}
+<section class="home-section">
+    <h2 class="row-title">Browse by category</h2>
+    <div class="cat-row">
+        {{range .Categories}}
+        <a href="{{.Link}}" class="cat-tile">
+            <span class="cat-circle">{{.Icon}}</span>
+            <span class="cat-name">{{.Name}}</span>
+        </a>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+{{if .Again}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Order again</h2>
+        <a href="/orders" class="row-link">My orders →</a>
+    </div>
+    <div class="h-row">
+        {{range .Again}}
+        <article class="h-card">
+            <div class="h-image">
+                {{if .ImageURL}}
+                <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
                 {{else}}
                 <div class="no-image">🍽️</div>
                 {{end}}
             </div>
-            <div class="preview-info">
-                <h3>{{.Name}}</h3>
-                <strong>₦{{naira .PriceKobo}}</strong>
+            <div class="h-info">
+                <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
+                <strong class="h-price">₦{{naira .PriceKobo}}</strong>
+            </div>
+        </article>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+{{if .Popular}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Popular now</h2>
+        <a href="/menu" class="row-link">See all →</a>
+    </div>
+    <div class="h-row">
+        {{range .Popular}}
+        <article class="h-card">
+            <div class="h-image">
+                {{if .ImageURL}}
+                <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                {{else}}
+                <div class="no-image">🍽️</div>
+                {{end}}
+            </div>
+            <div class="h-info">
+                <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
+                <strong class="h-price">₦{{naira .PriceKobo}}</strong>
             </div>
         </article>
         {{end}}
@@ -77,6 +156,7 @@
 </footer>
 
 <script src="/static/js/lightbox.js"></script>
+<script src="/static/js/banners.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 
 	"Order-site/brand"
 	"Order-site/menu"
+	"Order-site/middleware"
+
+	"html/template"
 )
 
 func naira(kobo int) int {
@@ -27,6 +29,12 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 
 	items, err := menu.GetAll(h.DB, search, category)
+	if err != nil {
+		fmt.Println("Menu load error", err)
+		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		return
+	}
+
 	categories := []string{}
 	catRows, err := h.DB.Query(`
 		SELECT DISTINCT category FROM menu_items
@@ -44,10 +52,22 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err != nil {
-		fmt.Println("Menu load error", err)
-		http.Error(w, "Could not load menu", http.StatusInternalServerError)
-		return
+	favs := map[int]bool{}
+	if cookie, err := r.Cookie("session_token"); err == nil {
+		if userID, err := middleware.GetUserID(h.DB, cookie.Value); err == nil {
+			favRows, err := h.DB.Query("SELECT menu_item_id FROM favorites WHERE user_id = $1", userID)
+			if err != nil {
+				fmt.Println("Menu favourites error:", err)
+			} else {
+				defer favRows.Close()
+				for favRows.Next() {
+					var id int
+					if err := favRows.Scan(&id); err == nil {
+						favs[id] = true
+					}
+				}
+			}
+		}
 	}
 
 	message := r.URL.Query().Get("message")
@@ -58,12 +78,14 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		Search     string
 		Category   string
 		Categories []string
+		Favs       map[int]bool
 	}{
 		Items:      items,
 		Message:    message,
 		Search:     search,
 		Category:   category,
 		Categories: categories,
+		Favs:       favs,
 	}
 
 	err = tmpl.Execute(w, data)

@@ -45,3 +45,9 @@ ON CONFLICT (slug) DO NOTHING;
 UPDATE menu_items
 SET vendor_id = (SELECT id FROM vendors WHERE slug = 'graces-kitchen')
 WHERE vendor_id IS NULL;
+CREATE TABLE IF NOT EXISTS favorites (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, menu_item_id)
+);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu - {{brandName}}</title>
+    <title>Favourites - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
 </head>
@@ -16,40 +16,19 @@
     </div>
 
     <nav class="menu-nav">
-        <a href="/" class="home-link">Home</a>
-        <a href="/favorites">❤ Favourites</a>
+        <a href="/menu">Menu</a>
         <a href="/orders">My Orders</a>
         <a href="/account">Account</a>
-        <a href="/logout">Logout</a>
         <a href="/cart" class="cart-link">🛒 Cart</a>
     </nav>
 </header>
 
 <section class="menu-intro">
-    <h1>Our Menu</h1>
-    <p>Choose from our delicious selection of freshly prepared meals.</p>
-</section>
-
-<section class="menu-filters">
-    <form action="/menu" method="get" class="search-form">
-        <input type="text" name="search" placeholder="Search meals..." value="{{.Search}}">
-        {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
-        <button type="submit">Search</button>
-    </form>
-
-    <div class="category-filters">
-        <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}">All</a>
-        {{range .Categories}}
-        <a href="/menu?category={{.}}{{if $.Search}}&search={{$.Search}}{{end}}" class="category-btn {{if eq $.Category .}}active{{end}}">{{.}}</a>
-        {{end}}
-    </div>
+    <h1>My Favourites</h1>
+    <p>Dishes you've saved, ready to order again.</p>
 </section>
 
 <main class="menu-container">
-
-    {{if .Message}}
-        <p class="menu-message">{{.Message}}</p>
-    {{end}}
 
     <section class="menu-grid">
 
@@ -57,9 +36,9 @@
         <article class="food-card">
 
             <div class="food-image">
-                <button type="button" class="fav-btn{{if index $.Favs .ID}} on{{end}}" data-id="{{.ID}}" aria-label="Save to favourites" aria-pressed="{{if index $.Favs .ID}}true{{else}}false{{end}}">♥</button>
-                {{if .ImageURL.String}}
-                <img src="{{.ImageURL.String}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                <button type="button" class="fav-btn on" data-id="{{.ID}}" data-remove="1" aria-label="Remove from favourites" aria-pressed="true">♥</button>
+                {{if .ImageURL}}
+                <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
                 {{else}}
                 <div class="no-image">🍽️</div>
                 {{end}}
@@ -67,7 +46,6 @@
 
             <div class="food-content">
                 <h2>{{.Name}}</h2>
-
                 <p class="food-description">{{.Description}}</p>
 
                 <div class="food-bottom">
@@ -82,7 +60,11 @@
 
         </article>
         {{else}}
-            <p class="empty-menu">No menu items found. Try a different search or category.</p>
+        <div class="empty-menu">
+            <p>You haven't saved any dishes yet.</p>
+            <p>Tap the ♥ on a dish in the menu to save it here.</p>
+            <a href="/menu" class="add-cart-btn" style="display:inline-block;text-decoration:none;">Browse Menu</a>
+        </div>
         {{end}}
 
     </section>

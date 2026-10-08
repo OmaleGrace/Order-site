@@ -90,7 +90,8 @@ func main() {
 			middleware.RequireLogin(db, h.UpdateCartQuantity),
 		),
 	)
-
+	mux.HandleFunc("POST /favorites/toggle", middleware.Logging(middleware.RequireLogin(db, h.ToggleFavorite)))
+	mux.HandleFunc("GET /favorites", middleware.Logging(middleware.RequireLogin(db, h.Favorites)))
 	mux.HandleFunc(
 		"POST /checkout",
 		middleware.Logging(
