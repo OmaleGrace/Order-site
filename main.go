@@ -131,8 +131,8 @@ func main() {
 			middleware.Admin(db, h.UpdateOrderStatus),
 		),
 	)
-
-		mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))
+	mux.HandleFunc("GET /cart/count", middleware.Logging(h.CartCount))
+	mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))
 	mux.HandleFunc("POST /admin/menu/save", middleware.Logging(middleware.Admin(db, h.AdminMenuSave)))
 	mux.HandleFunc("POST /admin/menu/delete", middleware.Logging(middleware.Admin(db, h.AdminMenuDelete)))
 	

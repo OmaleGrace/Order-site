@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Phone - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
 </head>
 
@@ -11,7 +12,7 @@
 
 <header class="account-header">
     <div class="header-inner">
-        <a href="/menu" class="logo">{{brandName}}</a>
+        <a href="/menu" class="logo">🍴 {{brandName}}</a>
         <nav>
             <a href="/menu">Menu</a>
             <a href="/cart">Cart</a>
@@ -34,10 +35,10 @@
             <input type="hidden" name="pin_id" value="{{.PinID}}">
 
             <label for="code">Verification Code</label>
-            <input type="text" id="code" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required autofocus>
+            <input type="text" id="code" name="code" class="code-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required autofocus>
 
             <div class="profile-buttons">
-                <button type="submit">Verify & Save</button>
+                <button type="submit">Verify &amp; Save</button>
                 <a href="/account/edit">Cancel</a>
             </div>
         </form>

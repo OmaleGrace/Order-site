@@ -6,6 +6,7 @@
 
     <title>Admin Orders - {{brandName}}</title>
 
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/admin-orders.css">
 </head>
 
@@ -19,10 +20,10 @@
     </div>
 
     <nav>
-        <a href="/">Home</a>
-        <a href="/menu">Menu</a>
+        <a href="/admin/orders" class="active">Orders</a>
+        <a href="/admin/menu">Manage menu</a>
+        <a href="/menu">View menu</a>
         <a href="/logout">Logout</a>
-        <a href="/admin/menu">Menu</a>
     </nav>
 
 </header>
@@ -50,15 +51,10 @@
 
                         <div>
                             <h2>Order #{{.ID}}</h2>
-
-                            <span class="order-date">
-                                {{.CreatedAt}}
-                            </span>
+                            <span class="order-date">{{.CreatedAt}}</span>
                         </div>
 
-                        <span class="status status-{{.Status}}">
-                            {{.Status}}
-                        </span>
+                        <span class="status status-{{.Status}}">{{.Status}}</span>
 
                     </div>
 
@@ -85,13 +81,8 @@
                         <ul>
                             {{range .Items}}
                                 <li>
-                                    <span>
-                                        {{.Name}} × {{.Quantity}}
-                                    </span>
-
-                                    <strong>
-                                        ₦{{naira .PriceKobo}}
-                                    </strong>
+                                    <span>{{.Name}} × {{.Quantity}}</span>
+                                    <strong>₦{{naira .PriceKobo}}</strong>
                                 </li>
                             {{end}}
                         </ul>
@@ -103,9 +94,7 @@
 
                         <div class="total">
                             <span>Total</span>
-                            <strong>
-                                ₦{{naira .TotalKobo}}
-                            </strong>
+                            <strong>₦{{naira .TotalKobo}}</strong>
                         </div>
 
 
@@ -115,61 +104,18 @@
                             class="status-form"
                         >
 
-                            <input
-                                type="hidden"
-                                name="order_id"
-                                value="{{.ID}}"
-                            >
+                            <input type="hidden" name="order_id" value="{{.ID}}">
 
                             <select name="status">
-
-                                <option
-                                    value="pending"
-                                    {{if eq .Status "pending"}}selected{{end}}
-                                >
-                                    Pending
-                                </option>
-
-                                <option
-                                    value="paid"
-                                    {{if eq .Status "paid"}}selected{{end}}
-                                >
-                                    Paid
-                                </option>
-
-                                <option
-                                    value="preparing"
-                                    {{if eq .Status "preparing"}}selected{{end}}
-                                >
-                                    Preparing
-                                </option>
-
-                                <option
-                                    value="ready"
-                                    {{if eq .Status "ready"}}selected{{end}}
-                                >
-                                    Ready
-                                </option>
-
-                                <option
-                                    value="completed"
-                                    {{if eq .Status "completed"}}selected{{end}}
-                                >
-                                    Completed
-                                </option>
-
-                                <option
-                                    value="cancelled"
-                                    {{if eq .Status "cancelled"}}selected{{end}}
-                                >
-                                    Cancelled
-                                </option>
-
+                                <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                                <option value="paid" {{if eq .Status "paid"}}selected{{end}}>Paid</option>
+                                <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
+                                <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
+                                <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
+                                <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>Cancelled</option>
                             </select>
 
-                            <button type="submit">
-                                Update Status
-                            </button>
+                            <button type="submit">Update Status</button>
 
                         </form>
 
@@ -185,13 +131,11 @@
 
         <section class="empty-orders">
 
-            <div>📦</div>
+            <div class="empty-icon">📦</div>
 
             <h2>No orders yet</h2>
 
-            <p>
-                Customer orders will appear here when they are placed.
-            </p>
+            <p>Customer orders will appear here when they are placed.</p>
 
         </section>
 

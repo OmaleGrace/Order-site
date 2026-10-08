@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/home.css">
 </head>
 
@@ -22,14 +23,19 @@
 </header>
 
 <section class="hero">
-    <div class="hero-overlay"></div>
     <div class="hero-content">
         <h1>Fresh Meals, Made With Love</h1>
-        <p>Order delicious home-cooked meals delivered straight to your door.</p>
+        <p>Order delicious home-cooked meals straight from your phone, and pay securely online.</p>
 
         <div class="hero-actions">
             <a href="/menu" class="btn-primary">View Menu</a>
             <a href="/signup" class="btn-secondary">Create Account</a>
+        </div>
+
+        <div class="trust-row">
+            <span>✔ Secure online payment</span>
+            <span>✔ Easy ordering</span>
+            <span>✔ Track your orders</span>
         </div>
     </div>
 </section>
@@ -37,12 +43,15 @@
 {{if .Preview}}
 <section class="preview-section">
     <h2>Popular Dishes</h2>
-
     <div class="preview-grid">
         {{range .Preview}}
         <article class="preview-card">
             <div class="preview-image">
-                <img src="{{.ImageURL.String}}" alt="{{.Name}}">
+                {{if .ImageURL.String}}
+                <img src="{{.ImageURL.String}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                {{else}}
+                <div class="no-image">🍽️</div>
+                {{end}}
             </div>
             <div class="preview-info">
                 <h3>{{.Name}}</h3>
@@ -67,5 +76,7 @@
     <p>&copy; 2026 {{brandName}}</p>
 </footer>
 
+<script src="/static/js/lightbox.js"></script>
+<script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

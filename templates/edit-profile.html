@@ -6,6 +6,7 @@
 
     <title>Edit Profile - {{brandName}}</title>
 
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
 </head>
 
@@ -14,9 +15,7 @@
 <header class="account-header">
     <div class="header-inner">
 
-        <a href="/menu" class="logo">
-            {{brandName}}
-        </a>
+        <a href="/menu" class="logo">🍴 {{brandName}}</a>
 
         <nav>
             <a href="/menu">Menu</a>
@@ -43,41 +42,23 @@
         >
 
             <div class="profile-preview">
-
                 {{if .ProfilePicture}}
-                    <img
-                        src="{{.ProfilePicture}}"
-                        alt="Profile picture"
-                        class="profile-image"
-                    >
+                <img src="{{.ProfilePicture}}" alt="Profile picture" class="profile-image">
                 {{else}}
-                    <div class="profile-placeholder">
-                        👤
-                    </div>
+                <div class="profile-placeholder">👤</div>
                 {{end}}
-
             </div>
 
-            <label for="profile_picture">
-                Profile picture
-            </label>
-
+            <label for="profile_picture">Profile picture</label>
             <input
                 type="file"
                 id="profile_picture"
                 name="profile_picture"
                 accept="image/jpeg,image/png,image/webp"
             >
+            <small>JPG, PNG or WEBP. Maximum size: 5MB.</small>
 
-            <small>
-                JPG, PNG or WEBP. Maximum size: 5MB.
-            </small>
-
-
-            <label for="name">
-                Username
-            </label>
-
+            <label for="name">Username</label>
             <input
                 type="text"
                 id="name"
@@ -87,43 +68,25 @@
                 required
             >
 
-
-            <label for="email">
-                Email
-            </label>
-
+            <label for="email">Email</label>
             <input
                 type="email"
                 id="email"
                 value="{{.Email}}"
                 disabled
             >
-
-            <small>
-                Your email address cannot be changed here.
-            </small>
-
+            <small>Your email address cannot be changed here.</small>
 
             <div class="profile-buttons">
-
-                <button type="submit">
-                    Save Changes
-                </button>
-
-                <a href="/account">
-                    Cancel
-                </a>
-
+                <button type="submit">Save Changes</button>
+                <a href="/account">Cancel</a>
             </div>
 
         </form>
 
         <div class="phone-section">
 
-            <label for="current-phone">
-                Phone Number
-            </label>
-
+            <label for="current-phone">Phone Number</label>
             <input
                 type="tel"
                 id="current-phone"
@@ -131,7 +94,6 @@
                 disabled
                 placeholder="No phone number set"
             >
-
             <small>To add or change your phone number, verify a new one below.</small>
 
             <form action="/account/phone/send-otp" method="post" class="phone-form">
@@ -151,5 +113,6 @@
 
 </main>
 
+<script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

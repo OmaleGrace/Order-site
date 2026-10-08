@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/orders.css">
 </head>
 
@@ -63,7 +64,7 @@
             <div class="status">
 
                 <div class="status-title">
-                    Status: <span class="status-label">{{.Status}}</span>
+                    Status: <span class="status-label status-{{.Status}}">{{.Status}}</span>
                 </div>
 
                 <div class="steps">
@@ -109,5 +110,6 @@
     }, 10000);
 </script>
 
+<script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

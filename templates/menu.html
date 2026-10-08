@@ -4,27 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menu - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
 </head>
 
 <body>
 
-    <header class="menu-header">
-
+<header class="menu-header">
     <div class="brand">
         <a href="/" class="brand-name">🍴 {{brandName}}</a>
-        <p>Fresh meals. Great taste. Made for you ❤️</p>
     </div>
 
     <nav class="menu-nav">
         <a href="/" class="home-link">Home</a>
-        <a href="/cart" class="cart-link">🛒 View Cart</a>
         <a href="/orders">My Orders</a>
         <a href="/account">Account</a>
         <a href="/logout">Logout</a>
-
+        <a href="/cart" class="cart-link">🛒 Cart</a>
     </nav>
-
 </header>
 
 <section class="menu-intro">
@@ -33,7 +30,6 @@
 </section>
 
 <section class="menu-filters">
-
     <form action="/menu" method="get" class="search-form">
         <input type="text" name="search" placeholder="Search meals..." value="{{.Search}}">
         {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
@@ -46,62 +42,52 @@
         <a href="/menu?category={{.}}{{if $.Search}}&search={{$.Search}}{{end}}" class="category-btn {{if eq $.Category .}}active{{end}}">{{.}}</a>
         {{end}}
     </div>
-
 </section>
 
-    <main class="menu-container">
+<main class="menu-container">
 
-        {{if .Message}}
-            <p class="menu-message">{{.Message}}</p>
+    {{if .Message}}
+        <p class="menu-message">{{.Message}}</p>
+    {{end}}
+
+    <section class="menu-grid">
+
+        {{range .Items}}
+        <article class="food-card">
+
+            <div class="food-image">
+                {{if .ImageURL.String}}
+                <img src="{{.ImageURL.String}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                {{else}}
+                <div class="no-image">🍽️</div>
+                {{end}}
+            </div>
+
+            <div class="food-content">
+                <h2>{{.Name}}</h2>
+
+                <p class="food-description">{{.Description}}</p>
+
+                <div class="food-bottom">
+                    <strong class="food-price">₦{{naira .PriceKobo}}</strong>
+
+                    <form action="/cart/add" method="post">
+                        <input type="hidden" name="id" value="{{.ID}}">
+                        <button type="submit" class="add-cart-btn">+ Add to Cart</button>
+                    </form>
+                </div>
+            </div>
+
+        </article>
+        {{else}}
+            <p class="empty-menu">No menu items found. Try a different search or category.</p>
         {{end}}
 
-        <section class="menu-grid">
+    </section>
 
-            {{range .Items}}
+</main>
 
-                <article class="food-card">
-
-                    <div class="food-image">
-                        <img src="{{.ImageURL.String}}" alt="{{.Name}}">
-                    </div>
-
-                    <div class="food-content">
-
-                        <span class="popular-badge">Popular</span>
-
-                        <h2>{{.Name}}</h2>
-
-                        <p class="food-description">
-                            {{.Description}}
-                        </p>
-
-                        <div class="food-bottom">
-
-                            <strong class="food-price">
-                                ₦{{naira .PriceKobo}}
-                            </strong>
-
-                            <form action="/cart/add" method="post">
-                                <input type="hidden" name="id" value="{{.ID}}">
-                                <button type="submit" class="add-cart-btn">
-                                    + Add to Cart
-                                </button>
-                            </form>
-
-                        </div>
-
-                    </div>
-
-                </article>
-
-            {{else}}
-
-                <p class="empty-menu">No menu items available.</p>
-
-            {{end}}
-
-        </section>
-
-    </main>
+<script src="/static/js/lightbox.js"></script>
+<script src="/static/js/bottomnav.js"></script>
 </body>
 </html>
