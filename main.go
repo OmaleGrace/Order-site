@@ -98,12 +98,10 @@ func main() {
 			middleware.RequireLogin(db, h.Checkout),
 		),
 	)
-
 	mux.HandleFunc(
 		"GET /payment/callback",
 		middleware.Logging(h.PaymentCallback),
 	)
-
 	mux.HandleFunc(
 		"POST /payment/webhook",
 		middleware.Logging(h.PaymentWebhook),
@@ -120,20 +118,21 @@ func main() {
 			middleware.RequireLogin(db, h.MyOrders),
 		),
 	)
-
 	mux.HandleFunc(
 		"GET /admin/orders",
 		middleware.Logging(
 			middleware.Admin(db, h.AdminOrders),
 		),
 	)
-
 	mux.HandleFunc(
 		"POST /admin/orders/status",
 		middleware.Logging(
 			middleware.Admin(db, h.UpdateOrderStatus),
 		),
-	)
+	)	
+	mux.HandleFunc("GET /admin/vendors", middleware.Logging(middleware.Admin(db, h.AdminVendors)))
+	mux.HandleFunc("POST /admin/vendors/save", middleware.Logging(middleware.Admin(db, h.AdminVendorSave)))
+	mux.HandleFunc("POST /admin/vendors/status", middleware.Logging(middleware.Admin(db, h.AdminVendorStatus)))
 	mux.HandleFunc("GET /cart/count", middleware.Logging(h.CartCount))
 	mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))
 	mux.HandleFunc("POST /admin/menu/save", middleware.Logging(middleware.Admin(db, h.AdminMenuSave)))
