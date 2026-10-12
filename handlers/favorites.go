@@ -97,6 +97,7 @@ func (h *Handlers) Favorites(w http.ResponseWriter, r *http.Request) {
 		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo, COALESCE(m.image_url, '')
 		FROM favorites f
 		JOIN menu_items m ON m.id = f.menu_item_id
+		JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
 		WHERE f.user_id = $1
 		ORDER BY f.created_at DESC
 	`, userID)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"Order-site/brand"
@@ -33,6 +34,16 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 	itemID, err := strconv.Atoi(r.FormValue("id"))
 	if err != nil {
 		errors.Render(w, "invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	if other, err := cart.OtherVendorInCart(h.DB, userID, itemID); err != nil {
+		fmt.Println("Vendor check error:", err)
+		errors.Render(w, "Could not add item to cart", http.StatusInternalServerError)
+		return
+	} else if other != "" {
+		msg := "Your cart has dishes from " + other + ". Check out or clear your cart before ordering from another vendor."
+		http.Redirect(w, r, "/menu?message="+url.QueryEscape(msg), http.StatusSeeOther)
 		return
 	}
 

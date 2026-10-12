@@ -68,6 +68,49 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		totalKobo += item.PriceKobo * item.Quantity
 	}
 
+	// One vendor per order, and that vendor must be live
+	vendorRows, err := h.DB.Query(`
+		SELECT DISTINCT m.vendor_id,
+		       COALESCE(v.status = 'active' AND v.paid_until > NOW(), false)
+		FROM cart_items ci
+		JOIN menu_items m ON m.id = ci.menu_item_id
+		JOIN vendors v ON v.id = m.vendor_id
+		WHERE ci.user_id = $1
+	`, userID)
+	if err != nil {
+		fmt.Println("Vendor check error:", err)
+		errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+		return
+	}
+
+	var vendorIDs []int
+	allLive := true
+	for vendorRows.Next() {
+		var vid int
+		var live bool
+		if err := vendorRows.Scan(&vid, &live); err != nil {
+			vendorRows.Close()
+			fmt.Println("Vendor check scan error:", err)
+			errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+			return
+		}
+		vendorIDs = append(vendorIDs, vid)
+		if !live {
+			allLive = false
+		}
+	}
+	vendorRows.Close()
+
+	if len(vendorIDs) != 1 {
+		errors.Render(w, "Your cart has dishes from more than one vendor. Please order from one vendor at a time.", http.StatusBadRequest)
+		return
+	}
+	if !allLive {
+		errors.Render(w, "This vendor is not taking orders right now.", http.StatusBadRequest)
+		return
+	}
+	vendorID := vendorIDs[0]
+
 	tx, err := h.DB.Begin()
 	if err != nil {
 		errors.Render(w, "Could not start order", http.StatusInternalServerError)
@@ -79,10 +122,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	var orderID int
 
 	err = tx.QueryRow(`
-	INSERT INTO orders (user_id, total_kobo, status)
-	VALUES ($1, $2, 'pending')
+	INSERT INTO orders (user_id, total_kobo, status, vendor_id)
+	VALUES ($1, $2, 'pending', $3)
 	RETURNING id
-`, userID, totalKobo).Scan(&orderID)
+`, userID, totalKobo, vendorID).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)

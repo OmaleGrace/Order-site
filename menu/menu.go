@@ -12,6 +12,8 @@ type MenuItem struct {
 	PriceKobo   int
 	ImageURL    sql.NullString
 	Category    sql.NullString
+	VendorID    int
+	VendorName  string
 }
 
 // LiveVendorSQL is true for a vendor whose dishes customers may see:
@@ -20,7 +22,8 @@ const LiveVendorSQL = "v.status = 'active' AND v.paid_until > NOW()"
 
 func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 	query := `
-		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo, m.image_url, m.category
+		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo,
+		       m.image_url, m.category, v.id, v.name
 		FROM menu_items m
 		JOIN vendors v ON v.id = m.vendor_id
 		WHERE ` + LiveVendorSQL + `
@@ -29,7 +32,9 @@ func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 	argIndex := 1
 
 	if search != "" {
-		query += " AND (m.name ILIKE $" + strconv.Itoa(argIndex) + " OR m.description ILIKE $" + strconv.Itoa(argIndex) + ")"
+		query += " AND (m.name ILIKE $" + strconv.Itoa(argIndex) +
+			" OR m.description ILIKE $" + strconv.Itoa(argIndex) +
+			" OR v.name ILIKE $" + strconv.Itoa(argIndex) + ")"
 		args = append(args, "%"+search+"%")
 		argIndex++
 	}
@@ -59,6 +64,8 @@ func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 			&item.PriceKobo,
 			&item.ImageURL,
 			&item.Category,
+			&item.VendorID,
+			&item.VendorName,
 		)
 		if err != nil {
 			return nil, err

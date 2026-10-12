@@ -80,6 +80,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 	popular := queryDishes(h.DB, `
 		SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
 		FROM menu_items m
+		JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
 		LEFT JOIN order_items oi ON oi.menu_item_id = m.id
 		LEFT JOIN orders o ON o.id = oi.order_id AND o.status NOT IN ('pending', 'cancelled')
 		GROUP BY m.id
@@ -94,6 +95,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 			again = queryDishes(h.DB, `
 				SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
 				FROM menu_items m
+				JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
 				JOIN (
 					SELECT oi.menu_item_id, MAX(o.created_at) AS last_ordered
 					FROM order_items oi
@@ -109,8 +111,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 
 	var categories []HomeCategory
 	catRows, err := h.DB.Query(`
-		SELECT DISTINCT category FROM menu_items
-		WHERE category <> '' ORDER BY category
+		SELECT DISTINCT m.category FROM menu_items m JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW() WHERE m.category <> '' ORDER BY m.category
 	`)
 	if err != nil {
 		log.Printf("home: categories query failed: %v", err)

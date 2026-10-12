@@ -37,8 +37,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 
 	categories := []string{}
 	catRows, err := h.DB.Query(`
-		SELECT DISTINCT category FROM menu_items
-		WHERE category <> '' ORDER BY category
+		SELECT DISTINCT m.category FROM menu_items m JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW() WHERE m.category <> '' ORDER BY m.category
 	`)
 	if err != nil {
 		fmt.Println("Menu categories error:", err)

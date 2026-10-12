@@ -32,7 +32,7 @@ func AddItem(db *sql.DB, userID, menuItemID int) (bool, error) {
 	var priceKobo int
 
 	err = db.QueryRow(
-		"SELECT price_kobo FROM menu_items WHERE id = $1",
+		"SELECT m.price_kobo FROM menu_items m JOIN vendors v ON v.id = m.vendor_id WHERE m.id = $1 AND v.status = 'active' AND v.paid_until > NOW()",
 		menuItemID,
 	).Scan(&priceKobo)
 
@@ -85,4 +85,22 @@ func ClearCart(db *sql.DB, userID int) error {
 	`, userID)
 
 	return err
+}
+// OtherVendorInCart returns the name of a different vendor whose dishes are
+// already in the cart, or "" when the cart is empty or all from the same vendor.
+func OtherVendorInCart(db *sql.DB, userID, menuItemID int) (string, error) {
+	var name string
+	err := db.QueryRow(`
+		SELECT v.name
+		FROM cart_items ci
+		JOIN menu_items m ON m.id = ci.menu_item_id
+		JOIN vendors v ON v.id = m.vendor_id
+		WHERE ci.user_id = $1
+		  AND m.vendor_id <> (SELECT vendor_id FROM menu_items WHERE id = $2)
+		LIMIT 1
+	`, userID, menuItemID).Scan(&name)
+	if err == sql.ErrNoRows {
+		return "", nil
+	}
+	return name, err
 }

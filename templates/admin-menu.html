@@ -74,20 +74,26 @@
     </style>
 </head>
 <body>
-    <header class="admin-header">
-        <h1>🍴 {{brandName}} · Admin</h1>
+        <header class="admin-header">
+        <h1>🍴 {{if .IsAdmin}}{{brandName}} · Admin{{else}}{{.VendorName}}{{end}}</h1>
+        {{if .IsAdmin}}
         <a href="/admin/orders">Orders</a>
         <a href="/admin/menu" class="active">Menu</a>
         <a href="/admin/vendors">Vendors</a>
+        {{else}}
+        <a href="/vendor/menu" class="active">My menu</a>
+        <a href="/vendor/orders">Orders</a>
+        {{end}}
         <a href="/">View site</a>
     </header>
 
     <main>
         {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+        {{if .Warning}}<div class="notice" style="background:#fff3cd;border-color:#f0d98a;color:#8a6d00;">{{.Warning}}</div>{{end}}
 
         <div class="card">
             <h2 id="form-title">Add a menu item</h2>
-            <form action="/admin/menu/save" method="post" id="item-form">
+            <form action="{{.Base}}/menu/save" method="post" id="item-form">
                 <input type="hidden" name="id" id="item-id">
                 <div class="grid">
                     <div>
@@ -152,7 +158,7 @@
                                 data-category="{{.Category}}"
                                 data-image="{{.ImageURL}}"
                                 data-description="{{.Description}}">Edit</button>
-                            <form action="/admin/menu/delete" method="post"
+                            <form action="{{$.Base}}/menu/delete" method="post"
                                   onsubmit="return confirm('Delete {{.Name}}?');">
                                 <input type="hidden" name="id" value="{{.ID}}">
                                 <button type="submit" class="danger">Delete</button>

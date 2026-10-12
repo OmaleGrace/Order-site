@@ -122,3 +122,7 @@ form button[type="submit"]:disabled { opacity: 0.45; cursor: not-allowed; box-sh
 @media (max-width: 480px) {
     .auth-wrapper { padding: 28px 20px 22px; }
 }
+.form-banner { margin: 0 0 16px; padding: 12px 14px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; }
+.form-banner[hidden] { display: none; }
+.form-banner.success { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); }
+.form-banner.error { background: #fdeceb; border: 1px solid #f3c5c1; color: var(--red-dark); }

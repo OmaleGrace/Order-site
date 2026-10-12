@@ -53,9 +53,12 @@ func main() {
 
 	mux.HandleFunc("GET /signup", middleware.Logging(h.Signup))
 	mux.HandleFunc("POST /signup", middleware.Logging(h.Signup))
+		mux.HandleFunc("GET /vendor/orders", middleware.Logging(h.VendorOrders))
 
 	mux.HandleFunc("GET /logout", middleware.Logging(h.Logout))
-
+		mux.HandleFunc("GET /vendor/menu", middleware.Logging(h.VendorMenu))
+	mux.HandleFunc("POST /vendor/menu/save", middleware.Logging(h.VendorMenuSave))
+	mux.HandleFunc("POST /vendor/menu/delete", middleware.Logging(h.VendorMenuDelete))
 	mux.HandleFunc(
 	"GET /menu",
 	middleware.Logging(
