@@ -20,6 +20,7 @@ type AccountPageData struct {
 	OrderCount     int
 	TotalSpentKobo int
 	Updated        bool
+	IsVendor       bool
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +75,10 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Updated = r.URL.Query().Get("updated") == "true"
+
+	var vendorCount int
+	h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount)
+	data.IsVendor = vendorCount > 0
 
 	tmpl := template.Must(
 		template.New("account.html").

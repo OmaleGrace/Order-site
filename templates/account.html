@@ -102,6 +102,12 @@
 
         <a href="/account/edit" class="account-button primary">✏️ Edit Profile</a>
 
+        {{if .IsVendor}}
+        <div class="account-actions">
+            <a href="/vendor/orders" class="account-button">🏪 Shop orders</a>
+            <a href="/vendor/menu" class="account-button">🍽️ Shop menu</a>
+        </div>
+        {{end}}
         <div class="account-actions">
             <a href="/orders" class="account-button">📦 My Orders</a>
             <a href="/cart" class="account-button">🛒 My Cart</a>

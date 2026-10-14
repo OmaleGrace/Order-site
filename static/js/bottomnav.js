@@ -2,7 +2,6 @@
     var path = location.pathname;
 
     var tabs = [
-        { href: '/', label: 'Home', icon: '🏠', active: path === '/' },
         { href: '/menu', label: 'Menu', icon: '🍽️', active: path.indexOf('/menu') === 0 },
         { href: '/cart', label: 'Cart', icon: '🛒', active: path.indexOf('/cart') === 0, badge: true },
         { href: '/orders', label: 'Orders', icon: '📦', active: path.indexOf('/orders') === 0 },

@@ -75,11 +75,23 @@
                     </ul>
                 </div>
 
-                <div class="order-bottom">
+                                <div class="order-bottom">
                     <div class="total">
                         <span>Total</span>
                         <strong>₦{{naira .TotalKobo}}</strong>
                     </div>
+
+                    {{if ne .Status "cancelled"}}
+                    <form action="/vendor/orders/status" method="post" class="status-form">
+                        <input type="hidden" name="order_id" value="{{.ID}}">
+                        <select name="status">
+                            <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
+                            <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
+                            <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
+                        </select>
+                        <button type="submit">Update Status</button>
+                    </form>
+                    {{end}}
                 </div>
 
             </article>
