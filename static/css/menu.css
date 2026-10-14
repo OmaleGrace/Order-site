@@ -152,3 +152,4 @@
 .empty-menu p { margin: 0 0 10px; }
 .vendor-line { margin: -2px 0 8px; font-size: 0.82rem; color: var(--muted); }
 .vendor-line strong { color: var(--green); font-weight: 700; }
+.vendor-line a { text-decoration: none; }

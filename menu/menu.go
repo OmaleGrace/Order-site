@@ -14,6 +14,7 @@ type MenuItem struct {
 	Category    sql.NullString
 	VendorID    int
 	VendorName  string
+	VendorSlug  string
 }
 
 // LiveVendorSQL is true for a vendor whose dishes customers may see:
@@ -23,7 +24,7 @@ const LiveVendorSQL = "v.status = 'active' AND v.paid_until > NOW()"
 func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 	query := `
 		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo,
-		       m.image_url, m.category, v.id, v.name
+		       m.image_url, m.category, v.id, v.name, v.slug
 		FROM menu_items m
 		JOIN vendors v ON v.id = m.vendor_id
 		WHERE ` + LiveVendorSQL + `
@@ -66,6 +67,7 @@ func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 			&item.Category,
 			&item.VendorID,
 			&item.VendorName,
+			&item.VendorSlug,
 		)
 		if err != nil {
 			return nil, err

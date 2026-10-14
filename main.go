@@ -50,7 +50,8 @@ func main() {
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
 	mux.HandleFunc("GET /login", middleware.Logging(h.Login))
 	mux.HandleFunc("POST /login", middleware.Logging(h.Login))
-
+	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
+	mux.HandleFunc("POST /vendor/profile/save", middleware.Logging(h.VendorProfileSave))
 	mux.HandleFunc("GET /signup", middleware.Logging(h.Signup))
 	mux.HandleFunc("POST /signup", middleware.Logging(h.Signup))
 	mux.HandleFunc("GET /vendor/orders", middleware.Logging(h.VendorOrders))
@@ -65,7 +66,7 @@ func main() {
 		middleware.RequireLogin(db, h.Menu),
 	),
 )
-
+	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
 		"POST /cart/add",
 		middleware.Logging(

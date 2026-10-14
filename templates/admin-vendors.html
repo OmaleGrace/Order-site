@@ -88,7 +88,7 @@
                 <tbody>
                     {{range .Vendors}}
                     <tr>
-                        <td><strong>{{.Name}}</strong><div class="muted">{{.Slug}}</div></td>
+                        <td><strong>{{.Name}}</strong>{{if .Verified}} <span class="badge badge-active">✔ Verified</span>{{end}}<div class="muted"><a href="/v/{{.Slug}}">/v/{{.Slug}}</a></div></td>
                         <td>{{if .OwnerEmail}}{{.OwnerEmail}}{{else}}<span class="muted">no owner yet</span>{{end}}</td>
                         <td>{{.Items}}</td>
                         <td>{{if .PaidUntil}}{{.PaidUntil}}{{else}}<span class="muted">not paid</span>{{end}}</td>
@@ -105,6 +105,11 @@
                                 <input type="hidden" name="id" value="{{.ID}}">
                                 <input type="hidden" name="action" value="extend">
                                 <button type="submit" class="secondary">+1 month paid</button>
+                            </form>
+                            <form action="/admin/vendors/status" method="post">
+                                <input type="hidden" name="id" value="{{.ID}}">
+                                <input type="hidden" name="action" value="{{if .Verified}}unverify{{else}}verify{{end}}">
+                                <button type="submit" class="secondary">{{if .Verified}}Remove badge{{else}}✔ Verify{{end}}</button>
                             </form>
                             {{if ne .Status "suspended"}}
                             <form action="/admin/vendors/status" method="post" onsubmit="return confirm('Suspend {{.Name}}? Their dishes will be hidden from customers.');">

@@ -21,6 +21,7 @@ type AdminVendor struct {
 	Items      int
 	PaidUntil  string
 	SetupPaid  bool
+	Verified   bool
 }
 
 type AdminVendorsPage struct {
@@ -58,7 +59,7 @@ func (h *Handlers) AdminVendors(w http.ResponseWriter, r *http.Request) {
 		           WHEN v.paid_until > NOW() + INTERVAL '50 years' THEN 'No expiry'
 		           ELSE TO_CHAR(v.paid_until, 'DD Mon YYYY')
 		       END,
-		       v.setup_paid_at IS NOT NULL
+		       v.setup_paid_at IS NOT NULL, v.verified
 		FROM vendors v
 		LEFT JOIN users u ON u.id = v.owner_user_id
 		ORDER BY v.id
@@ -74,7 +75,7 @@ func (h *Handlers) AdminVendors(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var v AdminVendor
-		if err := rows.Scan(&v.ID, &v.Name, &v.Slug, &v.Status, &v.OwnerEmail, &v.Items, &v.PaidUntil, &v.SetupPaid); err != nil {
+		if err := rows.Scan(&v.ID, &v.Name, &v.Slug, &v.Status, &v.OwnerEmail, &v.Items, &v.PaidUntil, &v.SetupPaid, &v.Verified); err != nil {
 			log.Printf("admin vendors: scan failed: %v", err)
 			errors.Render(w, "Could not read vendors", http.StatusInternalServerError)
 			return
@@ -180,6 +181,12 @@ func (h *Handlers) AdminVendorStatus(w http.ResponseWriter, r *http.Request) {
 			WHERE id = $1
 		`, id)
 		msg = "Paid period extended by one month"
+	case "verify":
+		_, err = h.DB.Exec("UPDATE vendors SET verified = TRUE WHERE id = $1", id)
+		msg = "Vendor marked as verified"
+	case "unverify":
+		_, err = h.DB.Exec("UPDATE vendors SET verified = FALSE WHERE id = $1", id)
+		msg = "Verified badge removed"
 	default:
 		errors.Render(w, "Unknown action", http.StatusBadRequest)
 		return
