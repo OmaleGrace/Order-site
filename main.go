@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"Order-site/database"
-	"Order-site/handlers"
 	"Order-site/errors"
+	"Order-site/handlers"
 	"Order-site/middleware"
-	
 
 	"github.com/joho/godotenv"
 )
@@ -48,6 +47,10 @@ func main() {
 	)
 
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
+	mux.HandleFunc("GET /about", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /contact", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /privacy", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /terms", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /login", middleware.Logging(h.Login))
 	mux.HandleFunc("POST /login", middleware.Logging(h.Login))
 	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
@@ -61,11 +64,11 @@ func main() {
 	mux.HandleFunc("POST /vendor/menu/save", middleware.Logging(h.VendorMenuSave))
 	mux.HandleFunc("POST /vendor/menu/delete", middleware.Logging(h.VendorMenuDelete))
 	mux.HandleFunc(
-	"GET /menu",
-	middleware.Logging(
-		middleware.RequireLogin(db, h.Menu),
-	),
-)
+		"GET /menu",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.Menu),
+		),
+	)
 	mux.HandleFunc("GET /checkout/details", middleware.Logging(middleware.RequireLogin(db, h.CheckoutDetails)))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
@@ -81,7 +84,7 @@ func main() {
 			middleware.RequireLogin(db, h.Cart),
 		),
 	)
-		mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
+	mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
 	mux.HandleFunc("POST /admin/applications/review", middleware.Logging(middleware.Admin(db, h.AdminApplicationReview)))
 	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))
 	mux.HandleFunc("POST /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApplySubmit)))
@@ -134,12 +137,13 @@ func main() {
 			middleware.Admin(db, h.AdminOrders),
 		),
 	)
+	mux.HandleFunc("GET /vendor/billing/status", middleware.Logging(h.VendorBillingStatus))
 	mux.HandleFunc(
 		"POST /admin/orders/status",
 		middleware.Logging(
 			middleware.Admin(db, h.UpdateOrderStatus),
 		),
-	)	
+	)
 	mux.HandleFunc("GET /admin/vendors", middleware.Logging(middleware.Admin(db, h.AdminVendors)))
 	mux.HandleFunc("POST /admin/vendors/save", middleware.Logging(middleware.Admin(db, h.AdminVendorSave)))
 	mux.HandleFunc("POST /admin/vendors/status", middleware.Logging(middleware.Admin(db, h.AdminVendorStatus)))
@@ -147,7 +151,7 @@ func main() {
 	mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))
 	mux.HandleFunc("POST /admin/menu/save", middleware.Logging(middleware.Admin(db, h.AdminMenuSave)))
 	mux.HandleFunc("POST /admin/menu/delete", middleware.Logging(middleware.Admin(db, h.AdminMenuDelete)))
-	
+
 	mux.HandleFunc(
 		"/auth/google",
 		middleware.Logging(h.GoogleLogin),
@@ -176,18 +180,18 @@ func main() {
 	mux.HandleFunc("POST /reset-password", middleware.Logging(h.ResetPassword))
 
 	mux.HandleFunc(
-	"POST /account/phone/send-otp",
-	middleware.Logging(
-		middleware.RequireLogin(db, h.SendPhoneOTP),
-	),
-)
+		"POST /account/phone/send-otp",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.SendPhoneOTP),
+		),
+	)
 
-mux.HandleFunc(
-	"POST /account/phone/verify-otp",
-	middleware.Logging(
-		middleware.RequireLogin(db, h.VerifyPhoneOTP),
-	),
-)
+	mux.HandleFunc(
+		"POST /account/phone/verify-otp",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.VerifyPhoneOTP),
+		),
+	)
 	// Any address that matches no other route gets the styled 404 page
 	mux.HandleFunc("/", middleware.Logging(func(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "We couldn't find the page you were looking for.", http.StatusNotFound)

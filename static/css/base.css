@@ -128,3 +128,20 @@ img.zoomable { cursor: zoom-in; }
         justify-content: center;
     }
 }
+.vendor-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: #fdeceb;
+    border: 1px solid #f3c5c1;
+    color: var(--red-dark);
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    font-weight: 600;
+}
+.vendor-banner.soon { background: #fff3cd; border-color: #f0d98a; color: #8a6d00; }
+.vendor-banner a { padding: 7px 18px; border-radius: 999px; background: var(--red); color: #fff; text-decoration: none; font-weight: 700; white-space: nowrap; }
+.vendor-banner.soon a { background: #8a6d00; }

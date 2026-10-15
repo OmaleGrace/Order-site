@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{.Title}} — information about Grace's Kitchen and its online food-ordering service.">
+    <title>{{.Title}} | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="/static/css/public-pages.css">
+</head>
+<body>
+<header class="site-header">
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 {{brandName}}</a>
+    </div>
+    <nav aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="/vendors">Shops</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/login">Login</a>
+        <a href="/signup" class="signup-link">Sign Up</a>
+    </nav>
+</header>
+
+<div class="public-hero">
+    <div class="public-hero-inner">
+        <a class="back-home" href="/">← Back to home</a>
+        <p class="page-eyebrow">A little more about us</p>
+        <h1>{{.Title}}</h1>
+        <p class="page-intro">{{.Intro}}</p>
+    </div>
+</div>
+
+<main class="public-page">
+
+    {{range .Sections}}
+    <section class="policy-section">
+        <h2>{{.Heading}}</h2>
+        {{range .Paragraphs}}
+        <p>{{.}}</p>
+        {{end}}
+        {{if .Items}}
+        <ul>
+            {{range .Items}}
+            <li>{{.}}</li>
+            {{end}}
+        </ul>
+        {{end}}
+    </section>
+    {{end}}
+
+    {{if eq .Title "Contact Us"}}
+    <section class="contact-card">
+        <h2>Contact email</h2>
+        <p><a href="mailto:{{.ContactEmail}}">{{.ContactEmail}}</a></p>
+    </section>
+    {{else if eq .Title "Terms of Service"}}
+    <section class="contact-card">
+        <h2>Questions about these terms?</h2>
+        <p><a href="mailto:{{.ContactEmail}}">{{.ContactEmail}}</a></p>
+    </section>
+    {{else if eq .Title "About Us"}}
+    <section class="contact-card">
+        <h2>Contact us</h2>
+        <p><a href="/contact">Visit our Contact page</a></p>
+    </section>
+    {{else if eq .Title "Privacy Policy"}}
+    <section class="contact-card">
+        <h2>Privacy questions</h2>
+        <p><a href="mailto:{{.ContactEmail}}">{{.ContactEmail}}</a></p>
+    </section>
+    {{end}}
+</main>
+
+<footer class="site-footer">
+    <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/vendors">Shops</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+    </div>
+    <p>&copy; 2026 {{brandName}}</p>
+</footer>
+</body>
+</html>

@@ -16,9 +16,11 @@
         <a href="/" class="brand-name">🍴 {{brandName}}</a>
     </div>
 
-    <nav>
+    <nav aria-label="Main navigation">
         <a href="/menu">Menu</a>
         <a href="/vendors">Shops</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
         <a href="/login">Login</a>
         <a href="/signup" class="signup-link">Sign Up</a>
     </nav>
@@ -176,12 +178,33 @@
 </section>
 {{end}}
 
+<section class="site-information">
+    <div class="site-information-inner">
+        <div>
+            <p class="info-eyebrow">NEED MORE INFORMATION?</p>
+            <h2>We're here to help.</h2>
+            <p>Learn about Grace's Kitchen, get in touch, or read how we handle your information.</p>
+        </div>
+        <div class="information-links">
+            <a href="/about">About us <span>→</span></a>
+            <a href="/contact">Contact us <span>→</span></a>
+            <a href="/privacy">Privacy policy <span>→</span></a>
+            <a href="/terms">Terms of service <span>→</span></a>
+        </div>
+    </div>
+</section>
+
 <footer class="site-footer">
     <div class="footer-links">
         <a href="/menu">Menu</a>
+        <a href="/vendors">Shops</a>
         <a href="/login">Login</a>
         <a href="/signup">Sign Up</a>
         <a href="/become-a-vendor">Sell with us</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
     </div>
     <p>&copy; 2026 {{brandName}}</p>
 </footer>

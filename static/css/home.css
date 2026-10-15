@@ -231,3 +231,79 @@
 @media (min-width: 900px) {
     .banner { min-height: 190px; padding: 28px 40px; }
 }
+
+/* Helpful links to public information pages */
+.site-information {
+    margin-top: 46px;
+    padding: 36px 5vw;
+    background: #f4efe5;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.site-information-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: center;
+}
+
+.info-eyebrow {
+    margin: 0 0 8px;
+    color: var(--red);
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+}
+
+.site-information h2 {
+    margin: 0 0 8px;
+    color: var(--green-dark);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.site-information-inner > div:first-child > p:last-child {
+    max-width: 430px;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.information-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.information-links a {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--green-dark);
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform .15s ease, border-color .15s ease;
+}
+
+.information-links a:hover {
+    transform: translateY(-2px);
+    border-color: var(--green);
+}
+
+.information-links a span {
+    color: var(--red);
+    font-size: 1.15rem;
+}
+
+@media (max-width: 700px) {
+    .site-information { padding: 28px 18px; }
+    .site-information-inner { grid-template-columns: 1fr; gap: 22px; }
+    .information-links { grid-template-columns: 1fr; }
+}

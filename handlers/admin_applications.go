@@ -2,14 +2,17 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
 	"Order-site/brand"
+	"Order-site/email"
 	"Order-site/errors"
 )
 
@@ -147,6 +150,20 @@ func (h *Handlers) AdminApplicationReview(w http.ResponseWriter, r *http.Request
 			back("That application was not found or has already been reviewed.")
 			return
 		}
+		var applicantEmail, rejectedBusiness string
+		h.DB.QueryRow(`
+			SELECT u.email, a.business_name
+			FROM vendor_applications a
+			JOIN users u ON u.id = a.user_id
+			WHERE a.id = $1
+		`, id).Scan(&applicantEmail, &rejectedBusiness)
+		if applicantEmail != "" {
+			applyLink := strings.TrimRight(os.Getenv("APP_BASE_URL"), "/") + "/become-a-vendor"
+			go email.Send(applicantEmail, "About your application - "+brand.Name(),
+				fmt.Sprintf("<h1>We could not approve your application</h1><p>Your application for <strong>%s</strong> was not approved.</p><p><strong>Reason:</strong> %s</p><p>You can correct the details and apply again here: <a href=\"%s\">Apply again</a></p>",
+					template.HTMLEscapeString(rejectedBusiness), template.HTMLEscapeString(note), applyLink))
+		}
+
 		back("Application rejected.")
 
 	case "approve":
