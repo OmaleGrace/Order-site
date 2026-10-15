@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shops - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/menu.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
+</head>
+
+<body>
+
+<header class="menu-header">
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 {{brandName}}</a>
+    </div>
+
+    <nav class="menu-nav">
+        <a href="/menu">Menu</a>
+        <a href="/vendors" class="active-link">Shops</a>
+        <a href="/orders">My Orders</a>
+        <a href="/account">Account</a>
+        <a href="/cart" class="cart-link">🛒 Cart</a>
+    </nav>
+</header>
+
+<section class="menu-intro">
+    <h1>Shops</h1>
+    <p>Pick a shop, see what they cook, and order from them.</p>
+</section>
+
+<section class="menu-filters">
+    <form action="/vendors" method="get" class="search-form">
+        <input type="text" name="q" placeholder="Search shops or areas..." value="{{.Query}}" aria-label="Search shops">
+        <button type="submit">Search</button>
+    </form>
+</section>
+
+<main class="menu-container">
+
+    <section class="shop-grid">
+
+        {{range .Shops}}
+        <a href="/v/{{.Slug}}" class="shop-card">
+
+            <div class="shop-card-logo">
+                {{if .LogoURL}}
+                <img src="{{.LogoURL}}" alt="" loading="lazy">
+                {{else}}
+                <span>🍴</span>
+                {{end}}
+            </div>
+
+            <div class="shop-card-body">
+                <h2>{{.Name}} {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}</h2>
+
+                {{if .Area}}<p class="shop-card-area">📍 {{.Area}}</p>{{end}}
+                {{if .Description}}<p class="shop-card-desc">{{.Description}}</p>{{end}}
+
+                <div class="shop-tags">
+                    {{if .OffersPickup}}<span class="tag-pill">🛍️ Pickup</span>{{end}}
+                    {{if .OffersDelivery}}<span class="tag-pill">🛵 Delivery · {{if .DeliveryFeeKobo}}₦{{naira .DeliveryFeeKobo}}{{else}}Free{{end}}</span>{{end}}
+                </div>
+
+                <p class="shop-card-meta">{{.Dishes}} {{if eq .Dishes 1}}dish{{else}}dishes{{end}} · {{if .Completed}}{{.Completed}} completed orders{{else}}New shop{{end}}</p>
+            </div>
+
+        </a>
+        {{else}}
+        <div class="empty-menu">
+            <p>{{if .Query}}No shops match "{{.Query}}".{{else}}No shops are open right now.{{end}}</p>
+            {{if .Query}}<a href="/vendors" class="add-cart-btn" style="display:inline-block;text-decoration:none;">See all shops</a>{{end}}
+        </div>
+        {{end}}
+
+    </section>
+
+</main>
+
+<script src="/static/js/bottomnav.js"></script>
+</body>
+</html>

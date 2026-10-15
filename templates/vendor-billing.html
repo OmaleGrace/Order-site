@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - {{.Name}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <style>
+        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px 5vw; background: rgba(253, 248, 240, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
+        .admin-header a { text-decoration: none; font-weight: 600; }
+        .admin-header a:hover { color: var(--red); }
+        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
+
+        main { max-width: 640px; margin: 0 auto; padding: 24px 5vw 70px; }
+        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
+
+        .card { background: var(--card); border-radius: 22px; border-top: 6px solid var(--green); box-shadow: var(--shadow-lg); padding: 24px; margin-bottom: 22px; }
+        .card.closed { border-top-color: var(--red); }
+        .card h2 { margin: 0 0 8px; font-size: 1.3rem; color: var(--green); }
+        .card.closed h2 { color: var(--red-dark); }
+        .card p { margin: 6px 0; }
+        .muted { color: var(--muted); font-size: 0.9rem; }
+        .amount { font-size: 2.2rem; font-weight: 800; color: var(--red); margin: 12px 0 4px; }
+
+        .pay-btn { margin-top: 14px; width: 100%; padding: 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer; box-shadow: 0 6px 16px rgba(200, 56, 42, 0.3); }
+        .pay-btn:hover:not(:disabled) { background: var(--red-dark); }
+        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .history h3 { margin: 0 0 10px; font-size: 1rem; color: var(--green); }
+        .history-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+        .history-row:last-child { border-bottom: 0; }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <h1>🍴 {{.Name}}</h1>
+        <a href="/vendor/orders">Orders</a>
+        <a href="/vendor/menu">My menu</a>
+        <a href="/vendor/profile">Shop profile</a>
+        <a href="/vendor/billing" class="active">Billing</a>
+        <a href="/">View site</a>
+    </header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        {{if eq .State "setup"}}
+        <div class="card">
+            <h2>Open your shop</h2>
+            <p>Your application was approved. Pay the one-time setup fee to open your shop to customers. It includes your first month.</p>
+            <div class="amount">₦{{naira .PayAmountKobo}}</div>
+            <p class="muted">After that, ₦{{naira .MonthlyFeeKobo}} a month keeps your shop open.</p>
+            <form action="/vendor/pay" method="post" class="pay-form">
+                <button type="submit" class="pay-btn">Pay with Paystack</button>
+            </form>
+        </div>
+
+        {{else if eq .State "active"}}
+        <div class="card">
+            <h2>Your shop is open</h2>
+            <p>Paid until <strong>{{.PaidUntil}}</strong>.</p>
+            {{if .CanPay}}
+            <p class="muted">Renewing adds one month to your paid period, so renewing early loses nothing.</p>
+            <div class="amount">₦{{naira .PayAmountKobo}}</div>
+            <form action="/vendor/pay" method="post" class="pay-form">
+                <button type="submit" class="pay-btn">Renew for one month</button>
+            </form>
+            {{else}}
+            <p class="muted">{{.Reason}}</p>
+            {{end}}
+        </div>
+
+        {{else if eq .State "expired"}}
+        <div class="card closed">
+            <h2>Your shop is closed</h2>
+            <p>Your paid period ended on <strong>{{.PaidUntil}}</strong>, so your dishes are hidden from customers. Renew to open again.</p>
+            {{if .CanPay}}
+            <div class="amount">₦{{naira .PayAmountKobo}}</div>
+            <form action="/vendor/pay" method="post" class="pay-form">
+                <button type="submit" class="pay-btn">Renew for one month</button>
+            </form>
+            {{else}}
+            <p class="muted">{{.Reason}}</p>
+            {{end}}
+        </div>
+
+        {{else if eq .State "nolimit"}}
+        <div class="card">
+            <h2>No payment needed</h2>
+            <p>Your shop has no expiry date.</p>
+        </div>
+
+        {{else}}
+        <div class="card closed">
+            <h2>Your shop is suspended</h2>
+            <p>{{.Reason}}</p>
+        </div>
+        {{end}}
+
+        {{if .History}}
+        <div class="card history">
+            <h3>Payments</h3>
+            {{range .History}}
+            <div class="history-row">
+                <span>{{if eq .Kind "setup"}}Setup fee{{else}}Monthly renewal{{end}} · {{.PaidAt}}</span>
+                <strong>₦{{naira .AmountKobo}}</strong>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </main>
+
+    <script>
+    document.querySelectorAll('.pay-form').forEach(function (f) {
+        f.addEventListener('submit', function () {
+            var b = f.querySelector('button');
+            b.disabled = true;
+            b.textContent = 'Taking you to Paystack...';
+        });
+    });
+    window.addEventListener('pageshow', function () {
+        document.querySelectorAll('.pay-form button').forEach(function (b) { b.disabled = false; });
+    });
+    </script>
+</body>
+</html>

@@ -108,9 +108,13 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 		back("Address must be 150 characters or fewer")
 		return
 	}
-	if phone != "" && !validPhone(phone) {
-		back("Enter a valid phone number, for example 08012345678")
-		return
+	if phone != "" {
+		normalized := normalizeNigerianPhone(phone)
+		if normalized == "" {
+			back("Enter a valid Nigerian phone number: 11 digits starting with 0 (for example 08012345678), or starting with +234")
+			return
+		}
+		phone = normalized
 	}
 	if logo != "" && !(strings.HasPrefix(logo, "https://") || strings.HasPrefix(logo, "http://")) {
 		back("The logo link must start with https://")

@@ -16,14 +16,18 @@ type VendorOrderItem struct {
 }
 
 type VendorOrder struct {
-	ID        int
-	Name      string
-	Email     string
-	Phone     string
-	TotalKobo int
-	Status    string
-	CreatedAt string
-	Items     []VendorOrderItem
+	ID              int
+	Name            string
+	Email           string
+	Phone           string
+	TotalKobo       int
+	Status          string
+	CreatedAt       string
+	DeliveryMethod  string
+	DeliveryAddress string
+	DeliveryPhone   string
+	DeliveryFeeKobo int
+	Items           []VendorOrderItem
 }
 
 type VendorOrdersPage struct {
@@ -39,7 +43,8 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 
 	rows, err := h.DB.Query(`
 		SELECT o.id, u.name, u.email, COALESCE(u.phone, ''), o.total_kobo, o.status,
-		       TO_CHAR(o.created_at, 'DD Mon YYYY, HH24:MI')
+		       TO_CHAR(o.created_at, 'DD Mon YYYY, HH24:MI'),
+		       o.delivery_method, o.delivery_address || ', ' || o.delivery_lga || ', ' || o.delivery_state, o.delivery_phone, o.delivery_fee_kobo
 		FROM orders o
 		JOIN users u ON u.id = o.user_id
 		WHERE o.vendor_id = $1 AND o.status <> 'pending'
@@ -54,7 +59,7 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 	var orders []VendorOrder
 	for rows.Next() {
 		var o VendorOrder
-		if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.Status, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.DeliveryAddress, &o.DeliveryPhone, &o.DeliveryFeeKobo); err != nil {
 			rows.Close()
 			log.Printf("vendor orders: scan failed: %v", err)
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)

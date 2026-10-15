@@ -14,13 +14,17 @@ type AdminOrderItem struct {
 }
 
 type AdminOrder struct {
-	ID        int
-	Name      string
-	Email     string
-	TotalKobo int
-	Status    string
-	CreatedAt string
-	Items     []AdminOrderItem
+	ID              int
+	Name            string
+	Email           string
+	TotalKobo       int
+	Status          string
+	CreatedAt       string
+	DeliveryMethod  string
+	DeliveryAddress string
+	DeliveryPhone   string
+	DeliveryFeeKobo int
+	Items           []AdminOrderItem
 }
 
 func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +40,8 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 			u.email,
 			o.total_kobo,
 			o.status,
-			o.created_at
+			o.created_at,
+			o.delivery_method, o.delivery_address || ', ' || o.delivery_lga || ', ' || o.delivery_state, o.delivery_phone, o.delivery_fee_kobo
 		FROM orders o
 		JOIN users u ON u.id = o.user_id
 		ORDER BY o.created_at DESC
@@ -59,6 +64,10 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 			&order.TotalKobo,
 			&order.Status,
 			&order.CreatedAt,
+			&order.DeliveryMethod,
+			&order.DeliveryAddress,
+			&order.DeliveryPhone,
+			&order.DeliveryFeeKobo,
 		)
 
 		if err != nil {

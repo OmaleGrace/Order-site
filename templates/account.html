@@ -101,12 +101,14 @@
         </div>
 
         <a href="/account/edit" class="account-button primary">✏️ Edit Profile</a>
+        {{if not .IsVendor}}<a href="/become-a-vendor" class="account-button" style="margin-bottom:12px;">🏪 Become a vendor</a>{{end}}
 
         {{if .IsVendor}}
         <div class="account-actions">
             <a href="/vendor/orders" class="account-button">🏪 Shop orders</a>
             <a href="/vendor/menu" class="account-button">🍽️ Shop menu</a>
             <a href="/vendor/profile" class="account-button">🏪 Shop profile</a>
+            <a href="/vendor/billing" class="account-button">💳 Billing</a>
         </div>
         {{end}}
         <div class="account-actions">

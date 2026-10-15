@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"Order-site/brand"
@@ -111,6 +112,70 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 	vendorID := vendorIDs[0]
 
+	// Delivery choice, checked against what this vendor really offers
+	var offersPickup, offersDelivery bool
+	var deliveryFeeKobo int
+	err = h.DB.QueryRow(`
+		SELECT offers_pickup, offers_delivery, delivery_fee_kobo
+		FROM vendors WHERE id = $1
+	`, vendorID).Scan(&offersPickup, &offersDelivery, &deliveryFeeKobo)
+	if err != nil {
+		fmt.Println("Vendor delivery options error:", err)
+		errors.Render(w, "Could not check delivery options", http.StatusInternalServerError)
+		return
+	}
+
+	method := r.FormValue("delivery_method")
+	state := strings.TrimSpace(r.FormValue("delivery_state"))
+	lga := strings.TrimSpace(r.FormValue("delivery_lga"))
+	address := strings.TrimSpace(r.FormValue("delivery_address"))
+	deliveryPhone := strings.TrimSpace(r.FormValue("delivery_phone"))
+
+	switch method {
+	case "pickup":
+		if !offersPickup {
+			errors.Render(w, "This shop does not offer pickup.", http.StatusBadRequest)
+			return
+		}
+		state, lga, address = "", "", ""
+		deliveryFeeKobo = 0
+	case "delivery":
+		if !offersDelivery {
+			errors.Render(w, "This shop does not offer delivery.", http.StatusBadRequest)
+			return
+		}
+		if !validState(state) {
+			errors.Render(w, "Choose your state.", http.StatusBadRequest)
+			return
+		}
+		if n := len([]rune(lga)); n < 3 || n > 60 {
+			errors.Render(w, "Enter your local government area.", http.StatusBadRequest)
+			return
+		}
+		if n := len([]rune(address)); n < 8 || n > 250 {
+			errors.Render(w, "Enter your house address (8 to 250 characters).", http.StatusBadRequest)
+			return
+		}
+		if deliveryPhone == "" {
+			errors.Render(w, "Enter a phone number the rider can reach you on.", http.StatusBadRequest)
+			return
+		}
+	default:
+		errors.Render(w, "Choose pickup or delivery.", http.StatusBadRequest)
+		return
+	}
+
+	if deliveryPhone != "" {
+		normalized := normalizeNigerianPhone(deliveryPhone)
+		if normalized == "" {
+			errors.Render(w, "Enter a valid Nigerian phone number: 11 digits starting with 0 (for example 08012345678), or starting with +234.", http.StatusBadRequest)
+			return
+		}
+		deliveryPhone = normalized
+	}
+
+	// The delivery fee is part of what the customer pays
+	totalKobo += deliveryFeeKobo
 	tx, err := h.DB.Begin()
 	if err != nil {
 		errors.Render(w, "Could not start order", http.StatusInternalServerError)
@@ -122,10 +187,12 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	var orderID int
 
 	err = tx.QueryRow(`
-	INSERT INTO orders (user_id, total_kobo, status, vendor_id)
-	VALUES ($1, $2, 'pending', $3)
+	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
+	                    delivery_method, delivery_state, delivery_lga, delivery_address,
+	                    delivery_phone, delivery_fee_kobo)
+	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9)
 	RETURNING id
-`, userID, totalKobo, vendorID).Scan(&orderID)
+`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)

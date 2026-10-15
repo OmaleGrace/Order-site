@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <style>
+        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px 5vw; background: rgba(253, 248, 240, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
+        .admin-header a { text-decoration: none; font-weight: 600; }
+        .admin-header a:hover { color: var(--red); }
+        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
+
+        main { max-width: 900px; margin: 0 auto; padding: 24px 5vw 70px; }
+        h2.section { margin: 26px 0 12px; font-size: 1.15rem; color: var(--green); }
+        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
+
+        .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 18px; box-shadow: var(--shadow); }
+        .card-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 12px; }
+        .card-top h3 { margin: 0; font-size: 1.1rem; color: var(--green); }
+        .muted { color: var(--muted); font-size: 0.85rem; }
+
+        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; background: #faf5ea; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+        .details .label { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .details strong, .details a { word-break: break-word; }
+        .details a { color: var(--green); font-weight: 700; text-decoration: none; }
+        .details .full { grid-column: 1 / -1; }
+
+        .review { border-top: 1px dashed var(--line); padding-top: 14px; }
+        .review h4 { margin: 0 0 10px; font-size: 0.95rem; }
+        .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; cursor: pointer; font-size: 0.95rem; }
+        .check-item input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--green); flex-shrink: 0; }
+        .row { display: grid; grid-template-columns: 1fr; gap: 12px; margin: 10px 0; }
+        label.field { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+        select, textarea { width: 100%; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; font: inherit; background: #fff; }
+        select:focus, textarea:focus { outline: none; border-color: var(--green); }
+        textarea { resize: vertical; min-height: 70px; }
+
+        .buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        button { padding: 11px 24px; border: 0; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; }
+        button.approve { background: var(--green); color: #fff; }
+        button.approve:hover:not(:disabled) { background: var(--green-dark); }
+        button.reject { background: #fff; color: var(--red); border: 2px solid #f3c5c1; }
+        button.reject:hover:not(:disabled) { background: var(--red); border-color: var(--red); color: #fff; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
+        .badge-approved { background: #e0f2e9; color: var(--green); }
+        .badge-rejected { background: #fdeceb; color: var(--red-dark); }
+        .empty { text-align: center; background: var(--card); border-radius: var(--radius); padding: 40px 20px; box-shadow: var(--shadow); color: var(--muted); }
+
+        @media (max-width: 600px) { .details { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <h1>🍴 {{brandName}} · Admin</h1>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/menu">Menu</a>
+        <a href="/admin/vendors">Vendors</a>
+        <a href="/admin/applications" class="active">Applications</a>
+        <a href="/">View site</a>
+    </header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <h2 class="section">Waiting for review ({{len .Pending}})</h2>
+
+        {{range .Pending}}
+        <article class="card">
+            <div class="card-top">
+                <div>
+                    <h3>{{.BusinessName}}</h3>
+                    <span class="muted">Applied {{.CreatedAt}}</span>
+                </div>
+            </div>
+
+            <div class="details">
+                <div><span class="label">Owner's name (must match the ID)</span><strong>{{.OwnerName}}</strong></div>
+                <div><span class="label">Phone (call this number)</span><a href="{{.PhoneLink}}">📞 {{.Phone}}</a></div>
+                <div><span class="label">ID they will show</span><strong>{{.IDTypeLabel}}</strong></div>
+                <div><span class="label">Account email</span><strong>{{.Email}}</strong></div>
+                <div><span class="label">Area</span><strong>{{.Area}}</strong></div>
+                <div><span class="label">Shop address</span><strong>{{.Address}}</strong></div>
+                {{if .OnlineLink}}<div class="full"><span class="label">Business page</span><a href="{{.OnlineLink}}" target="_blank" rel="noopener noreferrer">{{.OnlineLink}}</a></div>{{end}}
+                {{if .Notes}}<div class="full"><span class="label">Notes</span><strong>{{.Notes}}</strong></div>{{end}}
+            </div>
+
+            <form action="/admin/applications/review" method="post" class="review review-form" data-name="{{.BusinessName}}">
+                <input type="hidden" name="application_id" value="{{.ID}}">
+
+                <h4>Identity check. Tick each one only after you have done it.</h4>
+                <label class="check-item"><input type="checkbox" name="seen_id"> I saw the original ID, in person or on a live video call</label>
+                <label class="check-item"><input type="checkbox" name="name_match"> The name on the ID matches "{{.OwnerName}}"</label>
+                <label class="check-item"><input type="checkbox" name="face_match"> The photo on the ID matches the person</label>
+                <label class="check-item"><input type="checkbox" name="phone_reached"> I reached them on {{.Phone}}</label>
+
+                <div class="row">
+                    <div>
+                        <label class="field" for="method-{{.ID}}">How did you check the ID?</label>
+                        <select name="review_method" id="method-{{.ID}}">
+                            <option value="">Choose one</option>
+                            <option value="in_person">In person</option>
+                            <option value="video_call">Live video call</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field" for="note-{{.ID}}">Note (needed to reject. The applicant sees it)</label>
+                        <textarea name="admin_note" id="note-{{.ID}}" maxlength="500" placeholder="For example: the name on the ID did not match the name on the application"></textarea>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" name="action" value="approve" class="approve" disabled>Approve</button>
+                    <button type="submit" name="action" value="reject" class="reject" disabled>Reject</button>
+                </div>
+            </form>
+        </article>
+        {{else}}
+        <div class="empty">No applications waiting.</div>
+        {{end}}
+
+        {{if .Reviewed}}
+        <h2 class="section">Reviewed</h2>
+        {{range .Reviewed}}
+        <article class="card">
+            <div class="card-top">
+                <div>
+                    <h3>{{.BusinessName}}</h3>
+                    <span class="muted">{{.OwnerName}} · {{.Phone}} · applied {{.CreatedAt}}</span>
+                </div>
+                <span class="badge badge-{{.Status}}">{{.Status}}</span>
+            </div>
+            {{if eq .Status "approved"}}<p class="muted">ID checked {{if eq .ReviewMethod "in_person"}}in person{{else if eq .ReviewMethod "video_call"}}on a live video call{{end}}.</p>{{end}}
+            {{if .AdminNote}}<p class="muted">Note: {{.AdminNote}}</p>{{end}}
+        </article>
+        {{end}}
+        {{end}}
+    </main>
+
+    <script>
+    (function () {
+        document.querySelectorAll('.review-form').forEach(function (form) {
+            var approve = form.querySelector('button[value="approve"]');
+            var reject = form.querySelector('button[value="reject"]');
+            var checks = form.querySelectorAll('.check-item input');
+            var method = form.querySelector('select[name="review_method"]');
+            var note = form.querySelector('textarea[name="admin_note"]');
+            var shop = form.getAttribute('data-name');
+
+            function refresh() {
+                var allTicked = Array.prototype.every.call(checks, function (c) { return c.checked; });
+                approve.disabled = !(allTicked && method.value !== '');
+                reject.disabled = [...note.value.trim()].length < 5;
+            }
+
+            Array.prototype.forEach.call(checks, function (c) { c.addEventListener('change', refresh); });
+            method.addEventListener('change', refresh);
+            note.addEventListener('input', refresh);
+
+            form.addEventListener('submit', function (e) {
+                var action = e.submitter ? e.submitter.value : '';
+                var q = action === 'reject'
+                    ? 'Reject the application from ' + shop + '? They will see your note.'
+                    : 'Approve ' + shop + '? This creates their shop.';
+                if (!confirm(q)) e.preventDefault();
+            });
+
+            refresh();
+        });
+    })();
+    </script>
+</body>
+</html>

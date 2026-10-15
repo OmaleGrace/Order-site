@@ -23,6 +23,7 @@
         <a href="/admin/orders" class="active">Orders</a>
         <a href="/admin/menu">Manage menu</a>
         <a href="/admin/vendors">Vendors</a>
+        <a href="/admin/applications">Applications</a>
         <a href="/menu">View menu</a>
         <a href="/logout">Logout</a>
     </nav>
@@ -73,6 +74,21 @@
                         </div>
 
                     </div>
+                {{if eq .DeliveryMethod "delivery"}}
+                <div class="delivery-box">
+                    <strong>🛵 Deliver to</strong>
+                    <p>{{.DeliveryAddress}}</p>
+                    <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
+                    {{if .DeliveryFeeKobo}}<p class="delivery-fee">Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>{{end}}
+                </div>
+                {{else}}
+                <div class="delivery-box pickup">
+                    <strong>🛍️ Pickup</strong>
+                    <p>The customer will collect this order.</p>
+                </div>
+                {{end}}
+
+
 
 
                     <div class="order-items">

@@ -6,6 +6,7 @@
     <title>{{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="/static/css/shop.css">
 </head>
 
 <body>
@@ -17,6 +18,7 @@
 
     <nav>
         <a href="/menu">Menu</a>
+        <a href="/vendors">Shops</a>
         <a href="/login">Login</a>
         <a href="/signup" class="signup-link">Sign Up</a>
     </nav>
@@ -75,6 +77,34 @@
         </div>
     </div>
 </section>
+
+{{if .Shops}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Shops</h2>
+        <a href="/vendors" class="row-link">See all →</a>
+    </div>
+    <div class="shop-row">
+        {{range .Shops}}
+        <a href="/v/{{.Slug}}" class="shop-card shop-card-compact">
+            <div class="shop-card-logo">
+                {{if .LogoURL}}
+                <img src="{{.LogoURL}}" alt="" loading="lazy">
+                {{else}}
+                <span>🍴</span>
+                {{end}}
+            </div>
+            <div class="shop-card-body">
+                <h3>{{.Name}}</h3>
+                {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}
+                {{if .Area}}<p class="shop-card-area">📍 {{.Area}}</p>{{end}}
+                <p class="shop-card-meta">{{.Dishes}} {{if eq .Dishes 1}}dish{{else}}dishes{{end}}{{if .OffersDelivery}} · 🛵 Delivers{{end}}</p>
+            </div>
+        </a>
+        {{end}}
+    </div>
+</section>
+{{end}}
 
 {{if .Categories}}
 <section class="home-section">
@@ -151,6 +181,7 @@
         <a href="/menu">Menu</a>
         <a href="/login">Login</a>
         <a href="/signup">Sign Up</a>
+        <a href="/become-a-vendor">Sell with us</a>
     </div>
     <p>&copy; 2026 {{brandName}}</p>
 </footer>

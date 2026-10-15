@@ -66,6 +66,7 @@ func main() {
 		middleware.RequireLogin(db, h.Menu),
 	),
 )
+	mux.HandleFunc("GET /checkout/details", middleware.Logging(middleware.RequireLogin(db, h.CheckoutDetails)))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
 		"POST /cart/add",
@@ -73,14 +74,17 @@ func main() {
 			middleware.RequireLogin(db, h.AddToCart),
 		),
 	)
-
+	mux.HandleFunc("GET /vendors", middleware.Logging(h.VendorsList))
 	mux.HandleFunc(
 		"GET /cart",
 		middleware.Logging(
 			middleware.RequireLogin(db, h.Cart),
 		),
 	)
-
+		mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
+	mux.HandleFunc("POST /admin/applications/review", middleware.Logging(middleware.Admin(db, h.AdminApplicationReview)))
+	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))
+	mux.HandleFunc("POST /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApplySubmit)))
 	mux.HandleFunc(
 		"POST /cart/remove",
 		middleware.Logging(
@@ -115,7 +119,9 @@ func main() {
 		"GET /order-success",
 		middleware.Logging(h.OrderSuccess),
 	)
-
+	mux.HandleFunc("GET /vendor/billing", middleware.Logging(h.VendorBilling))
+	mux.HandleFunc("POST /vendor/pay", middleware.Logging(h.VendorPay))
+	mux.HandleFunc("GET /vendor/payment/callback", middleware.Logging(h.VendorPaymentCallback))
 	mux.HandleFunc(
 		"GET /orders",
 		middleware.Logging(

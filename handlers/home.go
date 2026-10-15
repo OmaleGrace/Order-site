@@ -133,10 +133,12 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		Popular    []HomeDish
 		Again      []HomeDish
 		Categories []HomeCategory
+		Shops      []ShopCard
 	}{
 		Popular:    popular,
 		Again:      again,
 		Categories: categories,
+		Shops:      h.topShops(8),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

@@ -231,6 +231,11 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+	// Vendor setup and renewal payments are handled separately from customer orders
+	if strings.HasPrefix(event.Data.Reference, "VENDOR-") {
+		h.vendorWebhook(w, event.Data.Reference, event.Data.Amount)
+		return
+	}
 
 	var orderID int
 	var userID int
