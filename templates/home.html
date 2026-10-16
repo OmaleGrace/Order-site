@@ -3,233 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#174a32">
     <title>{{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/home.css">
     <link rel="stylesheet" href="/static/css/shop.css">
 </head>
+
 <body>
+
 <header class="site-header">
-    <a href="/" class="brand-name" aria-label="{{brandName}} home">
-        <span class="brand-mark" aria-hidden="true">G</span>
-        <span>{{brandName}}<small>Good food, made easy.</small></span>
-    </a>
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 {{brandName}}</a>
+    </div>
 
     <nav aria-label="Main navigation">
         <a href="/menu">Menu</a>
         <a href="/vendors">Shops</a>
         <a href="/about">About</a>
         <a href="/contact">Contact</a>
-        <a href="/login" class="login-link">Login</a>
-        <a href="/signup" class="signup-link">Get started <span aria-hidden="true">↗</span></a>
+        <a href="/login">Login</a>
+        <a href="/signup" class="signup-link">Sign Up</a>
     </nav>
 </header>
 
-<main>
-    <section class="hero">
-        <div class="hero-layout">
-            <div class="hero-content">
-                <p class="eyebrow"><span class="eyebrow-dot"></span> GOOD FOOD, RIGHT WHEN YOU WANT IT</p>
-                <h1>Your next favourite meal is <span>just a few clicks away.</span></h1>
-                <p class="hero-description">Discover delicious meals from local kitchens, order with ease, and enjoy more of the food you love.</p>
-
-                <form action="/menu" method="get" class="home-search" role="search">
-                    <span class="home-search-icon" aria-hidden="true">⌕</span>
-                    <input type="search" name="search" placeholder="What are you craving today?" aria-label="Search meals">
-                    <button type="submit">Find food <span aria-hidden="true">→</span></button>
-                </form>
-
-                <div class="hero-actions">
-                    <a href="/menu" class="btn-primary">Explore the menu <span aria-hidden="true">→</span></a>
-                    <a href="/vendors" class="hero-text-link">Browse our kitchens</a>
-                </div>
-
-                <div class="trust-row">
-                    <span><b aria-hidden="true">✓</b> Easy ordering</span>
-                    <span><b aria-hidden="true">✓</b> Secure checkout</span>
-                    <span><b aria-hidden="true">✓</b> Order updates</span>
-                </div>
+<section class="home-search-strip">
+    <form action="/menu" method="get" class="home-search">
+        <span class="home-search-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search meals..." aria-label="Search meals">
+        <button type="submit">Search</button>
+    </form>
+</section>
+<section class="banner-wrap">
+    <div class="banner-track" id="banner-track">
+        <a href="/menu" class="banner banner-green">
+            <div class="banner-text">
+                <h2>Hungry? Order in minutes</h2>
+                <p>Browse the menu and pay securely online.</p>
+                <span class="banner-btn">View menu →</span>
             </div>
-
-            <div class="hero-visual" aria-label="A delicious meal ready to enjoy">
-                <div class="hero-photo"></div>
-                <div class="photo-label">
-                    <span class="photo-label-icon" aria-hidden="true">✦</span>
-                    <span><strong>Made for your cravings</strong><small>Find something delicious today</small></span>
-                </div>
-                <div class="floating-note"><span aria-hidden="true">♡</span> A little joy in every bite</div>
+            <div class="banner-emoji">🍲</div>
+        </a>
+        <a href="/menu?category=Drinks" class="banner banner-red">
+            <div class="banner-text">
+                <h2>Cold drinks, hot meals</h2>
+                <p>Add a drink to any order.</p>
+                <span class="banner-btn">See drinks →</span>
             </div>
-        </div>
-        <div class="hero-bottom-line"><span>GOOD FOOD.</span><span>GOOD MOOD.</span><span>GOOD MOMENTS.</span></div>
-    </section>
-
-    <section class="banner-wrap" aria-label="Highlights">
-        <div class="banner-track" id="banner-track">
-            <a href="/menu" class="banner banner-green">
-                <div class="banner-text">
-                    <span class="banner-kicker">YOUR CRAVINGS, SORTED</span>
-                    <h2>Hungry? Let's find your meal.</h2>
-                    <p>Explore the menu and order in a few simple steps.</p>
-                    <span class="banner-btn">Explore menu <span aria-hidden="true">→</span></span>
-                </div>
-                <div class="banner-emoji" aria-hidden="true">🍲</div>
-            </a>
-            <a href="/menu?category=Drinks" class="banner banner-red">
-                <div class="banner-text">
-                    <span class="banner-kicker">MAKE IT A COMBO</span>
-                    <h2>Something to sip, too?</h2>
-                    <p>Find a refreshing drink to go with your meal.</p>
-                    <span class="banner-btn">See drinks <span aria-hidden="true">→</span></span>
-                </div>
-                <div class="banner-emoji" aria-hidden="true">🥤</div>
-            </a>
-            <a href="/orders" class="banner banner-gold">
-                <div class="banner-text">
-                    <span class="banner-kicker">YOUR ORDER, YOUR WAY</span>
-                    <h2>Keep up with your order.</h2>
-                    <p>Check your orders and see their latest status.</p>
-                    <span class="banner-btn">My orders <span aria-hidden="true">→</span></span>
-                </div>
-                <div class="banner-emoji" aria-hidden="true">📦</div>
-            </a>
-        </div>
-        <div class="banner-dots" id="banner-dots"></div>
-    </section>
-
-    {{if .Categories}}
-    <section class="home-section categories-section">
-        <div class="section-heading">
-            <div><p class="section-kicker">FOLLOW YOUR APPETITE</p><h2 class="row-title">What are you in the mood for?</h2></div>
-            <a href="/menu" class="row-link">View all food <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="cat-row">
-            {{range .Categories}}
-            <a href="{{.Link}}" class="cat-tile">
-                <span class="cat-circle">{{.Icon}}</span>
-                <span class="cat-name">{{.Name}}</span>
-            </a>
-            {{end}}
-        </div>
-    </section>
-    {{end}}
-
-    {{if .Shops}}
-    <section class="home-section shops-section">
-        <div class="section-heading">
-            <div><p class="section-kicker">GOOD FOOD STARTS HERE</p><h2 class="row-title">Meet our kitchens</h2><p class="section-description">Discover local shops serving up something worth looking forward to.</p></div>
-            <a href="/vendors" class="row-link">All shops <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="shop-row">
-            {{range .Shops}}
-            <a href="/v/{{.Slug}}" class="shop-card shop-card-compact">
-                <div class="shop-card-logo">
-                    {{if .LogoURL}}
-                    <img src="{{.LogoURL}}" alt="" loading="lazy">
-                    {{else}}
-                    <span>🍴</span>
-                    {{end}}
-                </div>
-                <div class="shop-card-body">
-                    <h3>{{.Name}}</h3>
-                    {{if .Verified}}<span class="verified-badge">✓ Verified</span>{{end}}
-                    {{if .Area}}<p class="shop-card-area">⌖ {{.Area}}</p>{{end}}
-                    <p class="shop-card-meta">{{.Dishes}} {{if eq .Dishes 1}}dish{{else}}dishes{{end}}{{if .OffersDelivery}} · 🛵 Delivers{{end}}</p>
-                </div>
-            </a>
-            {{end}}
-        </div>
-    </section>
-    {{end}}
-
-    {{if .Again}}
-    <section class="home-section meals-section">
-        <div class="section-heading">
-            <div><p class="section-kicker">A LITTLE FAMILIARITY</p><h2 class="row-title">Ready for a repeat?</h2><p class="section-description">Your previous favourites are only a tap away.</p></div>
-            <a href="/orders" class="row-link">My orders <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="h-row">
-            {{range .Again}}
-            <article class="h-card">
-                <a href="/menu?search={{.Name}}" class="h-image-link" aria-label="Find {{.Name}}">
-                    <div class="h-image">
-                        {{if .ImageURL}}
-                        <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
-                        {{else}}
-                        <div class="no-image">🍽️</div>
-                        {{end}}
-                    </div>
-                </a>
-                <div class="h-info">
-                    <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
-                    <strong class="h-price">₦{{naira .PriceKobo}}</strong>
-                </div>
-            </article>
-            {{end}}
-        </div>
-    </section>
-    {{end}}
-
-    {{if .Popular}}
-    <section class="home-section meals-section popular-section">
-        <div class="section-heading">
-            <div><p class="section-kicker">LOVED BY FOOD FANS</p><h2 class="row-title">Popular right now</h2><p class="section-description">A few tasty ideas to get your appetite going.</p></div>
-            <a href="/menu" class="row-link">See full menu <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="h-row">
-            {{range .Popular}}
-            <article class="h-card">
-                <a href="/menu?search={{.Name}}" class="h-image-link" aria-label="Find {{.Name}}">
-                    <div class="h-image">
-                        {{if .ImageURL}}
-                        <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
-                        {{else}}
-                        <div class="no-image">🍽️</div>
-                        {{end}}
-                    </div>
-                </a>
-                <div class="h-info">
-                    <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
-                    <strong class="h-price">₦{{naira .PriceKobo}}</strong>
-                </div>
-            </article>
-            {{end}}
-        </div>
-        <div class="preview-cta"><a href="/menu" class="btn-outline">Explore the full menu <span aria-hidden="true">→</span></a></div>
-    </section>
-    {{end}}
-
-    <section class="site-information">
-        <div class="site-information-inner">
-            <div class="information-intro">
-                <p class="info-eyebrow">A LITTLE MORE ABOUT US</p>
-                <h2>Good food brings us together.</h2>
-                <p>Get to know Grace's Kitchen, ask us a question, or learn how we look after your information.</p>
-                <a class="information-contact-link" href="/contact">We'd love to hear from you <span aria-hidden="true">→</span></a>
+            <div class="banner-emoji">🥤</div>
+        </a>
+        <a href="/orders" class="banner banner-gold">
+            <div class="banner-text">
+                <h2>Track every order</h2>
+                <p>Watch it go from paid to ready.</p>
+                <span class="banner-btn">My orders →</span>
             </div>
-            <div class="information-links">
-                <a href="/about"><span><small>01</small> About us</span><b aria-hidden="true">↗</b></a>
-                <a href="/contact"><span><small>02</small> Contact us</span><b aria-hidden="true">↗</b></a>
-                <a href="/privacy"><span><small>03</small> Privacy policy</span><b aria-hidden="true">↗</b></a>
-                <a href="/terms"><span><small>04</small> Terms of service</span><b aria-hidden="true">↗</b></a>
-            </div>
+            <div class="banner-emoji">📦</div>
+        </a>
+    </div>
+    <div class="banner-dots" id="banner-dots"></div>
+</section>
+<section class="hero">
+    <div class="hero-content">
+        <h1>Fresh Meals, Made With Love</h1>
+        <p>Order delicious home-cooked meals straight from your phone, and pay securely online.</p>
+
+        <div class="hero-actions">
+            <a href="/menu" class="btn-primary">View Menu</a>
+            <a href="/signup" class="btn-secondary">Create Account</a>
         </div>
-    </section>
-</main>
+
+        <div class="trust-row">
+            <span>✔ Secure online payment</span>
+            <span>✔ Easy ordering</span>
+            <span>✔ Track your orders</span>
+        </div>
+    </div>
+</section>
+
+{{if .Shops}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Shops</h2>
+        <a href="/vendors" class="row-link">See all →</a>
+    </div>
+    <div class="shop-row">
+        {{range .Shops}}
+        <a href="/v/{{.Slug}}" class="shop-card shop-card-compact">
+            <div class="shop-card-logo">
+                {{if .LogoURL}}
+                <img src="{{.LogoURL}}" alt="" loading="lazy">
+                {{else}}
+                <span>🍴</span>
+                {{end}}
+            </div>
+            <div class="shop-card-body">
+                <h3>{{.Name}}</h3>
+                {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}
+                {{if .Area}}<p class="shop-card-area">📍 {{.Area}}</p>{{end}}
+                <p class="shop-card-meta">{{.Dishes}} {{if eq .Dishes 1}}dish{{else}}dishes{{end}}{{if .OffersDelivery}} · 🛵 Delivers{{end}}</p>
+            </div>
+        </a>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+{{if .Categories}}
+<section class="home-section">
+    <h2 class="row-title">Browse by category</h2>
+    <div class="cat-row">
+        {{range .Categories}}
+        <a href="{{.Link}}" class="cat-tile">
+            <span class="cat-circle">{{.Icon}}</span>
+            <span class="cat-name">{{.Name}}</span>
+        </a>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+{{if .Again}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Order again</h2>
+        <a href="/orders" class="row-link">My orders →</a>
+    </div>
+    <div class="h-row">
+        {{range .Again}}
+        <article class="h-card">
+            <div class="h-image">
+                {{if .ImageURL}}
+                <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                {{else}}
+                <div class="no-image">🍽️</div>
+                {{end}}
+            </div>
+            <div class="h-info">
+                <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
+                <strong class="h-price">₦{{naira .PriceKobo}}</strong>
+            </div>
+        </article>
+        {{end}}
+    </div>
+</section>
+{{end}}
+
+{{if .Popular}}
+<section class="home-section">
+    <div class="row-head">
+        <h2 class="row-title">Popular now</h2>
+        <a href="/menu" class="row-link">See all →</a>
+    </div>
+    <div class="h-row">
+        {{range .Popular}}
+        <article class="h-card">
+            <div class="h-image">
+                {{if .ImageURL}}
+                <img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">
+                {{else}}
+                <div class="no-image">🍽️</div>
+                {{end}}
+            </div>
+            <div class="h-info">
+                <a href="/menu?search={{.Name}}" class="h-name">{{.Name}}</a>
+                <strong class="h-price">₦{{naira .PriceKobo}}</strong>
+            </div>
+        </article>
+        {{end}}
+    </div>
+
+    <div class="preview-cta">
+        <a href="/menu" class="btn-outline">See Full Menu →</a>
+    </div>
+</section>
+{{end}}
+
+<section class="site-information">
+    <div class="site-information-inner">
+        <div>
+            <p class="info-eyebrow">NEED MORE INFORMATION?</p>
+            <h2>We're here to help.</h2>
+            <p>Learn about Grace's Kitchen, get in touch, or read how we handle your information.</p>
+        </div>
+        <div class="information-links">
+            <a href="/about">About us <span>→</span></a>
+            <a href="/contact">Contact us <span>→</span></a>
+            <a href="/privacy">Privacy policy <span>→</span></a>
+            <a href="/terms">Terms of service <span>→</span></a>
+        </div>
+    </div>
+</section>
 
 <footer class="site-footer">
-    <div class="footer-top">
-        <a href="/" class="footer-brand"><span class="brand-mark" aria-hidden="true">G</span><span>{{brandName}}<small>Good food, made easy.</small></span></a>
-        <p>Made for your cravings. Made for your everyday.</p>
+    <div class="footer-links">
+        <a href="/menu">Menu</a>
+        <a href="/vendors">Shops</a>
+        <a href="/login">Login</a>
+        <a href="/signup">Sign Up</a>
+        <a href="/become-a-vendor">Sell with us</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
     </div>
-    <div class="footer-bottom">
-        <div class="footer-links">
-            <a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/login">Login</a><a href="/signup">Sign Up</a>
-            <a href="/become-a-vendor">Sell with us</a><a href="/about">About</a><a href="/contact">Contact</a>
-            <a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a>
-        </div>
-        <p>&copy; 2026 {{brandName}}. All rights reserved.</p>
-    </div>
+    <p>&copy; 2026 {{brandName}}</p>
 </footer>
 
 <script src="/static/js/lightbox.js"></script>
