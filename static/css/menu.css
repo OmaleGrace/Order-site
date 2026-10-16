@@ -153,3 +153,205 @@
 .vendor-line { margin: -2px 0 8px; font-size: 0.82rem; color: var(--muted); }
 .vendor-line strong { color: var(--green); font-weight: 700; }
 .vendor-line a { text-decoration: none; }
+
+/* ===== Grace's Kitchen: Menu Experience Upgrade ===== */
+
+.menu-intro {
+    padding: 54px 5vw 18px;
+}
+
+.menu-intro h1 {
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    letter-spacing: -1.5px;
+    margin-bottom: 12px;
+}
+
+.menu-intro p {
+    max-width: 540px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+.menu-filters {
+    padding-top: 28px;
+}
+
+.search-form input {
+    min-height: 48px;
+    box-shadow: 0 3px 12px rgba(30, 50, 35, 0.04);
+}
+
+.search-form input:focus-visible,
+.search-form button:focus-visible,
+.category-btn:focus-visible,
+.add-cart-btn:focus-visible {
+    outline: 3px solid #e8a15b;
+    outline-offset: 3px;
+}
+
+.category-filters {
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.category-btn {
+    padding: 10px 20px;
+    transition: background 0.2s ease, color 0.2s ease,
+                border-color 0.2s ease, transform 0.2s ease;
+}
+
+.category-btn:hover {
+    transform: translateY(-2px);
+}
+
+.menu-container {
+    padding-top: 32px;
+}
+
+.menu-grid {
+    grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+    gap: 26px;
+}
+
+.food-card {
+    border: 1px solid rgba(40, 65, 45, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.food-card:hover {
+    transform: translateY(-5px);
+}
+
+.food-image {
+    aspect-ratio: 4 / 3;
+    position: relative;
+    overflow: hidden;
+}
+
+.food-image img {
+    transition: transform 0.4s ease;
+}
+
+.food-card:hover .food-image img {
+    transform: scale(1.045);
+}
+
+.food-content {
+    padding: 20px;
+}
+
+.food-content h2 {
+    font-size: 1.12rem;
+    line-height: 1.45;
+}
+
+.vendor-line {
+    margin-bottom: 12px;
+}
+
+.food-description {
+    line-height: 1.65;
+}
+
+.food-price {
+    color: var(--green);
+    font-size: 1.2rem;
+    white-space: nowrap;
+}
+
+.add-cart-btn {
+    padding: 11px 16px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.add-cart-btn:hover {
+    transform: translateY(-2px);
+}
+
+.fav-btn {
+    backdrop-filter: blur(8px);
+}
+
+.fav-btn:focus-visible {
+    outline: 3px solid #e8a15b;
+    outline-offset: 3px;
+}
+
+.menu-message {
+    line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+    .menu-header {
+        padding: 14px 5%;
+    }
+
+    .menu-nav {
+        gap: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    .menu-intro {
+        padding-top: 36px;
+    }
+
+    .menu-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .food-content {
+        padding: 14px;
+    }
+
+    .food-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .food-bottom form,
+    .add-cart-btn {
+        width: 100%;
+    }
+
+    .add-cart-btn {
+        padding: 11px 8px;
+    }
+}
+
+@media (max-width: 420px) {
+    .menu-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .food-bottom {
+        align-items: center;
+        flex-direction: row;
+    }
+
+    .food-bottom form {
+        width: auto;
+    }
+
+    .add-cart-btn {
+        width: auto;
+        padding: 10px 13px;
+    }
+
+    .search-form {
+        gap: 8px;
+    }
+
+    .search-form button {
+        padding: 12px 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .food-card,
+    .food-image img,
+    .category-btn,
+    .add-cart-btn {
+        transition: none;
+    }
+}

@@ -147,3 +147,173 @@
     .remove-form { grid-column: 1 / -1; }
     .remove-btn { width: 100%; }
 }
+/* ===== Grace's Kitchen: Cart Experience Upgrade ===== */
+
+.cart-container {
+    max-width: 960px;
+    padding-top: 42px;
+}
+
+.cart-title {
+    margin-bottom: 32px;
+}
+
+.cart-title h1 {
+    font-size: clamp(2.1rem, 5vw, 3rem);
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+}
+
+.cart-title p {
+    line-height: 1.7;
+}
+
+.cart-item {
+    border: 1px solid rgba(40, 65, 45, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cart-item:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.item-image {
+    overflow: hidden;
+}
+
+.item-info h2 {
+    line-height: 1.45;
+}
+
+.item-desc {
+    line-height: 1.6;
+}
+
+.quantity-controls {
+    gap: 14px;
+}
+
+.qty-btn {
+    transition: background 0.2s ease, border-color 0.2s ease,
+                color 0.2s ease;
+}
+
+.qty-btn:focus-visible,
+.remove-btn:focus-visible,
+.checkout-btn:focus-visible,
+.menu-btn:focus-visible {
+    outline: 3px solid #e8a15b;
+    outline-offset: 3px;
+}
+
+.item-price {
+    margin-top: 4px;
+}
+
+.item-subtotal {
+    line-height: 1.5;
+}
+
+.remove-btn {
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cart-summary {
+    padding: 26px;
+    border-top-width: 5px;
+}
+
+.total-row {
+    gap: 16px;
+}
+
+.total-row strong {
+    white-space: nowrap;
+}
+
+.checkout-btn {
+    min-height: 52px;
+    background: var(--green);
+    box-shadow: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.checkout-btn:hover {
+    background: var(--green-dark);
+    transform: translateY(-2px);
+}
+
+.empty-cart {
+    border: 1px solid rgba(40, 65, 45, 0.08);
+    padding: 58px 24px;
+}
+
+.empty-cart p {
+    line-height: 1.7;
+}
+
+.menu-btn {
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+@media (min-width: 900px) {
+    .cart-summary {
+        max-width: 520px;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 600px) {
+    .cart-container {
+        padding-top: 28px;
+    }
+
+    .cart-item {
+        grid-template-columns: 84px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .item-image {
+        width: 84px;
+        height: 84px;
+    }
+
+    .item-info {
+        min-width: 0;
+    }
+
+    .item-info h2 {
+        font-size: 1rem;
+    }
+
+    .item-desc {
+        font-size: 0.85rem;
+    }
+
+    .quantity-controls {
+        gap: 10px;
+    }
+
+    .cart-summary {
+        padding: 20px;
+    }
+
+    .total-row {
+        font-size: 1.05rem;
+    }
+
+    .total-row strong {
+        font-size: 1.35rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cart-item,
+    .qty-btn,
+    .remove-btn,
+    .checkout-btn,
+    .menu-btn {
+        transition: none;
+    }
+}
