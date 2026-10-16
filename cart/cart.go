@@ -56,7 +56,7 @@ func RemoveItem(db *sql.DB, userID, menuItemID int) error {
 
 func GetItems(db *sql.DB, userID int) ([]CartItem, error) {
 	rows, err := db.Query(`
-		SELECT ci.menu_item_id, ci.quantity, ci.price_kobo_at_addition, m.name, m.description, m.image_url
+		SELECT ci.menu_item_id, ci.quantity, ci.price_kobo_at_addition, m.name, COALESCE(m.description, ''), COALESCE(m.image_url, '')
 		FROM cart_items ci
 		JOIN menu_items m ON m.id = ci.menu_item_id
 		WHERE ci.user_id = $1

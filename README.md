@@ -166,7 +166,7 @@ Sessions also have an expiration time and expired sessions are cleaned up.
 
 ## Menu Search & Filtering
 
-The menu supports searching by name/description and filtering by category, both via URL query parameters (`/menu?search=...&category=...`) so results are shareable and linkable. Search and category filters can be combined. Menu access requires being logged in.
+The menu supports searching by name/description and filtering by category, both via URL query parameters (`/menu?search=...&category=...`) so results are shareable and linkable. Search and category filters can be combined. Menu browsing is public for discovery; adding items to the cart and checkout remain login-protected.
 
 ## Payment Processing
 
@@ -306,3 +306,22 @@ This project provided hands-on experience with:
 * Debugging production issues (including OAuth redirect URI mismatches, browser-caching pitfalls, and local vs. production database drift)
 * Basic web application security
 * Building a consistent design system across an entire application
+
+## Search and AdSense readiness
+
+The public site includes `robots.txt`, `sitemap.xml`, `ads.txt`, About, Contact, Privacy Policy, Terms of Service, and original public food guides. Public pages include descriptive metadata and can load the AdSense site-verification/loader snippet when a valid publisher ID is configured.
+
+### Deployment environment variables
+
+- `APP_BASE_URL`: the canonical public HTTPS origin, e.g. `https://your-domain.example` (no trailing slash).
+- `ADSENSE_PUBLISHER_ID`: your own publisher ID in `pub-1234567890123456` format. Leave unset until you have a real AdSense publisher ID. The app validates this value before publishing the AdSense script or `ads.txt`.
+
+After setting these variables in your hosting dashboard, redeploy and verify:
+- `https://YOUR-DOMAIN/robots.txt`
+- `https://YOUR-DOMAIN/sitemap.xml`
+- `https://YOUR-DOMAIN/ads.txt` (only after setting a valid publisher ID)
+- `/about`, `/contact`, `/privacy`, `/terms`, and `/guides` plus each guide page.
+
+Do not place ad units on login, account, cart, checkout, order, admin, vendor dashboard, or other non-content/private pages. Only add ad units after your AdSense account/site is approved, and review Google's current policies and consent requirements first.
+
+This preparation does not guarantee AdSense approval. Google reviews the live site, original content, navigation, policy compliance, ownership and account eligibility. If the site owner is under 18, a parent or legal guardian must own/manage the AdSense account; do not misstate age or account ownership.

@@ -48,6 +48,10 @@ func main() {
 
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
 	mux.HandleFunc("GET /about", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /guides", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /guides/nigerian-rice-dishes", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /guides/ordering-food-safely", middleware.Logging(h.PublicPage))
+	mux.HandleFunc("GET /guides/pickup-or-delivery", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /contact", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /privacy", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /terms", middleware.Logging(h.PublicPage))
@@ -63,12 +67,9 @@ func main() {
 	mux.HandleFunc("GET /vendor/menu", middleware.Logging(h.VendorMenu))
 	mux.HandleFunc("POST /vendor/menu/save", middleware.Logging(h.VendorMenuSave))
 	mux.HandleFunc("POST /vendor/menu/delete", middleware.Logging(h.VendorMenuDelete))
-	mux.HandleFunc(
-		"GET /menu",
-		middleware.Logging(
-			middleware.RequireLogin(db, h.Menu),
-		),
-	)
+	// Menu browsing is public so visitors and search crawlers can discover
+	// available dishes. Cart and checkout actions remain login-protected.
+	mux.HandleFunc("GET /menu", middleware.Logging(h.Menu))
 	mux.HandleFunc("GET /robots.txt", middleware.Logging(h.RobotsTxt))
 	mux.HandleFunc("GET /sitemap.xml", middleware.Logging(h.SitemapXML))
 	mux.HandleFunc("GET /ads.txt", middleware.Logging(h.AdsTxt))

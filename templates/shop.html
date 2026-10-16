@@ -3,7 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Name}} - {{brandName}}</title>
+    <title>{{.Name}} | {{brandName}}</title>
+    <meta name="description" content="{{.Name}} on {{brandName}}. Explore available dishes, prices, and pickup or delivery options.">
+    <meta name="robots" content="index,follow">
+    {{if adsensePublisherID}}
+    <meta name="google-adsense-account" content="ca-{{adsensePublisherID}}">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-{{adsensePublisherID}}" crossorigin="anonymous"></script>
+    {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
     <link rel="stylesheet" href="/static/css/shop.css">

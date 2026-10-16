@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 )
 
 // Name returns the business name for this copy of the app.
@@ -14,9 +16,30 @@ func Name() string {
 	return "Grace's Kitchen"
 }
 
-// Funcs makes {{brandName}} available inside templates.
+var adsensePublisherPattern = regexp.MustCompile(`^pub-[0-9]{10,20}$`)
+
+// AdSensePublisherID returns a validated publisher ID, or an empty string
+// until the owner configures a real ID in the deployment environment.
+func AdSensePublisherID() string {
+	id := strings.TrimSpace(os.Getenv("ADSENSE_PUBLISHER_ID"))
+	if !adsensePublisherPattern.MatchString(id) {
+		return ""
+	}
+	return id
+}
+
+// SiteURL returns the configured public base URL without a trailing slash.
+func SiteURL() string {
+	return strings.TrimRight(strings.TrimSpace(os.Getenv("APP_BASE_URL")), "/")
+}
+
+// Funcs makes shared site configuration available inside templates.
 func Funcs() template.FuncMap {
-	return template.FuncMap{"brandName": Name}
+	return template.FuncMap{
+		"brandName":          Name,
+		"adsensePublisherID": AdSensePublisherID,
+		"siteURL":            SiteURL,
+	}
 }
 
 // Parse loads template files with {{brandName}} available.

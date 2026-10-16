@@ -52,8 +52,10 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	}
 
 	favs := map[int]bool{}
+	loggedIn := false
 	if cookie, err := r.Cookie("session_token"); err == nil {
 		if userID, err := middleware.GetUserID(h.DB, cookie.Value); err == nil {
+			loggedIn = true
 			favRows, err := h.DB.Query("SELECT menu_item_id FROM favorites WHERE user_id = $1", userID)
 			if err != nil {
 				fmt.Println("Menu favourites error:", err)
@@ -78,6 +80,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		Category   string
 		Categories []string
 		Favs       map[int]bool
+		LoggedIn   bool
 	}{
 		Items:      items,
 		Message:    message,
@@ -85,6 +88,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		Category:   category,
 		Categories: categories,
 		Favs:       favs,
+		LoggedIn:   loggedIn,
 	}
 
 	err = tmpl.Execute(w, data)

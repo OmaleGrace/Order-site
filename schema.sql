@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict LUleP1Wg9HcF3on1PnW2PHmygddqj8ebmfnQP4ZyndsfjcEIPPGYorbgZSht9qh
+\restrict 9GnhRrLzS2qMK4XQomifpIcRweLmEzOeaO7Q0sMZYqZ2NIhOrIvvBMsYZbjKSc7
 
--- Dumped from database version 18.6 (c021049)
+-- Dumped from database version 18.6 (653b019)
 -- Dumped by pg_dump version 18.6 (Ubuntu 18.6-1.pgdg24.04+2)
 
 SET statement_timeout = 0;
@@ -160,7 +160,15 @@ CREATE TABLE public.orders (
     status character varying(50) DEFAULT 'pending'::character varying NOT NULL,
     payment_reference character varying(100),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    vendor_id integer DEFAULT 1
+    vendor_id integer DEFAULT 1,
+    delivery_method text DEFAULT 'pickup'::text NOT NULL,
+    delivery_address text DEFAULT ''::text NOT NULL,
+    delivery_phone text DEFAULT ''::text NOT NULL,
+    delivery_fee_kobo integer DEFAULT 0 NOT NULL,
+    delivery_state text DEFAULT ''::text NOT NULL,
+    delivery_lga text DEFAULT ''::text NOT NULL,
+    CONSTRAINT orders_delivery_fee_kobo_check CHECK ((delivery_fee_kobo >= 0)),
+    CONSTRAINT orders_delivery_method_check CHECK ((delivery_method = ANY (ARRAY['pickup'::text, 'delivery'::text])))
 );
 
 
@@ -245,6 +253,91 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: vendor_applications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vendor_applications (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    business_name text NOT NULL,
+    owner_name text NOT NULL,
+    phone text NOT NULL,
+    area text NOT NULL,
+    address text NOT NULL,
+    id_type text NOT NULL,
+    online_link text DEFAULT ''::text NOT NULL,
+    notes text DEFAULT ''::text NOT NULL,
+    status text DEFAULT 'pending'::text NOT NULL,
+    admin_note text DEFAULT ''::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    reviewed_at timestamp with time zone,
+    review_method text DEFAULT ''::text NOT NULL,
+    reviewed_by integer,
+    CONSTRAINT vendor_applications_id_type_check CHECK ((id_type = ANY (ARRAY['nin'::text, 'drivers_licence'::text, 'voters_card'::text, 'passport'::text]))),
+    CONSTRAINT vendor_applications_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+);
+
+
+--
+-- Name: vendor_applications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vendor_applications_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vendor_applications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vendor_applications_id_seq OWNED BY public.vendor_applications.id;
+
+
+--
+-- Name: vendor_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vendor_payments (
+    id integer NOT NULL,
+    vendor_id integer NOT NULL,
+    kind text NOT NULL,
+    amount_kobo integer NOT NULL,
+    reference text,
+    status text DEFAULT 'pending'::text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    paid_at timestamp with time zone,
+    CONSTRAINT vendor_payments_amount_kobo_check CHECK ((amount_kobo > 0)),
+    CONSTRAINT vendor_payments_kind_check CHECK ((kind = ANY (ARRAY['setup'::text, 'renewal'::text]))),
+    CONSTRAINT vendor_payments_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'paid'::text])))
+);
+
+
+--
+-- Name: vendor_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vendor_payments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vendor_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vendor_payments_id_seq OWNED BY public.vendor_payments.id;
+
+
+--
 -- Name: vendors; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -257,6 +350,16 @@ CREATE TABLE public.vendors (
     setup_paid_at timestamp with time zone,
     paid_until timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    description text DEFAULT ''::text NOT NULL,
+    area text DEFAULT ''::text NOT NULL,
+    address text DEFAULT ''::text NOT NULL,
+    phone text DEFAULT ''::text NOT NULL,
+    logo_url text DEFAULT ''::text NOT NULL,
+    offers_pickup boolean DEFAULT true NOT NULL,
+    offers_delivery boolean DEFAULT false NOT NULL,
+    delivery_fee_kobo integer DEFAULT 0 NOT NULL,
+    verified boolean DEFAULT false NOT NULL,
+    CONSTRAINT vendors_delivery_fee_kobo_check CHECK ((delivery_fee_kobo >= 0)),
     CONSTRAINT vendors_status_check CHECK ((status = ANY (ARRAY['pending'::text, 'active'::text, 'suspended'::text])))
 );
 
@@ -314,6 +417,20 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: vendor_applications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_applications ALTER COLUMN id SET DEFAULT nextval('public.vendor_applications_id_seq'::regclass);
+
+
+--
+-- Name: vendor_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_payments ALTER COLUMN id SET DEFAULT nextval('public.vendor_payments_id_seq'::regclass);
 
 
 --
@@ -412,6 +529,30 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: vendor_applications vendor_applications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_applications
+    ADD CONSTRAINT vendor_applications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vendor_payments vendor_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_payments
+    ADD CONSTRAINT vendor_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vendor_payments vendor_payments_reference_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_payments
+    ADD CONSTRAINT vendor_payments_reference_key UNIQUE (reference);
+
+
+--
 -- Name: vendors vendors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -439,6 +580,20 @@ CREATE INDEX idx_menu_items_vendor ON public.menu_items USING btree (vendor_id);
 --
 
 CREATE INDEX idx_orders_vendor ON public.orders USING btree (vendor_id);
+
+
+--
+-- Name: idx_vendor_payments_vendor; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_vendor_payments_vendor ON public.vendor_payments USING btree (vendor_id);
+
+
+--
+-- Name: one_pending_application_per_user; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX one_pending_application_per_user ON public.vendor_applications USING btree (user_id) WHERE (status = 'pending'::text);
 
 
 --
@@ -530,6 +685,30 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: vendor_applications vendor_applications_reviewed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_applications
+    ADD CONSTRAINT vendor_applications_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: vendor_applications vendor_applications_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_applications
+    ADD CONSTRAINT vendor_applications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: vendor_payments vendor_payments_vendor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_payments
+    ADD CONSTRAINT vendor_payments_vendor_id_fkey FOREIGN KEY (vendor_id) REFERENCES public.vendors(id) ON DELETE CASCADE;
+
+
+--
 -- Name: vendors vendors_owner_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -541,5 +720,5 @@ ALTER TABLE ONLY public.vendors
 -- PostgreSQL database dump complete
 --
 
-\unrestrict LUleP1Wg9HcF3on1PnW2PHmygddqj8ebmfnQP4ZyndsfjcEIPPGYorbgZSht9qh
+\unrestrict 9GnhRrLzS2qMK4XQomifpIcRweLmEzOeaO7Q0sMZYqZ2NIhOrIvvBMsYZbjKSc7
 

@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{brandName}}</title>
+    <title>{{brandName}} | Discover Local Food Shops and Order Online</title>
+    <meta name="description" content="Discover participating local food shops, explore menus, compare prices, and order meals for pickup or delivery with {{brandName}}.">
+    <meta name="robots" content="index,follow">
+    {{if siteURL}}<link rel="canonical" href="{{siteURL}}/">{{end}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{brandName}} | Discover Local Food Shops">
+    <meta property="og:description" content="Explore local food shops and order meals for pickup or delivery.">
+    <meta property="og:url" content="{{if siteURL}}{{siteURL}}/{{end}}">
+    {{if adsensePublisherID}}
+    <meta name="google-adsense-account" content="ca-{{adsensePublisherID}}">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-{{adsensePublisherID}}" crossorigin="anonymous"></script>
+    {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/shop.css">
     <link rel="stylesheet" href="/static/css/home.css">
@@ -292,6 +303,7 @@
         <div>
             <h4>Company</h4>
             <a href="/about">About</a>
+            <a href="/guides">Food Guides</a>
             <a href="/contact">Contact</a>
             <a href="/privacy">Privacy Policy</a>
             <a href="/terms">Terms of Service</a>

@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu - {{brandName}}</title>
+    <title>Browse the Menu | {{brandName}}</title>
+    <meta name="description" content="Explore available meals, food categories, descriptions and prices from participating food shops on {{brandName}}.">
+    <meta name="robots" content="index,follow">
+    {{if siteURL}}<link rel="canonical" href="{{siteURL}}/menu">{{end}}
+    {{if adsensePublisherID}}
+    <meta name="google-adsense-account" content="ca-{{adsensePublisherID}}">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-{{adsensePublisherID}}" crossorigin="anonymous"></script>
+    {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
 </head>
@@ -15,14 +22,21 @@
         <a href="/" class="brand-name">🍴 {{brandName}}</a>
     </div>
 
-    <nav class="menu-nav">
+    <nav class="menu-nav" aria-label="Main navigation">
         <a href="/" class="home-link">Home</a>
         <a href="/vendors">Shops</a>
+        {{if .LoggedIn}}
         <a href="/favorites">❤ Favourites</a>
         <a href="/orders">My Orders</a>
         <a href="/account">Account</a>
         <a href="/logout">Logout</a>
         <a href="/cart" class="cart-link">🛒 Cart</a>
+        {{else}}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/login">Login</a>
+        <a href="/signup" class="signup-link">Sign Up</a>
+        {{end}}
     </nav>
 </header>
 

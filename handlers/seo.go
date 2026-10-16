@@ -52,7 +52,13 @@ Sitemap: %s/sitemap.xml
 
 func (h *Handlers) SitemapXML(w http.ResponseWriter, r *http.Request) {
 	base := siteBase(r)
-	paths := []string{"/", "/vendors", "/about", "/contact", "/privacy", "/terms"}
+	paths := []string{
+		"/", "/menu", "/vendors", "/about", "/guides",
+		"/guides/nigerian-rice-dishes",
+		"/guides/ordering-food-safely",
+		"/guides/pickup-or-delivery",
+		"/contact", "/privacy", "/terms",
+	}
 
 	rows, err := h.DB.Query(`
 		SELECT v.slug

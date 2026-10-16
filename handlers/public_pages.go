@@ -52,6 +52,117 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 			ContactEmail: contactEmail,
 		},
 
+		"/guides": {
+			Title: "Nigerian Food and Ordering Guides",
+			Intro: "Practical, original guides to exploring Nigerian meals, choosing pickup or delivery, and ordering confidently from participating food shops.",
+			Sections: []PublicPageSection{
+				{
+					Heading: "Explore Nigerian meals by occasion",
+					Paragraphs: []string{
+						"Rice dishes such as jollof rice and fried rice are common choices for celebrations and group meals. If you are ordering for several people, check the portion size and whether sides or protein are included before comparing prices.",
+						"Soups such as egusi, okra, efo riro, and banga are often paired with swallows including eba, pounded yam, amala, or fufu. Since recipes and portion sizes vary between kitchens, read each shop's description and ask the vendor about ingredients or spice levels when those details matter to you.",
+					},
+				},
+				{
+					Heading: "How to compare food listings",
+					Paragraphs: []string{
+						"Compare the full order rather than the headline price alone. Check the listed portion, included sides, preparation notes, pickup or delivery availability, delivery fee, and estimated fulfilment information shown during checkout.",
+						"Menu photographs can help you understand a dish, but they may be illustrative and presentation can vary. Use the item name, description, and vendor details together when deciding what to order.",
+					},
+				},
+				{
+					Heading: "Food allergies and dietary needs",
+					Paragraphs: []string{
+						"If you have a food allergy or a dietary restriction, contact the vendor before placing an order. Recipes, cooking oils, seasonings, and preparation areas differ by kitchen, and an online menu may not list every ingredient or cross-contact risk.",
+						"Do not rely on a photograph alone to determine whether a dish is suitable for you. Ask specific questions and only order when you are comfortable with the information the vendor provides.",
+					},
+				},
+			},
+		},
+		"/guides/nigerian-rice-dishes": {
+			Title: "A Guide to Nigerian Rice Dishes",
+			Intro: "Jollof rice, fried rice, and white rice with stew offer different flavours and pairings. Use this guide to compare them when browsing a food menu.",
+			Sections: []PublicPageSection{
+				{
+					Heading: "Jollof rice",
+					Paragraphs: []string{
+						"Jollof rice is cooked with a seasoned tomato-and-pepper base, though the exact recipe varies by cook and region. It is often served with chicken, beef, fish, plantain, or salad. When ordering, check which sides are included instead of assuming every listing comes with the same extras.",
+					},
+				},
+				{
+					Heading: "Fried rice",
+					Paragraphs: []string{
+						"Nigerian-style fried rice commonly combines rice with vegetables and seasoning, and it is often served alongside grilled or fried protein. Ask the vendor about ingredients if you need to avoid a particular vegetable, seasoning, or cooking oil.",
+					},
+				},
+				{
+					Heading: "White rice and stew",
+					Paragraphs: []string{
+						"White rice with stew is a flexible meal because the stew and protein can vary between kitchens. Check the item description for the stew style, protein choice, and portion information before checkout.",
+					},
+				},
+				{
+					Heading: "Choosing the right listing",
+					Paragraphs: []string{
+						"Compare portion size, included sides, preparation notes, price, and pickup or delivery options. If an item description leaves out information that affects your decision, ask the vendor before paying.",
+					},
+				},
+			},
+		},
+		"/guides/ordering-food-safely": {
+			Title: "How to Order Food Online with Confidence",
+			Intro: "A practical checklist for reviewing a food listing, checking order details, and keeping a clear record of your online order.",
+			Sections: []PublicPageSection{
+				{
+					Heading: "Review the shop and menu",
+					Paragraphs: []string{
+						"Read the shop description and item details, check the listed price and available fulfilment methods, and review any verification information shown on the shop page. A verification badge should only be treated as evidence of the specific checks the platform says it performs, not as a guarantee of every aspect of a transaction.",
+					},
+				},
+				{
+					Heading: "Confirm your order before payment",
+					Paragraphs: []string{
+						"Before submitting an order, check quantities, item choices, delivery or pickup method, delivery address, contact phone number, fees, and the final total. Keep your order reference and confirmation message in case you need to ask a question later.",
+					},
+				},
+				{
+					Heading: "Protect your account",
+					Paragraphs: []string{
+						"Use a unique password, sign out on shared devices, and never send your password or full payment-card details in a support message. Only complete payment through the payment flow presented by the website.",
+					},
+				},
+				{
+					Heading: "If something goes wrong",
+					Paragraphs: []string{
+						"Contact the platform or vendor using the published contact route and include your order reference. Explain the issue clearly and keep relevant receipts or order confirmations. Refund and cancellation outcomes depend on the circumstances and applicable terms.",
+					},
+				},
+			},
+		},
+		"/guides/pickup-or-delivery": {
+			Title: "Food Pickup or Delivery: How to Choose",
+			Intro: "Pickup and delivery can both work well. The best choice depends on the shop's options, distance, timing, and the details shown at checkout.",
+			Sections: []PublicPageSection{
+				{
+					Heading: "When pickup may suit you",
+					Paragraphs: []string{
+						"Pickup can be useful if you are already nearby or prefer to collect the order yourself. Before travelling, check the shop's pickup address and any instructions, and wait for the order status or vendor confirmation that indicates it is ready.",
+					},
+				},
+				{
+					Heading: "When delivery may suit you",
+					Paragraphs: []string{
+						"Delivery can save a trip when the shop offers service to your area. Confirm that your address and phone number are correct, and review the delivery fee and any available timing information before paying.",
+					},
+				},
+				{
+					Heading: "Compare the total cost and instructions",
+					Paragraphs: []string{
+						"The item price is only one part of the decision. Check the final checkout total, fulfilment method, vendor instructions, and the contact details available if you need help. If delivery coverage or timing is unclear, ask the shop before submitting the order.",
+					},
+				},
+			},
+		},
 		"/contact": {
 			Title: "Contact Us",
 			Intro: "Have a question about Grace's Kitchen? You can reach us using the contact details below.",
@@ -103,6 +214,14 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 						"When you make an online payment, payment processing is handled through Paystack. Paystack may process payment information under its own privacy terms.",
 						"The website may use Brevo to send service-related emails, Termii to send phone verification codes by SMS, and Cloudinary to store profile pictures you upload. If you choose Google sign-in, Google may process information needed to authenticate you.",
 						"Information may also be shared with the relevant vendor when necessary to fulfil an order, such as providing the order details and delivery information required for fulfilment.",
+					},
+				},
+				{
+					Heading: "Advertising and third-party cookies",
+					Paragraphs: []string{
+						"If Google AdSense or another advertising service is enabled on this website, that service and its partners may use cookies, web beacons, IP addresses, or similar technologies to deliver, measure, and personalise ads where permitted. Third-party vendors, including Google, may use information from visits to this and other websites to provide advertising services.",
+						"Visitors can manage ad personalisation through Google's ad settings and can learn how Google uses information from partner sites through Google's published privacy information. The availability of controls depends on the visitor's location, device, and account settings.",
+						"We will update this policy if our advertising practices materially change. Where applicable law requires consent for non-essential cookies or personalised advertising, the appropriate consent choices must be configured before those technologies are used.",
 					},
 				},
 				{
