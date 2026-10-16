@@ -69,6 +69,9 @@ func main() {
 			middleware.RequireLogin(db, h.Menu),
 		),
 	)
+	mux.HandleFunc("GET /robots.txt", middleware.Logging(h.RobotsTxt))
+	mux.HandleFunc("GET /sitemap.xml", middleware.Logging(h.SitemapXML))
+	mux.HandleFunc("GET /ads.txt", middleware.Logging(h.AdsTxt))
 	mux.HandleFunc("GET /checkout/details", middleware.Logging(middleware.RequireLogin(db, h.CheckoutDetails)))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(

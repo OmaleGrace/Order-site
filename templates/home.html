@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/home.css">
     <link rel="stylesheet" href="/static/css/shop.css">
+    <link rel="stylesheet" href="/static/css/home.css">
 </head>
 
 <body>
@@ -19,6 +19,7 @@
     <nav aria-label="Main navigation">
         <a href="/menu">Menu</a>
         <a href="/vendors">Shops</a>
+        <a href="/become-a-vendor">Sell with us</a>
         <a href="/about">About</a>
         <a href="/contact">Contact</a>
         <a href="/login">Login</a>
@@ -26,56 +27,28 @@
     </nav>
 </header>
 
-<section class="home-search-strip">
-    <form action="/menu" method="get" class="home-search">
-        <span class="home-search-icon">🔍</span>
-        <input type="text" name="search" placeholder="Search meals..." aria-label="Search meals">
-        <button type="submit">Search</button>
-    </form>
-</section>
-<section class="banner-wrap">
-    <div class="banner-track" id="banner-track">
-        <a href="/menu" class="banner banner-green">
-            <div class="banner-text">
-                <h2>Hungry? Order in minutes</h2>
-                <p>Browse the menu and pay securely online.</p>
-                <span class="banner-btn">View menu →</span>
-            </div>
-            <div class="banner-emoji">🍲</div>
-        </a>
-        <a href="/menu?category=Drinks" class="banner banner-red">
-            <div class="banner-text">
-                <h2>Cold drinks, hot meals</h2>
-                <p>Add a drink to any order.</p>
-                <span class="banner-btn">See drinks →</span>
-            </div>
-            <div class="banner-emoji">🥤</div>
-        </a>
-        <a href="/orders" class="banner banner-gold">
-            <div class="banner-text">
-                <h2>Track every order</h2>
-                <p>Watch it go from paid to ready.</p>
-                <span class="banner-btn">My orders →</span>
-            </div>
-            <div class="banner-emoji">📦</div>
-        </a>
-    </div>
-    <div class="banner-dots" id="banner-dots"></div>
-</section>
-<section class="hero">
+<section class="hero hero-home">
     <div class="hero-content">
-        <h1>Fresh Meals, Made With Love</h1>
-        <p>Order delicious home-cooked meals straight from your phone, and pay securely online.</p>
+        <p class="hero-eyebrow">Food ordering you can trust</p>
+        <h1>Order great food from shops we have checked.</h1>
+        <p>Browse local kitchens, pay securely online, and follow your order from payment to pickup or delivery.</p>
+
+        <form action="/menu" method="get" class="home-search hero-search">
+            <span class="home-search-icon">🔍</span>
+            <input type="text" name="search" placeholder="Search meals or shops..." aria-label="Search meals">
+            <button type="submit">Search</button>
+        </form>
 
         <div class="hero-actions">
-            <a href="/menu" class="btn-primary">View Menu</a>
-            <a href="/signup" class="btn-secondary">Create Account</a>
+            <a href="/menu" class="btn-primary">Order food</a>
+            <a href="/become-a-vendor" class="btn-secondary">Sell with us</a>
         </div>
 
         <div class="trust-row">
+            <span>✔ Checked vendors</span>
             <span>✔ Secure online payment</span>
-            <span>✔ Easy ordering</span>
-            <span>✔ Track your orders</span>
+            <span>✔ Pickup or delivery</span>
+            <span>✔ Track every order</span>
         </div>
     </div>
 </section>
@@ -178,39 +151,171 @@
 </section>
 {{end}}
 
-<section class="site-information">
-    <div class="site-information-inner">
-        <div>
-            <p class="info-eyebrow">NEED MORE INFORMATION?</p>
-            <h2>We're here to help.</h2>
-            <p>Learn about Grace's Kitchen, get in touch, or read how we handle your information.</p>
+<section class="home-section how">
+    <div class="section-head">
+        <p class="eyebrow">How it works</p>
+        <h2>From hungry to fed in four steps.</h2>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Choose who you are">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="customers">For customers</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="vendors">For vendors</button>
+    </div>
+
+    <div class="steps-grid" id="tab-customers" role="tabpanel">
+        <div class="step-card"><span class="step-num">1</span><h3>Pick a shop</h3><p>Browse the shops near you, or search for a dish you want.</p></div>
+        <div class="step-card"><span class="step-num">2</span><h3>Choose your food</h3><p>Add dishes to your cart. Each order comes from one shop.</p></div>
+        <div class="step-card"><span class="step-num">3</span><h3>Pay securely</h3><p>Pay online through Paystack. Your order is marked paid only when the payment is confirmed.</p></div>
+        <div class="step-card"><span class="step-num">4</span><h3>Pick up or get it delivered</h3><p>Follow your order's status, then collect it or wait for the rider.</p></div>
+    </div>
+
+    <div class="steps-grid" id="tab-vendors" role="tabpanel" hidden>
+        <div class="step-card"><span class="step-num">1</span><h3>Apply</h3><p>Tell us about your shop and yourself. It takes a few minutes.</p></div>
+        <div class="step-card"><span class="step-num">2</span><h3>Get checked</h3><p>We call you and look at your ID, so customers can trust every shop.</p></div>
+        <div class="step-card"><span class="step-num">3</span><h3>Pay and open</h3><p>Pay the one-time setup fee, which includes your first month, and your shop opens.</p></div>
+        <div class="step-card"><span class="step-num">4</span><h3>Take orders</h3><p>Manage your menu, delivery options and orders from your own dashboard.</p></div>
+    </div>
+</section>
+
+<section class="home-section trust">
+    <div class="section-head">
+        <p class="eyebrow">Why trust us</p>
+        <h2>Proof, not promises.</h2>
+        <p>Ordering food from a stranger online should not feel risky. Here is how we reduce the risk.</p>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-card">
+            <span class="info-icon">🪪</span>
+            <h3>Vendors are checked first</h3>
+            <p>Before a shop opens, we speak to the owner and see their ID. A ✔ Verified badge means that check was done.</p>
         </div>
-        <div class="information-links">
-            <a href="/about">About us <span>→</span></a>
-            <a href="/contact">Contact us <span>→</span></a>
-            <a href="/privacy">Privacy policy <span>→</span></a>
-            <a href="/terms">Terms of service <span>→</span></a>
+        <div class="info-card">
+            <span class="info-icon">💳</span>
+            <h3>Payments are confirmed by the system</h3>
+            <p>An order only becomes paid when Paystack confirms the payment. No screenshots, no fake transfer alerts.</p>
+        </div>
+        <div class="info-card">
+            <span class="info-icon">📊</span>
+            <h3>A real track record</h3>
+            <p>Every shop page shows how many orders it has completed, so you can see who is established.</p>
         </div>
     </div>
 </section>
 
-<footer class="site-footer">
-    <div class="footer-links">
-        <a href="/menu">Menu</a>
-        <a href="/vendors">Shops</a>
-        <a href="/login">Login</a>
-        <a href="/signup">Sign Up</a>
-        <a href="/become-a-vendor">Sell with us</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/privacy">Privacy Policy</a>
-        <a href="/terms">Terms of Service</a>
+<section class="home-section sell">
+    <div class="sell-card">
+        <div class="sell-text">
+            <p class="eyebrow">For vendors</p>
+            <h2>Open your shop on {{brandName}}.</h2>
+            <p>Get your own shop page, your own menu and your own orders dashboard, in front of customers who are ready to order.</p>
+            <ul class="sell-list">
+                <li>Your own public shop page you can share anywhere</li>
+                <li>Menu manager with photos and categories</li>
+                <li>Orders dashboard with customers' delivery details</li>
+                <li>Pickup, delivery, or both. You set the delivery fee.</li>
+            </ul>
+            <a href="/become-a-vendor" class="btn-primary">Apply to sell</a>
+        </div>
+
+        <div class="price-box">
+            <p class="price-label">One-time setup</p>
+            <p class="price-amount">₦{{naira .SetupFeeKobo}}</p>
+            <p class="price-note">Your first month is included.</p>
+            <hr>
+            <p class="price-label">Then, each month</p>
+            <p class="price-amount">₦{{naira .MonthlyFeeKobo}}</p>
+            <p class="price-note">Pay only after your application is approved.</p>
+        </div>
     </div>
-    <p>&copy; 2026 {{brandName}}</p>
+</section>
+
+<section class="home-section faq">
+    <div class="section-head">
+        <p class="eyebrow">Questions</p>
+        <h2>Straight answers.</h2>
+    </div>
+
+    <details>
+        <summary>How do I know a shop is real?</summary>
+        <p>Shops go through an application where we speak to the owner and check their ID before the shop opens. Shops with a ✔ Verified badge have passed that check, and each shop page shows how many orders it has completed.</p>
+    </details>
+    <details>
+        <summary>How do I pay?</summary>
+        <p>At checkout you pay online through Paystack. Your order shows as paid once Paystack confirms the payment.</p>
+    </details>
+    <details>
+        <summary>Can I order from two shops at once?</summary>
+        <p>Not yet. Each order is from one shop, so it can go to one kitchen. Check out, then start a new order for the next shop.</p>
+    </details>
+    <details>
+        <summary>Pickup or delivery?</summary>
+        <p>Each shop chooses what it offers. At checkout you see their options and any delivery fee before you pay.</p>
+    </details>
+    <details>
+        <summary>How much does it cost to sell here?</summary>
+        <p>A one-time setup fee of ₦{{naira .SetupFeeKobo}}, with your first month included, then ₦{{naira .MonthlyFeeKobo}} a month. You pay only after your application is approved.</p>
+    </details>
+    <details>
+        <summary>How do I become a vendor?</summary>
+        <p>Create an account, then apply from the Sell with us page. We will call you to verify your identity. Once you are approved, you pay the setup fee and your shop opens.</p>
+    </details>
+</section>
+
+<section class="final-cta">
+    <h2>Hungry, or cooking for others?</h2>
+    <p>Order something good today, or open your own shop.</p>
+    <div class="hero-actions">
+        <a href="/menu" class="btn-primary">Order food</a>
+        <a href="/become-a-vendor" class="btn-secondary">Sell with us</a>
+    </div>
+</section>
+
+<footer class="site-footer">
+    <div class="footer-cols">
+        <div>
+            <h4>{{brandName}}</h4>
+            <p>Food ordering you can trust.</p>
+        </div>
+        <div>
+            <h4>Customers</h4>
+            <a href="/menu">Menu</a>
+            <a href="/vendors">Shops</a>
+            <a href="/orders">My orders</a>
+            <a href="/favorites">Favourites</a>
+        </div>
+        <div>
+            <h4>Vendors</h4>
+            <a href="/become-a-vendor">Sell with us</a>
+            <a href="/login">Vendor login</a>
+        </div>
+        <div>
+            <h4>Company</h4>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+        </div>
+    </div>
+    <p class="footer-copy">&copy; 2026 {{brandName}}</p>
 </footer>
 
+<script>
+(function () {
+    var tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            tabs.forEach(function (b) {
+                var on = b === btn;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+                document.getElementById('tab-' + b.dataset.tab).hidden = !on;
+            });
+        });
+    });
+})();
+</script>
 <script src="/static/js/lightbox.js"></script>
-<script src="/static/js/banners.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

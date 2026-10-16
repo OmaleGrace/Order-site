@@ -27,13 +27,15 @@
 </header>
 
 <section class="menu-intro">
+    <span class="menu-eyebrow">Fresh from local kitchens</span>
     <h1>Our Menu</h1>
-    <p>Choose from our delicious selection of freshly prepared meals.</p>
+    <p>Choose from freshly prepared meals, cooked by shops we have checked.</p>
 </section>
 
 <section class="menu-filters">
     <form action="/menu" method="get" class="search-form">
-        <input type="text" name="search" placeholder="Search meals..." value="{{.Search}}">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" name="search" placeholder="Search meals or shops..." value="{{.Search}}" aria-label="Search meals">
         {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
         <button type="submit">Search</button>
     </form>
@@ -52,6 +54,11 @@
         <p class="menu-message">{{.Message}}</p>
     {{end}}
 
+    <div class="results-bar">
+        <p class="results-count"><strong>{{len .Items}}</strong> {{if eq (len .Items) 1}}dish{{else}}dishes{{end}}{{if .Search}} for “{{.Search}}”{{end}}{{if .Category}} in {{.Category}}{{end}}</p>
+        {{if or .Search .Category}}<a href="/menu" class="clear-link">Clear filters ✕</a>{{end}}
+    </div>
+
     <section class="menu-grid">
 
         {{range .Items}}
@@ -64,6 +71,7 @@
                 {{else}}
                 <div class="no-image">🍽️</div>
                 {{end}}
+                {{if .Category.String}}<span class="food-tag">{{.Category.String}}</span>{{end}}
             </div>
 
             <div class="food-content">
@@ -84,12 +92,26 @@
 
         </article>
         {{else}}
-            <p class="empty-menu">No menu items found. Try a different search or category.</p>
+        <div class="empty-menu">
+            <div class="empty-emoji">🍽️</div>
+            <p><strong>No dishes found.</strong></p>
+            <p>Try a different search or category.</p>
+            <a href="/menu" class="add-cart-btn" style="display:inline-block;text-decoration:none;">See the full menu</a>
+        </div>
         {{end}}
 
     </section>
 
 </main>
+
+<footer class="menu-footer">
+    <div class="menu-footer-links">
+        <a href="/">Home</a>
+        <a href="/vendors">Shops</a>
+        <a href="/become-a-vendor">Sell with us</a>
+    </div>
+    <p>&copy; 2026 {{brandName}}</p>
+</footer>
 
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/favorites.js"></script>

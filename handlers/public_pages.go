@@ -87,14 +87,21 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 					Heading: "How information is used",
 					Paragraphs: []string{
 						"We use relevant information to create and manage accounts, authenticate users, process orders, communicate about transactions, support customers, and protect the website against misuse.",
-						"Account passwords should be stored in protected, non-plaintext form. Never send your password to us by email.",
+						"Account passwords are stored in hashed form, not as plain text. Never send your password to us by email.",
+					},
+				},
+				{
+					Heading: "Vendor applications",
+					Paragraphs: []string{
+						"If you apply to sell on the platform, we collect your business name, your full name, phone number, shop area and address, the kind of ID you will show us, an optional business link, and any notes you add.",
+						"We check your identity by speaking to you and viewing your ID in person or on a live video call. We do not ask you to submit your ID number or a photo of your ID through the website, and we do not store them. We record which kind of ID was checked, how it was checked, and our decision.",
 					},
 				},
 				{
 					Heading: "Payments and service providers",
 					Paragraphs: []string{
 						"When you make an online payment, payment processing is handled through Paystack. Paystack may process payment information under its own privacy terms.",
-						"The website may use Brevo to send service-related emails. If you choose Google sign-in, Google may process information needed to authenticate you.",
+						"The website may use Brevo to send service-related emails, Termii to send phone verification codes by SMS, and Cloudinary to store profile pictures you upload. If you choose Google sign-in, Google may process information needed to authenticate you.",
 						"Information may also be shared with the relevant vendor when necessary to fulfil an order, such as providing the order details and delivery information required for fulfilment.",
 					},
 				},
@@ -152,6 +159,15 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 					Paragraphs: []string{
 						"Payments are processed using the payment options presented on the website. Payment transactions may also be subject to the payment provider's terms.",
 						"Cancellation and refund requests depend on the circumstances of the order and applicable requirements. Contact us about a specific issue rather than assuming every order can be cancelled or refunded automatically.",
+					},
+				},
+				{
+					Heading: "Terms for vendors",
+					Paragraphs: []string{
+						"To sell on the platform you must apply, pass our identity check, and pay the setup fee and then the monthly fee shown on the Sell with us page. We open a shop only after approval and payment.",
+						"Your shop and its dishes are visible to customers only while your shop is active and your paid period has not ended. If your paid period ends, your dishes are hidden until you renew. We may suspend or remove a shop that breaks these terms, gives false information, or harms customers.",
+						"You are responsible for the accuracy of your menu, prices and delivery details, for preparing food safely and legally, for fulfilling the orders you accept, and for dealing fairly with customers who contact you about them.",
+						"Each order is placed with one vendor. Fees paid to us for opening or renewing a shop are not refundable unless we say otherwise in writing.",
 					},
 				},
 				{

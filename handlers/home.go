@@ -130,15 +130,19 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Popular    []HomeDish
-		Again      []HomeDish
-		Categories []HomeCategory
-		Shops      []ShopCard
+		Popular        []HomeDish
+		Again          []HomeDish
+		Categories     []HomeCategory
+		Shops          []ShopCard
+		SetupFeeKobo   int
+		MonthlyFeeKobo int
 	}{
-		Popular:    popular,
-		Again:      again,
-		Categories: categories,
-		Shops:      h.topShops(8),
+		Popular:        popular,
+		Again:          again,
+		Categories:     categories,
+		Shops:          h.topShops(8),
+		SetupFeeKobo:   vendorSetupFeeKobo(),
+		MonthlyFeeKobo: vendorMonthlyFeeKobo(),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {
