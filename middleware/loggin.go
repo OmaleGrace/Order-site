@@ -14,7 +14,7 @@ func Logging(next http.HandlerFunc) http.HandlerFunc {
 		next(w, r)
 
 		duration := time.Since(start)
-		log.Printf("%s %s (%v)", r.Method, r.URL.Path, duration)
+		log.Printf("%s %s ip=%s (%v)", r.Method, r.URL.Path, ClientIP(r), duration)
 	}
 }
 

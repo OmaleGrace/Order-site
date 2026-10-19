@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html"
+	"log"
 	"net/http"
 	"strings"
 
@@ -14,6 +17,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// dummyHash is a real bcrypt hash of a random string. It is compared against when
+// no matching account exists, so a wrong email and a wrong password take equally long.
+var dummyHash = func() string {
+	secret, _ := generateToken()
+	h, _ := bcrypt.GenerateFromPassword([]byte(secret), bcrypt.DefaultCost)
+	return string(h)
+}()
+
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	tmpl := brand.Parse("templates/login.html")
 
@@ -24,32 +35,42 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		email := r.FormValue("email")
+		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
 		password := r.FormValue("password")
 
+		// Too many wrong guesses for this email, or from this address: stop and wait.
+		// The same message is used whether or not the email exists.
+		ip := middleware.ClientIP(r)
+		if middleware.LoginFailsByEmail.Blocked(email) {
+			log.Printf("login: locked out email attempt from ip=%s", ip)
+			w.Header().Set("Retry-After", "900")
+			errors.Render(w, "Too many failed attempts. Please wait 15 minutes, or reset your password.", http.StatusTooManyRequests)
+			return
+		}
+
 		var userID int
-		var storedPassword string
+		var storedPassword sql.NullString
 		var isAdmin bool
 
 		err = h.DB.QueryRow(
-			"SELECT id, password, is_admin FROM users WHERE email = $1",
+			"SELECT id, password, is_admin FROM users WHERE LOWER(email) = $1",
 			email,
 		).Scan(&userID, &storedPassword, &isAdmin)
 
-		if err != nil {
+		// Always do the slow password check, even when the account does not exist
+		// or has no password (Google sign-in), so response time does not reveal which.
+		hashToCheck := dummyHash
+		if err == nil && storedPassword.Valid && storedPassword.String != "" {
+			hashToCheck = storedPassword.String
+		}
+		cmpErr := bcrypt.CompareHashAndPassword([]byte(hashToCheck), []byte(password))
+
+		if err != nil || !storedPassword.Valid || cmpErr != nil {
+			middleware.LoginFailsByEmail.Hit(email)
 			errors.Render(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
-
-		err = bcrypt.CompareHashAndPassword(
-			[]byte(storedPassword),
-			[]byte(password),
-		)
-
-		if err != nil {
-			errors.Render(w, "Invalid email or password", http.StatusUnauthorized)
-			return
-		}
+		middleware.LoginFailsByEmail.Reset(email)
 
 		// Create a secure server-side session
 		token, err := middleware.CreateSession(h.DB, userID)
@@ -109,7 +130,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		name := strings.TrimSpace(r.FormValue("name"))
-		email := strings.TrimSpace(r.FormValue("email"))
+		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
 		password := r.FormValue("password")
 
 		if err := validateName(name); err != nil {
@@ -128,6 +149,12 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			signupFail(w, r, "Could not create account", http.StatusInternalServerError)
+			return
+		}
+
+		var existing bool
+		if err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = $1)", email).Scan(&existing); err == nil && existing {
+			signupFail(w, r, "An account with this email already exists. Try logging in instead.", http.StatusConflict)
 			return
 		}
 
@@ -165,7 +192,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		})
 
 		go func() {
-			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", name)); err != nil {
+			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", html.EscapeString(name))); err != nil {
 				fmt.Println("Welcome email error:", err)
 			}
 		}()

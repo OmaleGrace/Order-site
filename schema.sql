@@ -205,6 +205,18 @@ CREATE TABLE public.password_reset_tokens (
 
 
 --
+-- Name: phone_verifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.phone_verifications (
+    pin_id text NOT NULL,
+    user_id integer NOT NULL,
+    phone text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -719,6 +731,14 @@ ALTER TABLE ONLY public.vendors
 --
 -- PostgreSQL database dump complete
 --
+
+ALTER TABLE ONLY public.phone_verifications
+    ADD CONSTRAINT phone_verifications_pkey PRIMARY KEY (pin_id);
+
+
+ALTER TABLE ONLY public.phone_verifications
+    ADD CONSTRAINT phone_verifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
 
 \unrestrict 9GnhRrLzS2qMK4XQomifpIcRweLmEzOeaO7Q0sMZYqZ2NIhOrIvvBMsYZbjKSc7
 

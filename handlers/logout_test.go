@@ -77,7 +77,7 @@ func TestLogout(t *testing.T) {
 		SELECT COUNT(*)
 		FROM sessions
 		WHERE token = $1
-	`, token).Scan(&count)
+	`, middleware.HashToken(token)).Scan(&count)
 
 	if err != nil {
 		t.Fatal(err)

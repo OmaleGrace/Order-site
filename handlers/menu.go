@@ -27,6 +27,12 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("search")
 	category := r.URL.Query().Get("category")
+	if len([]rune(search)) > 80 {
+		search = string([]rune(search)[:80])
+	}
+	if len([]rune(category)) > 40 {
+		category = string([]rune(category)[:40])
+	}
 
 	items, err := menu.GetAll(h.DB, search, category)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"Order-site/brand"
 	emailer "Order-site/email"
 	"Order-site/errors"
+	"Order-site/middleware"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -34,18 +35,22 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		email := strings.TrimSpace(r.FormValue("email"))
+		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
 		if err := validateEmail(email); err != nil {
 			errors.Render(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		var userID int
-		err = h.DB.QueryRow("SELECT id FROM users WHERE email = $1", email).Scan(&userID)
+		err = h.DB.QueryRow("SELECT id FROM users WHERE LOWER(email) = $1", email).Scan(&userID)
+
+		// Nobody may flood one inbox with reset emails. Over the limit we quietly
+		// send nothing but show the same message below.
+		allowed := middleware.ForgotByEmail.Hit(email)
 
 		// Always show the same message, whether or not the email exists —
 		// this avoids revealing which emails are registered.
-		if err == nil {
+		if err == nil && allowed {
 			token, err := generateToken()
 			if err != nil {
 				fmt.Println("Generate token error:", err)
@@ -53,10 +58,13 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// Only a fingerprint of the token is stored. The real one goes in the email.
+			// Older unused links for this person stop working.
+			h.DB.Exec("DELETE FROM password_reset_tokens WHERE user_id = $1", userID)
 			_, err = h.DB.Exec(`
 				INSERT INTO password_reset_tokens (token, user_id, expires_at)
 				VALUES ($1, $2, NOW() + INTERVAL '15 minutes')
-			`, token, userID)
+			`, middleware.HashToken(token), userID)
 
 			if err != nil {
 				fmt.Println("Save reset token error:", err)
@@ -64,7 +72,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			resetLink := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("APP_BASE_URL"), token)
+			resetLink := fmt.Sprintf("%s/reset-password?token=%s", strings.TrimRight(os.Getenv("APP_BASE_URL"), "/"), token)
 
 			go func() {
 				if err := emailer.Send(email, "Reset Your Password", fmt.Sprintf("<h1>Reset your password</h1><p>Click the link below to reset your password. This link expires in 15 minutes.</p><p><a href=\"%s\">Reset Password</a></p>", resetLink)); err != nil {
@@ -102,7 +110,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		token := r.FormValue("token")
+		token := strings.TrimSpace(r.FormValue("token"))
 		newPassword := r.FormValue("password")
 		if err := validatePassword(newPassword); err != nil {
 			errors.Render(w, err.Error(), http.StatusBadRequest)
@@ -114,7 +122,7 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 		err = h.DB.QueryRow(`
 			SELECT user_id, expires_at FROM password_reset_tokens WHERE token = $1
-		`, token).Scan(&userID, &expiresAt)
+		`, middleware.HashToken(token)).Scan(&userID, &expiresAt)
 
 		if err != nil {
 			errors.Render(w, "This reset link is invalid or has already been used", http.StatusBadRequest)
@@ -139,8 +147,13 @@ func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Token is single-use — delete it now that it's been used
-		_, _ = h.DB.Exec("DELETE FROM password_reset_tokens WHERE token = $1", token)
+		// Token is single-use — delete it now that it's been used, along with any other
+		// reset links for this person, and log them out everywhere. If someone else
+		// had got into the account, the new password now locks them out.
+		_, _ = h.DB.Exec("DELETE FROM password_reset_tokens WHERE user_id = $1", userID)
+		if err := middleware.DeleteUserSessions(h.DB, userID); err != nil {
+			fmt.Println("Reset: could not end old sessions:", err)
+		}
 
 		fmt.Fprint(w, `
     <html>

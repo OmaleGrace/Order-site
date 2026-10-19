@@ -97,5 +97,19 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Remembers which phone number a text-message code was sent to, and for whom,
+	// so a code can only verify the number it was really sent to.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS phone_verifications (
+			pin_id TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			phone TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }

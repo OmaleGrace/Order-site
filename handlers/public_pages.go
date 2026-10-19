@@ -107,6 +107,26 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 						"Compare portion size, included sides, preparation notes, price, and pickup or delivery options. If an item description leaves out information that affects your decision, ask the vendor before paying.",
 					},
 				},
+				{
+					Heading: "Party rice and everyday rice",
+					Paragraphs: []string{
+						"Jollof rice served at large gatherings is often cooked in big pots over open heat, which can give it a smoky flavour that a smaller kitchen pot does not produce. Everyday jollof made for a single order is usually cooked on a stove and tastes lighter. Neither is better; they are simply different, so it helps to know which style a vendor is describing.",
+						"If you are ordering for an event, ask the vendor how far ahead they need notice, how many portions their pots can handle, and whether they provide serving containers. Large orders are easier to get right when the details are agreed before payment.",
+					},
+				},
+				{
+					Heading: "Typical sides and how they change the price",
+					Paragraphs: []string{
+						"Fried plantain, moi moi, coleslaw, salad, and a choice of chicken, beef, turkey, or fish are common additions. Some vendors list rice as a base price and charge for each extra, while others price a full plate. Comparing a base price with a full-plate price is a common reason two listings look very different in cost.",
+						"A simple way to compare is to write down what you actually want on the plate, then add up the listed price for exactly that combination from each vendor. The cheapest headline price is not always the cheapest finished plate.",
+					},
+				},
+				{
+					Heading: "Heat, spice and personal taste",
+					Paragraphs: []string{
+						"Pepper levels vary a great deal between cooks. If you prefer mild food, or you are ordering for children or older relatives, say so in your order notes or contact the vendor before paying. Many cooks will adjust the pepper when they know about it in advance.",
+					},
+				},
 			},
 		},
 		"/guides/ordering-food-safely": {
@@ -137,6 +157,26 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 						"Contact the platform or vendor using the published contact route and include your order reference. Explain the issue clearly and keep relevant receipts or order confirmations. Refund and cancellation outcomes depend on the circumstances and applicable terms.",
 					},
 				},
+				{
+					Heading: "Spotting a well-described listing",
+					Paragraphs: []string{
+						"A helpful listing tells you what the dish is, roughly how much food you receive, what is included, and whether anything is optional. Listings that only show a photograph and a price leave more room for misunderstanding. If a description is thin, a short message to the vendor before you order is a sensible step.",
+						"Prices should be shown in naira and the total at checkout should match what you expected. If the total includes a delivery fee, it should be shown before you pay, not after.",
+					},
+				},
+				{
+					Heading: "Paying safely",
+					Paragraphs: []string{
+						"Pay only through the checkout flow on the website. Card details are entered on the payment provider's page, not typed into a chat or sent in a message. Be cautious of anyone who asks you to transfer money to a personal account, or who asks for a card number, PIN, or one-time code by phone or message.",
+						"After you pay, keep the confirmation email or the order number. If the page says your payment is processing, wait for the confirmation before paying a second time, to avoid being charged twice.",
+					},
+				},
+				{
+					Heading: "Receiving your order",
+					Paragraphs: []string{
+						"When your food arrives or you collect it, check that the items match the order. If something is missing or wrong, contact the vendor promptly with your order number and describe the problem clearly. A calm, specific message with the order number gets a faster and more useful reply than a general complaint.",
+					},
+				},
 			},
 		},
 		"/guides/pickup-or-delivery": {
@@ -159,6 +199,26 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 					Heading: "Compare the total cost and instructions",
 					Paragraphs: []string{
 						"The item price is only one part of the decision. Check the final checkout total, fulfilment method, vendor instructions, and the contact details available if you need help. If delivery coverage or timing is unclear, ask the shop before submitting the order.",
+					},
+				},
+				{
+					Heading: "Planning around timing",
+					Paragraphs: []string{
+						"Food that is made to order takes time to prepare before it is collected or sent out. At busy hours such as lunchtime and early evening, preparation may take longer, and delivery may depend on traffic and the distance from the vendor. If you have a firm deadline, order earlier than you think you need to and check the status shown on your orders page.",
+						"For pickup, arrive when your order is marked ready rather than when you placed it. Food collected promptly is usually better than food left waiting.",
+					},
+				},
+				{
+					Heading: "Getting the delivery details right",
+					Paragraphs: []string{
+						"A complete address includes the street, a nearby landmark if the street is hard to find, your local government area, and your state. Add a phone number that you will answer, because delivery riders often need to call. Most failed deliveries happen because the address is incomplete or the phone is switched off.",
+						"If you will not be home, tell the vendor who can receive the order. Do not leave food outside for long, especially in hot weather.",
+					},
+				},
+				{
+					Heading: "Costs to keep in mind",
+					Paragraphs: []string{
+						"Delivery fees are set by the vendor and may depend on distance. Pickup has no delivery fee, but you may spend on transport. For a single meal, pickup can be cheaper if the shop is close; for a group order, delivery often costs less per person than everyone travelling separately.",
 					},
 				},
 			},

@@ -2,10 +2,14 @@ package handlers
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
+	"html"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"Order-site/brand"
@@ -27,17 +31,54 @@ func googleOAuthConfig() *oauth2.Config {
 	}
 }
 
+// GoogleLogin starts Google sign-in. A random "state" value is saved in a short-lived
+// cookie and sent to Google; Google must hand the same value back. This stops anyone
+// from tricking a visitor into finishing a sign-in that the attacker started.
 func (h *Handlers) GoogleLogin(w http.ResponseWriter, r *http.Request) {
-	url := googleOAuthConfig().AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	state, err := generateToken()
+	if err != nil {
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		Path:     "/auth/google",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   600,
+	})
+
+	url := googleOAuthConfig().AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 type googleUserInfo struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
 }
 
 func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
+	stateCookie, err := r.Cookie("oauth_state")
+	gotState := r.URL.Query().Get("state")
+	if err != nil || stateCookie.Value == "" || subtle.ConstantTimeCompare([]byte(stateCookie.Value), []byte(gotState)) != 1 {
+		errors.Render(w, "Google sign-in could not be verified. Please try again.", http.StatusBadRequest)
+		return
+	}
+	// The state value is single-use
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    "",
+		Path:     "/auth/google",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		errors.Render(w, "Missing authorization code", http.StatusBadRequest)
@@ -64,7 +105,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	var userInfo googleUserInfo
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&userInfo); err != nil {
 		errors.Render(w, "Could not read Google profile", http.StatusInternalServerError)
 		return
 	}
@@ -73,12 +114,23 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Google account has no email", http.StatusBadRequest)
 		return
 	}
+	// Only trust an email address that Google itself has verified. Otherwise someone
+	// could sign in as another person by claiming their address.
+	if !userInfo.VerifiedEmail {
+		errors.Render(w, "Your Google email address is not verified, so we cannot sign you in with it.", http.StatusBadRequest)
+		return
+	}
+	userInfo.Email = strings.ToLower(strings.TrimSpace(userInfo.Email))
+	userInfo.Name = strings.TrimSpace(userInfo.Name)
+	if userInfo.Name == "" || len([]rune(userInfo.Name)) > 100 {
+		userInfo.Name = strings.SplitN(userInfo.Email, "@", 2)[0]
+	}
 
 	var userID int
 	var isAdmin bool
 
 	err = h.DB.QueryRow(
-		"SELECT id, is_admin FROM users WHERE email = $1",
+		"SELECT id, is_admin FROM users WHERE LOWER(email) = $1",
 		userInfo.Email,
 	).Scan(&userID, &isAdmin)
 
@@ -101,7 +153,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		go emailer.Send(
 			userInfo.Email,
 			"Welcome to "+brand.Name()+"!",
-			fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully via Google. Start browsing our menu and place your first order today.</p>", userInfo.Name),
+			fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully via Google. Start browsing our menu and place your first order today.</p>", html.EscapeString(userInfo.Name)),
 		)
 	}
 

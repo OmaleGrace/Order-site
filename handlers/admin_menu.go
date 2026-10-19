@@ -160,6 +160,14 @@ func (h *Handlers) saveMenuItem(w http.ResponseWriter, r *http.Request, vendorID
 		errors.Render(w, "Item name is required", http.StatusBadRequest)
 		return
 	}
+	if len([]rune(name)) > 100 || len([]rune(description)) > 500 || len([]rune(category)) > 40 {
+		errors.Render(w, "Name, description or category is too long", http.StatusBadRequest)
+		return
+	}
+	if msg := validImageURL(imageURL); msg != "" {
+		errors.Render(w, msg, http.StatusBadRequest)
+		return
+	}
 
 	naira, err := strconv.ParseFloat(strings.TrimSpace(r.FormValue("price")), 64)
 	if err != nil || naira <= 0 || naira > 10000000 {

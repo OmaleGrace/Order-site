@@ -16,7 +16,7 @@ import (
 	"Order-site/middleware"
 )
 
-var httpClient = &http.Client{}
+var httpClient = &http.Client{Timeout: 20 * time.Second}
 
 func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -40,10 +41,17 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Static files
+	// Folder listings are switched off: only named files can be fetched.
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle(
 		"/static/",
-		http.StripPrefix("/static/", fs),
+		http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "" || strings.HasSuffix(r.URL.Path, "/") {
+				errors.Render(w, "We couldn't find the page you were looking for.", http.StatusNotFound)
+				return
+			}
+			fs.ServeHTTP(w, r)
+		})),
 	)
 
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
@@ -56,11 +64,11 @@ func main() {
 	mux.HandleFunc("GET /privacy", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /terms", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /login", middleware.Logging(h.Login))
-	mux.HandleFunc("POST /login", middleware.Logging(h.Login))
+	mux.HandleFunc("POST /login", middleware.Logging(middleware.RateLimit(middleware.LoginIPLimiter, h.Login)))
 	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
 	mux.HandleFunc("POST /vendor/profile/save", middleware.Logging(h.VendorProfileSave))
 	mux.HandleFunc("GET /signup", middleware.Logging(h.Signup))
-	mux.HandleFunc("POST /signup", middleware.Logging(h.Signup))
+	mux.HandleFunc("POST /signup", middleware.Logging(middleware.RateLimit(middleware.SignupIPLimiter, h.Signup)))
 	mux.HandleFunc("GET /vendor/orders", middleware.Logging(h.VendorOrders))
 	mux.HandleFunc("POST /vendor/orders/status", middleware.Logging(h.VendorUpdateOrderStatus))
 	mux.HandleFunc("GET /logout", middleware.Logging(h.Logout))
@@ -91,7 +99,7 @@ func main() {
 	mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
 	mux.HandleFunc("POST /admin/applications/review", middleware.Logging(middleware.Admin(db, h.AdminApplicationReview)))
 	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))
-	mux.HandleFunc("POST /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApplySubmit)))
+	mux.HandleFunc("POST /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.ApplyLimiter, h.VendorApplySubmit))))
 	mux.HandleFunc(
 		"POST /cart/remove",
 		middleware.Logging(
@@ -127,7 +135,7 @@ func main() {
 		middleware.Logging(h.OrderSuccess),
 	)
 	mux.HandleFunc("GET /vendor/billing", middleware.Logging(h.VendorBilling))
-	mux.HandleFunc("POST /vendor/pay", middleware.Logging(h.VendorPay))
+	mux.HandleFunc("POST /vendor/pay", middleware.Logging(middleware.RateLimit(middleware.PayLimiter, h.VendorPay)))
 	mux.HandleFunc("GET /vendor/payment/callback", middleware.Logging(h.VendorPaymentCallback))
 	mux.HandleFunc(
 		"GET /orders",
@@ -170,18 +178,18 @@ func main() {
 
 	mux.HandleFunc(
 		"/account",
-		middleware.Logging(h.Account),
+		middleware.Logging(middleware.RequireLogin(db, h.Account)),
 	)
 
 	mux.HandleFunc(
 		"/account/edit",
-		middleware.Logging(h.EditProfile),
+		middleware.Logging(middleware.RequireLogin(db, h.EditProfile)),
 	)
 
 	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))
-	mux.HandleFunc("POST /forgot-password", middleware.Logging(h.ForgotPassword))
+	mux.HandleFunc("POST /forgot-password", middleware.Logging(middleware.RateLimit(middleware.ForgotIPLimiter, h.ForgotPassword)))
 	mux.HandleFunc("GET /reset-password", middleware.Logging(h.ResetPassword))
-	mux.HandleFunc("POST /reset-password", middleware.Logging(h.ResetPassword))
+	mux.HandleFunc("POST /reset-password", middleware.Logging(middleware.RateLimit(middleware.ResetIPLimiter, h.ResetPassword)))
 
 	mux.HandleFunc(
 		"POST /account/phone/send-otp",
@@ -206,9 +214,16 @@ func main() {
 		port = "8080"
 	}
 
+	// Order matters: headers first, then the size limit, then the forged-request check.
+	// The timeouts stop slow or stuck connections from tying up the server.
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: middleware.SecurityHeaders(mux),
+		Addr:              ":" + port,
+		Handler:           middleware.SecurityHeaders(middleware.LimitBody(middleware.SameOrigin(mux))),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    1 << 16,
 	}
 
 	go func() {

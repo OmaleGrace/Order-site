@@ -74,26 +74,6 @@ A full-stack food ordering web application for a single restaurant, built with G
 * Payment webhook verification
 * Server-side amount validation
 
-### Email
-
-* Brevo transactional email API
-* Asynchronous sending (background goroutines) so email delivery never blocks the user-facing request
-* Triggers: signup welcome email, password reset link, payment confirmation, order status change
-
-### Security
-
-* bcrypt password hashing (manual accounts)
-* Google OAuth for password-less sign-in
-* Time-limited (15-minute), single-use password reset tokens
-* Server-side session tokens
-* Secure, HttpOnly cookies
-* SameSite cookie protection
-* Protected customer routes (menu, cart, checkout, orders)
-* Protected admin routes
-* Security headers
-* HTTP method-specific routing
-* Styled, reusable error pages (shared `errors` package) instead of raw browser error text
-
 ### Deployment & Tools
 
 * Render
@@ -138,19 +118,6 @@ Admin
    └── Update Order Status ── Status update email sent to customer
 ```
 
-## Database Structure
-
-The application uses PostgreSQL with separate tables for the main application data:
-
-* `users` (includes `auth_provider` to distinguish manual vs. Google accounts; `password` is nullable for Google accounts)
-* `menu_items` (includes `category` for menu filtering and `image_url`)
-* `cart_items`
-* `orders`
-* `order_items`
-* `sessions`
-* `password_reset_tokens`
-
-Orders and order items are stored separately so that an order keeps a record of the items and prices associated with that purchase.
 
 ## Authentication & Sessions
 
@@ -307,21 +274,3 @@ This project provided hands-on experience with:
 * Basic web application security
 * Building a consistent design system across an entire application
 
-## Search and AdSense readiness
-
-The public site includes `robots.txt`, `sitemap.xml`, `ads.txt`, About, Contact, Privacy Policy, Terms of Service, and original public food guides. Public pages include descriptive metadata and can load the AdSense site-verification/loader snippet when a valid publisher ID is configured.
-
-### Deployment environment variables
-
-- `APP_BASE_URL`: the canonical public HTTPS origin, e.g. `https://your-domain.example` (no trailing slash).
-- `ADSENSE_PUBLISHER_ID`: your own publisher ID in `pub-1234567890123456` format. Leave unset until you have a real AdSense publisher ID. The app validates this value before publishing the AdSense script or `ads.txt`.
-
-After setting these variables in your hosting dashboard, redeploy and verify:
-- `https://YOUR-DOMAIN/robots.txt`
-- `https://YOUR-DOMAIN/sitemap.xml`
-- `https://YOUR-DOMAIN/ads.txt` (only after setting a valid publisher ID)
-- `/about`, `/contact`, `/privacy`, `/terms`, and `/guides` plus each guide page.
-
-Do not place ad units on login, account, cart, checkout, order, admin, vendor dashboard, or other non-content/private pages. Only add ad units after your AdSense account/site is approved, and review Google's current policies and consent requirements first.
-
-This preparation does not guarantee AdSense approval. Google reviews the live site, original content, navigation, policy compliance, ownership and account eligibility. If the site owner is under 18, a parent or legal guardian must own/manage the AdSense account; do not misstate age or account ownership.

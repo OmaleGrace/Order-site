@@ -116,12 +116,8 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 		}
 		phone = normalized
 	}
-	if logo != "" && !(strings.HasPrefix(logo, "https://") || strings.HasPrefix(logo, "http://")) {
-		back("The logo link must start with https://")
-		return
-	}
-	if len(logo) > 500 {
-		back("The logo link is too long")
+	if msg := validImageURL(logo); msg != "" {
+		back(msg)
 		return
 	}
 	if !pickup && !delivery {

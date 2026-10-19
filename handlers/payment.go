@@ -8,16 +8,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"Order-site/cart"
 	"Order-site/email"
 	"Order-site/errors"
 )
 
-var paymentHTTPClient = http.DefaultClient
+var paymentHTTPClient = &http.Client{Timeout: 20 * time.Second}
 
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	reference := r.URL.Query().Get("reference")
@@ -29,7 +31,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest(
 		http.MethodGet,
-		"https://api.paystack.co/transaction/verify/"+reference,
+		"https://api.paystack.co/transaction/verify/"+url.PathEscape(reference),
 		nil,
 	)
 	if err != nil {

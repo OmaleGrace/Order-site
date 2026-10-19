@@ -8,7 +8,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
+
+var client = &http.Client{Timeout: 15 * time.Second}
 
 type sendOTPRequest struct {
 	APIKey         string `json:"api_key"`
@@ -53,7 +56,7 @@ func SendOTP(phone string) (string, error) {
 		return "", err
 	}
 
-	resp, err := http.Post(
+	resp, err := client.Post(
 		"https://api.ng.termii.com/api/sms/otp/send",
 		"application/json",
 		bytes.NewBuffer(jsonBody),
@@ -65,15 +68,8 @@ func SendOTP(phone string) (string, error) {
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
 
-	fmt.Println("Termii status:", resp.Status)
-	fmt.Println("Termii send OTP raw response:", string(bodyBytes))
-
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf(
-			"termii returned HTTP %s: %s",
-			resp.Status,
-			string(bodyBytes),
-		)
+		return "", fmt.Errorf("termii returned HTTP %s", resp.Status)
 	}
 
 	var result sendOTPResponse
@@ -115,7 +111,7 @@ func VerifyOTP(pinID, code string) (bool, error) {
 		return false, err
 	}
 
-	resp, err := http.Post(
+	resp, err := client.Post(
 		"https://api.ng.termii.com/api/sms/otp/verify",
 		"application/json",
 		bytes.NewBuffer(jsonBody),
@@ -126,7 +122,6 @@ func VerifyOTP(pinID, code string) (bool, error) {
 	defer resp.Body.Close()
 
 	bodyBytes, _ := io.ReadAll(resp.Body)
-	fmt.Println("Termii verify OTP raw response:", string(bodyBytes))
 
 	var result verifyOTPResponse
 	if err := json.Unmarshal(bodyBytes, &result); err != nil {
