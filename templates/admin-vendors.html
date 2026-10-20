@@ -54,6 +54,7 @@
         <a href="/admin/orders">Orders</a>
         <a href="/admin/menu">Menu</a>
         <a href="/admin/vendors" class="active">Vendors</a>
+        <a href="/admin/earnings">Earnings</a>
         <a href="/admin/applications">Applications</a>
         <a href="/">View site</a>
     </header>
@@ -84,7 +85,7 @@
             <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Vendor</th><th>Owner</th><th>Items</th><th>Paid until</th><th>Status</th><th></th></tr>
+                    <tr><th>Vendor</th><th>Owner</th><th>Items</th><th>Setup</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody>
                     {{range .Vendors}}
@@ -92,7 +93,7 @@
                         <td><strong>{{.Name}}</strong>{{if .Verified}} <span class="badge badge-active">✔ Verified</span>{{end}}<div class="muted"><a href="/v/{{.Slug}}">/v/{{.Slug}}</a></div></td>
                         <td>{{if .OwnerEmail}}{{.OwnerEmail}}{{else}}<span class="muted">no owner yet</span>{{end}}</td>
                         <td>{{.Items}}</td>
-                        <td>{{if .PaidUntil}}{{.PaidUntil}}{{else}}<span class="muted">not paid</span>{{end}}</td>
+                        <td>{{if .SetupPaid}}Paid{{else}}<span class="muted">not paid</span>{{end}}</td>
                         <td><span class="badge badge-{{.Status}}">{{.Status}}</span></td>
                         <td class="row-actions">
                             {{if ne .Status "active"}}
@@ -105,7 +106,7 @@
                             <form action="/admin/vendors/status" method="post">
                                 <input type="hidden" name="id" value="{{.ID}}">
                                 <input type="hidden" name="action" value="extend">
-                                <button type="submit" class="secondary">+1 month paid</button>
+                                <button type="submit" class="secondary">Mark setup paid</button>
                             </form>
                             <form action="/admin/vendors/status" method="post">
                                 <input type="hidden" name="id" value="{{.ID}}">

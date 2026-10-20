@@ -36,14 +36,14 @@ func validIDType(v string) bool {
 }
 
 type VendorApplyPage struct {
-	State          string // form, pending, rejected, owner
-	Notice         string
-	AdminNote      string
-	BusinessName   string
-	Phone          string
-	SetupFeeKobo   int
-	MonthlyFeeKobo int
-	IDTypes        []IDTypeOption
+	State             string // form, pending, rejected, owner
+	Notice            string
+	AdminNote         string
+	BusinessName      string
+	Phone             string
+	SetupFeeKobo      int
+	CommissionPercent int
+	IDTypes           []IDTypeOption
 }
 
 func (h *Handlers) sessionUserID(r *http.Request) (int, bool) {
@@ -87,10 +87,10 @@ func (h *Handlers) VendorApply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := VendorApplyPage{
-		Notice:         r.URL.Query().Get("msg"),
-		SetupFeeKobo:   vendorSetupFeeKobo(),
-		MonthlyFeeKobo: vendorMonthlyFeeKobo(),
-		IDTypes:        idTypeOptions,
+		Notice:            r.URL.Query().Get("msg"),
+		SetupFeeKobo:      vendorSetupFeeKobo(),
+		CommissionPercent: commissionPercent(),
+		IDTypes:           idTypeOptions,
 	}
 
 	var owned int

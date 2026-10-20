@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-adsense-account" content="ca-pub-5653609194057959">
     <title>{{brandName}} | Discover Local Food Shops and Order Online</title>
     <meta name="description" content="Discover participating local food shops, explore menus, compare prices, and order meals for pickup or delivery with {{brandName}}.">
     <meta name="robots" content="index,follow">
@@ -233,11 +232,11 @@
         <div class="price-box">
             <p class="price-label">One-time setup</p>
             <p class="price-amount">₦{{naira .SetupFeeKobo}}</p>
-            <p class="price-note">Your first month is included.</p>
+            <p class="price-note">No monthly fee. Pay only after your application is approved.</p>
             <hr>
-            <p class="price-label">Then, each month</p>
-            <p class="price-amount">₦{{naira .MonthlyFeeKobo}}</p>
-            <p class="price-note">Pay only after your application is approved.</p>
+            <p class="price-label">On each sale</p>
+            <p class="price-amount">{{.CommissionPercent}}%</p>
+            <p class="price-note">We keep {{.CommissionPercent}}% of the food total. The rest is yours.</p>
         </div>
     </div>
 </section>
@@ -266,7 +265,7 @@
     </details>
     <details>
         <summary>How much does it cost to sell here?</summary>
-        <p>A one-time setup fee of ₦{{naira .SetupFeeKobo}}, with your first month included, then ₦{{naira .MonthlyFeeKobo}} a month. You pay only after your application is approved.</p>
+        <p>A one-time setup fee of ₦{{naira .SetupFeeKobo}} and no monthly fee. On each sale we keep {{.CommissionPercent}}% of the food total (delivery fees are not included) and the rest is yours. You pay the setup fee only after your application is approved.</p>
     </details>
     <details>
         <summary>How do I become a vendor?</summary>

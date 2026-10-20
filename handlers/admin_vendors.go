@@ -177,10 +177,10 @@ func (h *Handlers) AdminVendorStatus(w http.ResponseWriter, r *http.Request) {
 		_, err = h.DB.Exec(`
 			UPDATE vendors
 			SET setup_paid_at = COALESCE(setup_paid_at, NOW()),
-			    paid_until = GREATEST(COALESCE(paid_until, NOW()), NOW()) + INTERVAL '1 month'
+			    paid_until = NOW() + INTERVAL '100 years'
 			WHERE id = $1
 		`, id)
-		msg = "Paid period extended by one month"
+		msg = "Setup marked as paid. The shop can now open."
 	case "verify":
 		_, err = h.DB.Exec("UPDATE vendors SET verified = TRUE WHERE id = $1", id)
 		msg = "Vendor marked as verified"

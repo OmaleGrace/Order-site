@@ -343,10 +343,10 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 				{
 					Heading: "Terms for vendors",
 					Paragraphs: []string{
-						"To sell on the platform you must apply, pass our identity check, and pay the setup fee and then the monthly fee shown on the Sell with us page. We open a shop only after approval and payment.",
-						"Your shop and its dishes are visible to customers only while your shop is active and your paid period has not ended. If your paid period ends, your dishes are hidden until you renew. We may suspend or remove a shop that breaks these terms, gives false information, or harms customers.",
+						"To sell on the platform you must apply, pass our identity check, and pay the one-time setup fee shown on the Sell with us page. There is no monthly fee. We open a shop only after approval and payment.",
+						"On every order we keep a commission of the food total shown on the Sell with us page. Delivery fees are not part of the commission. Customer payments are received by us, and we pay the vendor's share to the vendor after deducting the commission. Your shop and its dishes are visible to customers while your shop is active. We may suspend or remove a shop that breaks these terms, gives false information, or harms customers.",
 						"You are responsible for the accuracy of your menu, prices and delivery details, for preparing food safely and legally, for fulfilling the orders you accept, and for dealing fairly with customers who contact you about them.",
-						"Each order is placed with one vendor. Fees paid to us for opening or renewing a shop are not refundable unless we say otherwise in writing.",
+						"Each order is placed with one vendor. The setup fee is not refundable unless we say otherwise in writing.",
 					},
 				},
 				{

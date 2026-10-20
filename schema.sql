@@ -167,6 +167,7 @@ CREATE TABLE public.orders (
     delivery_fee_kobo integer DEFAULT 0 NOT NULL,
     delivery_state text DEFAULT ''::text NOT NULL,
     delivery_lga text DEFAULT ''::text NOT NULL,
+    commission_kobo integer DEFAULT 0 NOT NULL,
     CONSTRAINT orders_delivery_fee_kobo_check CHECK ((delivery_fee_kobo >= 0)),
     CONSTRAINT orders_delivery_method_check CHECK ((delivery_method = ANY (ARRAY['pickup'::text, 'delivery'::text])))
 );
@@ -201,6 +202,21 @@ CREATE TABLE public.password_reset_tokens (
     user_id integer NOT NULL,
     expires_at timestamp with time zone NOT NULL,
     used boolean DEFAULT false NOT NULL
+);
+
+
+--
+-- Name: vendor_payouts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vendor_payouts (
+    id serial PRIMARY KEY,
+    vendor_id integer NOT NULL,
+    amount_kobo integer NOT NULL,
+    note text DEFAULT ''::text NOT NULL,
+    paid_at timestamp with time zone DEFAULT now() NOT NULL,
+    recorded_by integer,
+    CONSTRAINT vendor_payouts_amount_kobo_check CHECK ((amount_kobo > 0))
 );
 
 

@@ -54,12 +54,10 @@ func billingKind(b vendorBilling) (kind string, reason string) {
 	switch {
 	case b.Status == "suspended":
 		return "", "Your shop is suspended. Please contact the site admin."
-	case b.NoExpiry || b.TooFar:
-		return "", "Your shop is already paid up for a long time ahead."
 	case !b.SetupPaid && b.Status == "pending":
 		return "setup", ""
-	case b.SetupPaid && b.Status == "active":
-		return "renewal", ""
+	case b.SetupPaid:
+		return "", "Nothing to pay. There is no monthly fee."
 	}
 	return "", "Payments are not available for this shop right now."
 }
@@ -71,17 +69,18 @@ type VendorPaymentRow struct {
 }
 
 type VendorBillingPage struct {
-	Name           string
-	State          string // setup, active, expired, nolimit, suspended
-	PaidUntil      string
-	CanPay         bool
-	PayKind        string
-	PayAmountKobo  int
-	Reason         string
-	SetupFeeKobo   int
-	MonthlyFeeKobo int
-	Notice         string
-	History        []VendorPaymentRow
+	Name              string
+	State             string // setup, active, suspended
+	CanPay            bool
+	PayKind           string
+	PayAmountKobo     int
+	Reason            string
+	SetupFeeKobo      int
+	CommissionPercent int
+	Notice            string
+	History           []VendorPaymentRow
+	Earnings          VendorEarnings
+	Payouts           []VendorPayoutRow
 }
 
 func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
@@ -98,11 +97,10 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := VendorBillingPage{
-		Name:           b.Name,
-		PaidUntil:      b.PaidUntil,
-		SetupFeeKobo:   vendorSetupFeeKobo(),
-		MonthlyFeeKobo: vendorMonthlyFeeKobo(),
-		Notice:         r.URL.Query().Get("msg"),
+		Name:              b.Name,
+		SetupFeeKobo:      vendorSetupFeeKobo(),
+		CommissionPercent: commissionPercent(),
+		Notice:            r.URL.Query().Get("msg"),
 	}
 
 	switch {
@@ -110,13 +108,16 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 		page.State = "suspended"
 	case !b.SetupPaid:
 		page.State = "setup"
-	case b.NoExpiry:
-		page.State = "nolimit"
-	case b.Current:
-		page.State = "active"
 	default:
-		page.State = "expired"
+		page.State = "active"
 	}
+
+	if e, err := h.vendorEarnings(vendorID); err != nil {
+		log.Printf("vendor billing: earnings failed: %v", err)
+	} else {
+		page.Earnings = e
+	}
+	page.Payouts = h.vendorPayouts(vendorID, 10)
 
 	kind, reason := billingKind(b)
 	page.PayKind = kind
@@ -124,8 +125,6 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 	page.Reason = reason
 	if kind == "setup" {
 		page.PayAmountKobo = page.SetupFeeKobo
-	} else {
-		page.PayAmountKobo = page.MonthlyFeeKobo
 	}
 
 	rows, err := h.DB.Query(`
@@ -147,7 +146,7 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, err := template.New("vendor-billing.html").
-		Funcs(template.FuncMap{"naira": naira}).
+		Funcs(template.FuncMap{"naira": naira, "money": money}).
 		Funcs(brand.Funcs()).
 		ParseFiles("templates/vendor-billing.html")
 	if err != nil {
@@ -190,9 +189,6 @@ func (h *Handlers) VendorPay(w http.ResponseWriter, r *http.Request) {
 	}
 
 	amount := vendorSetupFeeKobo()
-	if kind == "renewal" {
-		amount = vendorMonthlyFeeKobo()
-	}
 
 	base := strings.TrimRight(os.Getenv("APP_BASE_URL"), "/")
 	if base == "" {
@@ -325,22 +321,15 @@ func (h *Handlers) activateVendorPayment(reference string, amountKobo int) (bool
 		return false, err
 	}
 
-	if kind == "setup" {
-		// A shop you suspended stays suspended: only a waiting shop is opened.
-		_, err = tx.Exec(`
-			UPDATE vendors
-			SET status = CASE WHEN status = 'pending' THEN 'active' ELSE status END,
-			    setup_paid_at = COALESCE(setup_paid_at, NOW()),
-			    paid_until = GREATEST(COALESCE(paid_until, NOW()), NOW()) + INTERVAL '1 month'
-			WHERE id = $1
-		`, vendorID)
-	} else {
-		_, err = tx.Exec(`
-			UPDATE vendors
-			SET paid_until = GREATEST(COALESCE(paid_until, NOW()), NOW()) + INTERVAL '1 month'
-			WHERE id = $1
-		`, vendorID)
-	}
+	// There is no monthly fee any more. Paying the setup fee opens the shop for good.
+	// A shop you suspended stays suspended: only a waiting shop is opened.
+	_, err = tx.Exec(`
+		UPDATE vendors
+		SET status = CASE WHEN status = 'pending' THEN 'active' ELSE status END,
+		    setup_paid_at = COALESCE(setup_paid_at, NOW()),
+		    paid_until = NOW() + INTERVAL '100 years'
+		WHERE id = $1
+	`, vendorID)
 	if err != nil {
 		return false, err
 	}
@@ -349,23 +338,18 @@ func (h *Handlers) activateVendorPayment(reference string, amountKobo int) (bool
 		return false, err
 	}
 
-	var ownerEmail, shopName, paidUntil string
+	var ownerEmail, shopName string
 	h.DB.QueryRow(`
-		SELECT u.email, v.name, COALESCE(TO_CHAR(v.paid_until, 'DD Mon YYYY'), '')
+		SELECT u.email, v.name
 		FROM vendors v
 		JOIN users u ON u.id = v.owner_user_id
 		WHERE v.id = $1
-	`, vendorID).Scan(&ownerEmail, &shopName, &paidUntil)
+	`, vendorID).Scan(&ownerEmail, &shopName)
 
 	if ownerEmail != "" {
 		shop := template.HTMLEscapeString(shopName)
-		if kind == "setup" {
-			go email.Send(ownerEmail, "Your shop is open on "+brand.Name(),
-				fmt.Sprintf("<h1>Payment received</h1><p>Your shop <strong>%s</strong> is now open to customers. It is paid until %s.</p>", shop, paidUntil))
-		} else {
-			go email.Send(ownerEmail, "Renewal received - "+brand.Name(),
-				fmt.Sprintf("<h1>Renewal received</h1><p>Thank you. Your shop <strong>%s</strong> is paid until %s.</p>", shop, paidUntil))
-		}
+		go email.Send(ownerEmail, "Your shop is open on "+brand.Name(),
+			fmt.Sprintf("<h1>Payment received</h1><p>Your shop <strong>%s</strong> is now open to customers. There is no monthly fee.</p>", shop))
 	}
 
 	return true, nil

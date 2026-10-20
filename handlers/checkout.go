@@ -174,6 +174,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		deliveryPhone = normalized
 	}
 
+	// The platform's cut is taken from the food only, not the delivery fee.
+	// It is fixed now, so later rate changes never alter an existing order.
+	commission := commissionKobo(totalKobo)
+
 	// The delivery fee is part of what the customer pays
 	totalKobo += deliveryFeeKobo
 	tx, err := h.DB.Begin()
@@ -189,10 +193,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow(`
 	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
 	                    delivery_method, delivery_state, delivery_lga, delivery_address,
-	                    delivery_phone, delivery_fee_kobo)
-	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9)
+	                    delivery_phone, delivery_fee_kobo, commission_kobo)
+	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9, $10)
 	RETURNING id
-`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo).Scan(&orderID)
+`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)

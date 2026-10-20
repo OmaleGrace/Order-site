@@ -156,6 +156,8 @@ func main() {
 			middleware.Admin(db, h.UpdateOrderStatus),
 		),
 	)
+	mux.HandleFunc("GET /admin/earnings", middleware.Logging(middleware.Admin(db, h.AdminEarnings)))
+	mux.HandleFunc("POST /admin/earnings/payout", middleware.Logging(middleware.Admin(db, h.AdminRecordPayout)))
 	mux.HandleFunc("GET /admin/vendors", middleware.Logging(middleware.Admin(db, h.AdminVendors)))
 	mux.HandleFunc("POST /admin/vendors/save", middleware.Logging(middleware.Admin(db, h.AdminVendorSave)))
 	mux.HandleFunc("POST /admin/vendors/status", middleware.Logging(middleware.Admin(db, h.AdminVendorStatus)))

@@ -48,9 +48,9 @@
         {{if eq .State "setup"}}
         <div class="card">
             <h2>Open your shop</h2>
-            <p>Your application was approved. Pay the one-time setup fee to open your shop to customers. It includes your first month.</p>
+            <p>Your application was approved. Pay the one-time setup fee to open your shop to customers.</p>
             <div class="amount">₦{{naira .PayAmountKobo}}</div>
-            <p class="muted">After that, ₦{{naira .MonthlyFeeKobo}} a month keeps your shop open.</p>
+            <p class="muted">There is no monthly fee. On each sale we keep {{.CommissionPercent}}% of the food total, and the rest is yours.</p>
             <form action="/vendor/pay" method="post" class="pay-form">
                 <button type="submit" class="pay-btn">Pay with Paystack</button>
             </form>
@@ -59,36 +59,17 @@
         {{else if eq .State "active"}}
         <div class="card">
             <h2>Your shop is open</h2>
-            <p>Paid until <strong>{{.PaidUntil}}</strong>.</p>
-            {{if .CanPay}}
-            <p class="muted">Renewing adds one month to your paid period, so renewing early loses nothing.</p>
-            <div class="amount">₦{{naira .PayAmountKobo}}</div>
-            <form action="/vendor/pay" method="post" class="pay-form">
-                <button type="submit" class="pay-btn">Renew for one month</button>
-            </form>
-            {{else}}
-            <p class="muted">{{.Reason}}</p>
-            {{end}}
+            <p>There is no monthly fee. On each sale we keep <strong>{{.CommissionPercent}}%</strong> of the food total (delivery fees are not included), and the rest is yours.</p>
         </div>
 
-        {{else if eq .State "expired"}}
-        <div class="card closed">
-            <h2>Your shop is closed</h2>
-            <p>Your paid period ended on <strong>{{.PaidUntil}}</strong>, so your dishes are hidden from customers. Renew to open again.</p>
-            {{if .CanPay}}
-            <div class="amount">₦{{naira .PayAmountKobo}}</div>
-            <form action="/vendor/pay" method="post" class="pay-form">
-                <button type="submit" class="pay-btn">Renew for one month</button>
-            </form>
-            {{else}}
-            <p class="muted">{{.Reason}}</p>
-            {{end}}
-        </div>
-
-        {{else if eq .State "nolimit"}}
         <div class="card">
-            <h2>No payment needed</h2>
-            <p>Your shop has no expiry date.</p>
+            <h2>Your sales</h2>
+            <div class="history-row"><span>Paid orders</span><strong>{{.Earnings.Orders}}</strong></div>
+            <div class="history-row"><span>Total paid by customers</span><strong>₦{{money .Earnings.SalesKobo}}</strong></div>
+            <div class="history-row"><span>Our {{.CommissionPercent}}% commission</span><strong>−₦{{money .Earnings.CommissionKobo}}</strong></div>
+            <div class="history-row"><span>Already sent to you</span><strong>−₦{{money .Earnings.PaidOutKobo}}</strong></div>
+            <div class="history-row"><span><strong>Owed to you</strong></span><strong>₦{{money .Earnings.BalanceKobo}}</strong></div>
+            <p class="muted">Customers pay us, and we send you your share. Orders that are still waiting for payment, or were cancelled, are not counted.</p>
         </div>
 
         {{else}}
@@ -98,12 +79,24 @@
         </div>
         {{end}}
 
+        {{if .Payouts}}
+        <div class="card history">
+            <h3>Money sent to you</h3>
+            {{range .Payouts}}
+            <div class="history-row">
+                <span>{{.PaidAt}}{{if .Note}} · {{.Note}}{{end}}</span>
+                <strong>₦{{money .AmountKobo}}</strong>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
         {{if .History}}
         <div class="card history">
-            <h3>Payments</h3>
+            <h3>Setup payment</h3>
             {{range .History}}
             <div class="history-row">
-                <span>{{if eq .Kind "setup"}}Setup fee{{else}}Monthly renewal{{end}} · {{.PaidAt}}</span>
+                <span>{{if eq .Kind "setup"}}Setup fee{{else}}Monthly fee (old){{end}} · {{.PaidAt}}</span>
                 <strong>₦{{naira .AmountKobo}}</strong>
             </div>
             {{end}}
