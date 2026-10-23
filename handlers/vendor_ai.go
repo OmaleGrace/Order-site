@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -17,7 +18,7 @@ import (
 
 const vendorAIEndpointBase = "https://generativelanguage.googleapis.com/v1beta/models/"
 
-var vendorAIHTTPClient = &http.Client{Timeout: 35 * time.Second}
+var vendorAIHTTPClient = &http.Client{Timeout: 25 * time.Second}
 
 type VendorAIPage struct {
 	VendorName string
@@ -102,10 +103,6 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		requestPrompt += "Write one engaging social media promotional caption for this food business, with a clear call to action and 3-5 relevant hashtags. Do not invent prices or offers."
 	}
-	model := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
-	if model == "" {
-		model = "gemini-3.8-flash"
-	}
 	payload := vendorAIRequest{
 		SystemInstruction: vendorAIContent{Parts: []vendorAIText{{Text: systemPrompt}}},
 		Contents:          []vendorAIContent{{Role: "user", Parts: []vendorAIText{{Text: requestPrompt}}}},
@@ -118,53 +115,93 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not prepare the AI request", http.StatusInternalServerError)
 		return
 	}
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, vendorAIEndpointBase+url.PathEscape(model)+":generateContent", bytes.NewReader(body))
+
+	// Try the chosen model first, then a fallback if it is busy or slow.
+	models := vendorAIModels()
+	var lastNotice string
+	for _, model := range models {
+		for attempt := 1; attempt <= 2; attempt++ {
+			text, retry, notice := callGemini(r.Context(), apiKey, model, body)
+			if text != "" {
+				p.Result = text
+				h.renderVendorAI(w, p, http.StatusOK)
+				return
+			}
+			lastNotice = notice
+			if !retry {
+				break // retrying the same model will not help (bad key, bad model name, ...)
+			}
+			time.Sleep(time.Duration(attempt) * 700 * time.Millisecond)
+		}
+		if r.Context().Err() != nil {
+			break
+		}
+	}
+	p.Notice = lastNotice
+	h.renderVendorAI(w, p, http.StatusBadGateway)
+}
+
+// vendorAIModels returns the configured model followed by a fallback model.
+func vendorAIModels() []string {
+	primary := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
+	fallback := strings.TrimSpace(os.Getenv("GEMINI_FALLBACK_MODEL"))
+	if fallback == "" {
+		fallback = "gemini-2.5-flash"
+	}
+	if primary == "" || primary == fallback {
+		return []string{fallback}
+	}
+	return []string{primary, fallback}
+}
+
+// callGemini makes one request. It returns the text on success; otherwise an
+// empty text, whether another try may help, and a message safe to show the vendor.
+func callGemini(parent context.Context, apiKey, model string, body []byte) (text string, retry bool, notice string) {
+	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, vendorAIEndpointBase+url.PathEscape(model)+":generateContent", bytes.NewReader(body))
 	if err != nil {
-		errors.Render(w, "Could not prepare the AI request", http.StatusInternalServerError)
-		return
+		return "", false, "Could not prepare the AI request."
 	}
 	req.Header.Set("x-goog-api-key", apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := vendorAIHTTPClient.Do(req)
 	if err != nil {
-		log.Printf("vendor AI: request failed: %v", err)
-		p.Notice = "The AI service could not be reached. Please try again shortly."
-		h.renderVendorAI(w, p, http.StatusBadGateway)
-		return
+		log.Printf("vendor AI: request failed (model %s): %v", model, err)
+		return "", true, "The AI service could not be reached. Please try again shortly."
 	}
 	defer resp.Body.Close()
-	limited, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		p.Notice = "The AI service response could not be read. Please try again."
-		h.renderVendorAI(w, p, http.StatusBadGateway)
-		return
+		log.Printf("vendor AI: reading response failed (model %s): %v", model, err)
+		return "", true, "The AI service response could not be read. Please try again."
 	}
 	var decoded vendorAIResponse
-	if err := json.Unmarshal(limited, &decoded); err != nil {
-		log.Printf("vendor AI: invalid response (status %d): %v: %.300s", resp.StatusCode, err, limited)
-		p.Notice = "The AI service returned an unexpected response. Please try again."
-		h.renderVendorAI(w, p, http.StatusBadGateway)
-		return
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		log.Printf("vendor AI: invalid response (status %d, model %s): %v: %.300s", resp.StatusCode, model, err, raw)
+		return "", true, "The AI service returned an unexpected response. Please try again."
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 || len(decoded.Candidates) == 0 {
+		msg := string(raw)
 		if decoded.Error != nil {
-			log.Printf("vendor AI: provider rejected request (status %d, model %s): %s", resp.StatusCode, model, decoded.Error.Message)
-		} else {
-			log.Printf("vendor AI: no candidates (status %d, model %s): %.300s", resp.StatusCode, model, limited)
+			msg = decoded.Error.Message
 		}
-		p.Notice = "AI generation failed. Check the AI API configuration or try again later."
-		h.renderVendorAI(w, p, http.StatusBadGateway)
-		return
+		log.Printf("vendor AI: provider rejected request (status %d, model %s): %.300s", resp.StatusCode, model, msg)
+		busy := resp.StatusCode == 429 || resp.StatusCode >= 500
+		if busy {
+			return "", true, "The AI service is busy right now. Please try again in a minute."
+		}
+		return "", false, "AI generation failed. Check the AI API configuration or try again later."
 	}
 	var sb strings.Builder
 	for _, part := range decoded.Candidates[0].Content.Parts {
 		sb.WriteString(part.Text)
 	}
-	p.Result = strings.TrimSpace(sb.String())
-	if p.Result == "" {
-		p.Notice = "The AI service returned an empty draft. Please try again."
+	out := strings.TrimSpace(sb.String())
+	if out == "" {
+		return "", true, "The AI service returned an empty draft. Please try again."
 	}
-	h.renderVendorAI(w, p, http.StatusOK)
+	return out, false, ""
 }
 
 func (h *Handlers) renderVendorAI(w http.ResponseWriter, p VendorAIPage, status int) {
