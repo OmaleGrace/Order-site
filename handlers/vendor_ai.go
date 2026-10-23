@@ -141,17 +141,23 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 	h.renderVendorAI(w, p, http.StatusBadGateway)
 }
 
-// vendorAIModels returns the configured model followed by a fallback model.
+// vendorAIModels returns the configured model followed by fallback models,
+// without duplicates. Set GEMINI_FALLBACK_MODEL to choose the first fallback.
 func vendorAIModels() []string {
-	primary := strings.TrimSpace(os.Getenv("GEMINI_MODEL"))
 	fallback := strings.TrimSpace(os.Getenv("GEMINI_FALLBACK_MODEL"))
 	if fallback == "" {
-		fallback = "gemini-2.5-flash"
+		fallback = "gemini-3.5-flash-lite"
 	}
-	if primary == "" || primary == fallback {
-		return []string{fallback}
+	candidates := []string{strings.TrimSpace(os.Getenv("GEMINI_MODEL")), fallback, "gemini-3.6-flash"}
+	var out []string
+	seen := map[string]bool{}
+	for _, m := range candidates {
+		if m != "" && !seen[m] {
+			seen[m] = true
+			out = append(out, m)
+		}
 	}
-	return []string{primary, fallback}
+	return out
 }
 
 // callGemini makes one request. It returns the text on success; otherwise an
