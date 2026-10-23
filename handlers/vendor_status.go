@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"Order-site/email"
 	"Order-site/errors"
 )
 
@@ -49,20 +48,11 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var userEmail string
-	h.DB.QueryRow(`
-		SELECT u.email FROM orders o
-		JOIN users u ON u.id = o.user_id
-		WHERE o.id = $1
-	`, orderID).Scan(&userEmail)
-
-	if userEmail != "" {
-		go func() {
-			if err := email.Send(userEmail, "Order Update - Order #"+strconv.Itoa(orderID), fmt.Sprintf("<h1>Order status updated</h1><p>Your order #%d is now: <strong>%s</strong>.</p>", orderID, status)); err != nil {
-				fmt.Println("Order status email error:", err)
-			}
-		}()
-	}
+	go func(id int, newStatus string) {
+		if err := sendOrderStatusEmail(h.DB, id, newStatus); err != nil {
+			fmt.Println("Order status email error:", err)
+		}
+	}(orderID, status)
 
 	http.Redirect(w, r, "/vendor/orders", http.StatusSeeOther)
 }

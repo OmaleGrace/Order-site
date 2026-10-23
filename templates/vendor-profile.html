@@ -109,6 +109,20 @@
 
             <button type="submit" class="save-btn" id="save-btn">Save shop details</button>
         </form>
+
+        <section class="card">
+            <h2>Vendor payout account</h2>
+            <p class="sub">Add the bank account where you want to receive your sales balance. ENIE verifies the account name through Paystack. Your account details are private and are not shown on your public shop page.</p>
+            {{if .PayoutVerified}}<div class="notice">Verified account: <strong>{{.PayoutAccountName}}</strong> · {{.PayoutBankName}} · account ending {{.PayoutAccountNumber}}</div>{{else}}<p class="sub">Status: not verified. Verify an account before ENIE can record a payout to it.</p>{{end}}
+            <form action="/vendor/payout-account/verify" method="post">
+                <div class="grid">
+                    <div><label class="field" for="payout_bank_name">Bank name</label><input type="text" name="payout_bank_name" id="payout_bank_name" maxlength="100" value="{{.PayoutBankName}}" placeholder="e.g. Access Bank" required></div>
+                    <div><label class="field" for="payout_bank_code">Paystack bank code</label><input type="text" name="payout_bank_code" id="payout_bank_code" maxlength="12" value="{{.PayoutBankCode}}" placeholder="Bank code from Paystack" required><small>Use the bank code listed by Paystack for your bank.</small></div>
+                    <div class="full"><label class="field" for="payout_account_number">10-digit account number</label><input type="text" inputmode="numeric" pattern="[0-9]{10}" name="payout_account_number" id="payout_account_number" maxlength="10" placeholder="Enter your 10-digit account number" required><small>For privacy, the saved account number is masked on this page.</small></div>
+                    <div class="full"><button class="save-btn" type="submit">Verify and save bank account</button></div>
+                </div>
+            </form>
+        </section>
     </main>
 
     <script>

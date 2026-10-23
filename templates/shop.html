@@ -54,6 +54,10 @@
             </div>
 
             <p class="shop-stats">{{if .Completed}}{{.Completed}} completed orders{{else}}New shop{{end}}</p>
+            <form action="/messages/start" method="post" class="shop-message-form">
+                <input type="hidden" name="vendor_id" value="{{.VendorID}}">
+                <button type="submit" class="add-cart-btn">💬 Message this shop</button>
+            </form>
 
             {{if and .OffersPickup .Address}}<p class="shop-line">🏠 Pickup address: {{.Address}}</p>{{end}}
             {{if .PhoneLink}}<p class="shop-line"><a href="{{.PhoneLink}}">📞 {{.Phone}}</a></p>{{end}}

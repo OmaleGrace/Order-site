@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"Order-site/middleware"
 )
@@ -98,6 +99,8 @@ func TestMyOrders(t *testing.T) {
 		"Jollof Rice",
 		"paid",
 		"3500",
+		"ENIE-",
+		"order-item-placeholder",
 	}
 
 	for _, expected := range checks {
@@ -128,5 +131,23 @@ func TestMyOrdersRequiresSession(t *testing.T) {
 			"expected status 401, got %d",
 			w.Code,
 		)
+	}
+}
+
+func TestPublicOrderReferenceIsStableAndNotSequentialID(t *testing.T) {
+	createdAt := time.Date(2026, time.October, 23, 10, 30, 0, 0, time.UTC)
+	first := publicOrderReference(12345, createdAt)
+	second := publicOrderReference(12345, createdAt)
+	if first != second {
+		t.Fatalf("reference should be stable: %q != %q", first, second)
+	}
+	if !strings.HasPrefix(first, "ENIE-") {
+		t.Fatalf("expected ENIE reference, got %q", first)
+	}
+	if first == "12345" || strings.Contains(first, "12345") {
+		t.Fatalf("reference should not expose sequential database ID: %q", first)
+	}
+	if first == publicOrderReference(12346, createdAt) {
+		t.Fatal("different orders should have different references")
 	}
 }

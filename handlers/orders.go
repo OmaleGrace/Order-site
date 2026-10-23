@@ -6,19 +6,22 @@ import (
 	"Order-site/middleware"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 type CustomerOrderItem struct {
 	Name      string
 	Quantity  int
 	PriceKobo int
+	ImageURL  string
 }
 
 type CustomerOrder struct {
 	ID        int
+	Reference string
 	TotalKobo int
 	Status    string
-	CreatedAt string
+	CreatedAt time.Time
 	Items     []CustomerOrderItem
 }
 
@@ -64,17 +67,18 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 			&order.Status,
 			&order.CreatedAt,
 		)
-
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 			return
 		}
+		order.Reference = publicOrderReference(order.ID, order.CreatedAt)
 
 		itemRows, err := h.DB.Query(`
 			SELECT
 				m.name,
 				oi.quantity,
-				oi.price_kobo
+				oi.price_kobo,
+				COALESCE(m.image_url, '')
 			FROM order_items oi
 			JOIN menu_items m ON m.id = oi.menu_item_id
 			WHERE oi.order_id = $1
@@ -92,6 +96,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 				&item.Name,
 				&item.Quantity,
 				&item.PriceKobo,
+				&item.ImageURL,
 			)
 
 			if err != nil {
@@ -116,9 +121,8 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(
 		template.New("orders.html").
 			Funcs(template.FuncMap{
-				"naira": func(kobo int) int {
-					return kobo / 100
-				},
+				"naira": func(kobo int) int { return kobo / 100 },
+				"date":  func(value time.Time) string { return value.Format("02 Jan 2006, 3:04 PM") },
 			}).
 			Funcs(brand.Funcs()).
 			ParseFiles("templates/orders.html"),

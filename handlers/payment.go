@@ -10,12 +10,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"Order-site/cart"
-	"Order-site/email"
 	"Order-site/errors"
 )
 
@@ -169,15 +167,11 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userEmail string
-	h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail)
-	if userEmail != "" {
-		go email.Send(
-			userEmail,
-			"Payment Confirmed - Order #"+strconv.Itoa(orderID),
-			fmt.Sprintf("<h1>Payment received!</h1><p>Your payment for order #%d has been confirmed. We're preparing your meal now.</p>", orderID),
-		)
-	}
+	go func(id int) {
+		if err := sendOrderPlacedEmail(h.DB, id); err != nil {
+			fmt.Println("Order confirmation email error:", err)
+		}
+	}(orderID)
 
 	http.Redirect(w, r, "/order-success", http.StatusSeeOther)
 }
@@ -309,15 +303,11 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userEmail string
-	h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail)
-	if userEmail != "" {
-		go email.Send(
-			userEmail,
-			"Payment Confirmed - Order #"+strconv.Itoa(orderID),
-			fmt.Sprintf("<h1>Payment received!</h1><p>Your payment for order #%d has been confirmed. We're preparing your meal now.</p>", orderID),
-		)
-	}
+	go func(id int) {
+		if err := sendOrderPlacedEmail(h.DB, id); err != nil {
+			fmt.Println("Order confirmation email error:", err)
+		}
+	}(orderID)
 
 	w.WriteHeader(http.StatusOK)
 }

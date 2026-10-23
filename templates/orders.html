@@ -43,14 +43,17 @@
         <section class="order-card">
 
             <div class="order-card-header">
-                <h2>Order #{{.ID}}</h2>
-                <span class="order-date">{{.CreatedAt}}</span>
+                <div><h2>Order {{.Reference}}</h2><small class="order-id-label">Use this reference for support</small></div>
+                <span class="order-date">{{date .CreatedAt}}</span>
             </div>
 
             <ul class="order-items">
                 {{range .Items}}
                     <li>
-                        <span>{{.Name}} × {{.Quantity}}</span>
+                        <div class="order-item-info">
+                            {{if .ImageURL}}<img class="order-item-image" src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}<span class="order-item-placeholder" aria-hidden="true">🍽️</span>{{end}}
+                            <span>{{.Name}} × {{.Quantity}}</span>
+                        </div>
                         <span>₦{{naira .PriceKobo}}</span>
                     </li>
                 {{end}}

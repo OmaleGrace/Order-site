@@ -93,3 +93,9 @@
 @media (max-width: 520px) {
     .steps { grid-template-columns: repeat(2, 1fr); }
 }
+.order-card-header h2 { overflow-wrap: anywhere; }
+.order-id-label { display: block; margin-top: 4px; color: var(--muted); font-size: .75rem; }
+.order-item-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.order-item-image, .order-item-placeholder { width: 52px; height: 52px; flex: 0 0 52px; border-radius: 10px; object-fit: cover; background: #f3efe6; }
+.order-item-placeholder { display: grid; place-items: center; font-size: 1.4rem; }
+.order-items li > span { white-space: nowrap; }

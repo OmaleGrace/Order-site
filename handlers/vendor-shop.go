@@ -21,6 +21,7 @@ type ShopDish struct {
 }
 
 type ShopPage struct {
+	VendorID        int
 	Name            string
 	Description     string
 	Area            string
@@ -48,6 +49,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 		WHERE slug = $1 AND status = 'active' AND paid_until > NOW()
 	`, slug).Scan(&vendorID, &p.Name, &p.Description, &p.Area, &p.Address, &p.Phone,
 		&p.LogoURL, &p.Verified, &p.OffersPickup, &p.OffersDelivery, &p.DeliveryFeeKobo)
+	p.VendorID = vendorID
 	if err == sql.ErrNoRows {
 		errors.Render(w, "We couldn't find that shop.", http.StatusNotFound)
 		return

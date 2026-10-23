@@ -85,26 +85,26 @@
             <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Vendor</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Record a payout</th></tr>
+                    <tr><th>Vendor / verified bank account</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Record a payout</th></tr>
                 </thead>
                 <tbody>
                     {{range .Rows}}
                     <tr>
-                        <td><strong>{{.Name}}</strong></td>
+                        <td><strong>{{.Name}}</strong>{{if .AccountVerified}}<div class="muted">✅ {{.AccountName}} · {{.BankName}} ({{.BankCode}})<br>Account: <strong>{{.AccountNumber}}</strong></div>{{else}}<div class="muted">⚠️ Bank account not verified</div>{{end}}</td>
                         <td>{{.Orders}}</td>
                         <td>₦{{money .SalesKobo}}</td>
                         <td>₦{{money .CommissionKobo}}</td>
                         <td>₦{{money .PaidOutKobo}}</td>
                         <td class="owed">₦{{money .BalanceKobo}}</td>
                         <td>
-                            {{if gt .BalanceKobo 0}}
+                            {{if and (gt .BalanceKobo 0) .AccountVerified}}
                             <form action="/admin/earnings/payout" method="post" class="payout-form">
                                 <input type="hidden" name="vendor_id" value="{{.VendorID}}">
                                 <input type="number" name="amount" min="1" step="0.01" max="{{money2 .BalanceKobo}}" placeholder="₦ amount" required>
                                 <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)">
                                 <button type="submit">Record</button>
                             </form>
-                            {{else}}<span class="muted">nothing owed</span>{{end}}
+                            {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else}}<span class="muted">nothing owed</span>{{end}}
                         </td>
                     </tr>
                     {{else}}

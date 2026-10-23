@@ -146,6 +146,21 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Vendor payout account details. Verification is performed through Paystack
+	// and the account is never exposed on public vendor pages.
+	_, err = db.Exec(`
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_bank_name TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_bank_code TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_number TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_name TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified BOOLEAN NOT NULL DEFAULT FALSE;
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified_at TIMESTAMPTZ;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// Store the exact Nigerian state/LGA combinations each vendor serves.
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS vendor_delivery_areas (
@@ -162,6 +177,52 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_vendor_delivery_areas_vendor ON vendor_delivery_areas(vendor_id)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Private customer-to-vendor conversations. A customer has one thread per shop;
+	// every read/write handler independently checks that the requester is a participant.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS message_threads (
+			id SERIAL PRIMARY KEY,
+			customer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (customer_id, vendor_id)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS messages (
+			id BIGSERIAL PRIMARY KEY,
+			thread_id INTEGER NOT NULL REFERENCES message_threads(id) ON DELETE CASCADE,
+			sender_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			body TEXT NOT NULL CHECK (char_length(body) BETWEEN 1 AND 2000),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			read_at TIMESTAMPTZ
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_message_threads_customer_updated ON message_threads(customer_id, updated_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_message_threads_vendor_updated ON message_threads(vendor_id, updated_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_messages_thread_id ON messages(thread_id, id)`)
 	if err != nil {
 		db.Close()
 		return nil, err

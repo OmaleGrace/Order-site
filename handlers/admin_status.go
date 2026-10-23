@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"Order-site/email"
 	"Order-site/errors"
 	"fmt"
 	"net/http"
@@ -47,22 +46,11 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userEmail string
-	h.DB.QueryRow(`
-	SELECT u.email FROM orders o
-	JOIN users u ON u.id = o.user_id
-	WHERE o.id = $1
-`, orderID).Scan(&userEmail)
-
-	if userEmail == "" {
-		fmt.Println("Order status email skipped: no email found for order", orderID)
-	} else {
-		go func() {
-			if err := email.Send(userEmail, "Order Update - Order #"+strconv.Itoa(orderID), fmt.Sprintf("<h1>Order status updated</h1><p>Your order #%d is now: <strong>%s</strong>.</p>", orderID, status)); err != nil {
-				fmt.Println("Order status email error:", err)
-			}
-		}()
-	}
+	go func(id int, newStatus string) {
+		if err := sendOrderStatusEmail(h.DB, id, newStatus); err != nil {
+			fmt.Println("Order status email error:", err)
+		}
+	}(orderID, status)
 
 	http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)
 }

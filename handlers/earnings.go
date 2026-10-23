@@ -72,8 +72,13 @@ func (h *Handlers) vendorPayouts(vendorID, limit int) []VendorPayoutRow {
 }
 
 type AdminEarningsRow struct {
-	VendorID int
-	Name     string
+	VendorID        int
+	Name            string
+	BankName        string
+	BankCode        string
+	AccountNumber   string
+	AccountName     string
+	AccountVerified bool
 	VendorEarnings
 }
 
@@ -89,7 +94,8 @@ type AdminEarningsPage struct {
 // AdminEarnings shows, per vendor, what was sold, what you keep, and what you still owe them.
 func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.DB.Query(`
-		SELECT v.id, v.name,
+		SELECT v.id, v.name, COALESCE(v.payout_bank_name,''), COALESCE(v.payout_bank_code,''),
+		       COALESCE(v.payout_account_number,''), COALESCE(v.payout_account_name,''), COALESCE(v.payout_account_verified,FALSE),
 		       COALESCE(o.cnt, 0), COALESCE(o.sales, 0), COALESCE(o.comm, 0), COALESCE(p.paid, 0)
 		FROM vendors v
 		LEFT JOIN (
@@ -111,7 +117,7 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 	page := AdminEarningsPage{Notice: r.URL.Query().Get("msg"), CommissionPercent: commissionPercent()}
 	for rows.Next() {
 		var row AdminEarningsRow
-		if err := rows.Scan(&row.VendorID, &row.Name, &row.Orders, &row.SalesKobo, &row.CommissionKobo, &row.PaidOutKobo); err != nil {
+		if err := rows.Scan(&row.VendorID, &row.Name, &row.BankName, &row.BankCode, &row.AccountNumber, &row.AccountName, &row.AccountVerified, &row.Orders, &row.SalesKobo, &row.CommissionKobo, &row.PaidOutKobo); err != nil {
 			log.Printf("admin earnings: scan failed: %v", err)
 			errors.Render(w, "Could not read earnings", http.StatusInternalServerError)
 			return
@@ -210,6 +216,17 @@ func (h *Handlers) AdminRecordPayout(w http.ResponseWriter, r *http.Request) {
 	} else if err != nil {
 		log.Printf("admin payout: lock failed: %v", err)
 		errors.Render(w, "Could not record the payout", http.StatusInternalServerError)
+		return
+	}
+
+	var verified bool
+	if err := tx.QueryRow(`SELECT payout_account_verified FROM vendors WHERE id=$1`, vendorID).Scan(&verified); err != nil {
+		log.Printf("admin payout: account verification lookup failed: %v", err)
+		errors.Render(w, "Could not verify vendor payout account", http.StatusInternalServerError)
+		return
+	}
+	if !verified {
+		back("The vendor must verify their payout bank account before a payout can be recorded.")
 		return
 	}
 
