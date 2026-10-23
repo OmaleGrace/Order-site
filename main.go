@@ -106,8 +106,8 @@ func main() {
 		),
 	)
 	mux.HandleFunc("GET /admin", middleware.Logging(middleware.Admin(db, h.AdminDashboard)))
-	mux.HandleFunc("GET /admin/users", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminUsers)))
-	mux.HandleFunc("POST /admin/users/delete", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminUserDelete)))
+	mux.HandleFunc("GET /admin/users", middleware.Logging(middleware.SuperAdmin(db, handlers.MainAdminEmail(), h.AdminUsers)))
+	mux.HandleFunc("POST /admin/users/delete", middleware.Logging(middleware.SuperAdmin(db, handlers.MainAdminEmail(), h.AdminUserDelete)))
 	mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
 	mux.HandleFunc("POST /admin/applications/review", middleware.Logging(middleware.Admin(db, h.AdminApplicationReview)))
 	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))
@@ -168,8 +168,8 @@ func main() {
 			middleware.Admin(db, h.UpdateOrderStatus),
 		),
 	)
-	mux.HandleFunc("GET /admin/earnings", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminEarnings)))
-	mux.HandleFunc("POST /admin/earnings/payout", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminRecordPayout)))
+	mux.HandleFunc("GET /admin/earnings", middleware.Logging(middleware.SuperAdmin(db, handlers.MainAdminEmail(), h.AdminEarnings)))
+	mux.HandleFunc("POST /admin/earnings/payout", middleware.Logging(middleware.SuperAdmin(db, handlers.MainAdminEmail(), h.AdminRecordPayout)))
 	mux.HandleFunc("GET /admin/vendors", middleware.Logging(middleware.Admin(db, h.AdminVendors)))
 	mux.HandleFunc("POST /admin/vendors/save", middleware.Logging(middleware.Admin(db, h.AdminVendorSave)))
 	mux.HandleFunc("POST /admin/vendors/status", middleware.Logging(middleware.Admin(db, h.AdminVendorStatus)))

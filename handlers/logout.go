@@ -34,7 +34,7 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   middleware.SecureCookie(r),
 		SameSite: http.SameSiteLaxMode,
 	})
 

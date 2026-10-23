@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -14,6 +15,15 @@ import (
 )
 
 const mainAdminEmail = "omalegrace2009@gmail.com"
+
+// MainAdminEmail returns the designated platform owner's email. It can be
+// overridden in deployment without changing source code.
+func MainAdminEmail() string {
+	if email := strings.ToLower(strings.TrimSpace(os.Getenv("MAIN_ADMIN_EMAIL"))); email != "" {
+		return email
+	}
+	return mainAdminEmail
+}
 
 type AdminUser struct {
 	ID        int
@@ -96,7 +106,7 @@ func (h *Handlers) AdminUsers(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	page := AdminUsersPage{Notice: r.URL.Query().Get("msg"), CurrentID: currentID, OwnerEmail: mainAdminEmail}
+	page := AdminUsersPage{Notice: r.URL.Query().Get("msg"), CurrentID: currentID, OwnerEmail: MainAdminEmail()}
 	rows, err := h.DB.Query(`
 		SELECT u.id, u.name, u.email, TO_CHAR(u.created_at, 'DD Mon YYYY'), u.is_admin,
 		       (SELECT COUNT(*) FROM vendors v WHERE v.owner_user_id = u.id),
@@ -174,7 +184,7 @@ func (h *Handlers) AdminUserDelete(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not look up user", http.StatusInternalServerError)
 		return
 	}
-	if targetEmail == mainAdminEmail {
+	if targetEmail == MainAdminEmail() {
 		adminUsersRedirect(w, r, "The main administrator account cannot be deleted here")
 		return
 	}

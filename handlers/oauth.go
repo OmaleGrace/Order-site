@@ -46,7 +46,7 @@ func (h *Handlers) GoogleLogin(w http.ResponseWriter, r *http.Request) {
 		Value:    state,
 		Path:     "/auth/google",
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   middleware.SecureCookie(r),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   600,
 	})
@@ -75,7 +75,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/auth/google",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   middleware.SecureCookie(r),
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -168,7 +168,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionToken,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   middleware.SecureCookie(r),
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   60 * 60 * 24,
 	})

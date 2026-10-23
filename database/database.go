@@ -97,10 +97,12 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Add admin role to users
+	// Keep existing databases compatible with the current user model.
 	_, err = db.Exec(`
-		ALTER TABLE users
-		ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'local';
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 	`)
 	if err != nil {
 		db.Close()
@@ -120,10 +122,18 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// The platform's cut of each order, fixed when the order is placed
+	// Keep existing order records compatible with checkout, vendor orders and delivery.
+	// vendor_id is nullable so old records that cannot be mapped safely are not
+	// assigned to the wrong shop. New orders always set it explicitly.
 	_, err = db.Exec(`
-		ALTER TABLE orders
-		ADD COLUMN IF NOT EXISTS commission_kobo INTEGER NOT NULL DEFAULT 0
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS vendor_id INTEGER REFERENCES vendors(id);
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_method TEXT NOT NULL DEFAULT 'pickup';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_address TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_phone TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee_kobo INTEGER NOT NULL DEFAULT 0;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_state TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_lga TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS commission_kobo INTEGER NOT NULL DEFAULT 0;
 	`)
 	if err != nil {
 		db.Close()
@@ -223,6 +233,21 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_messages_thread_id ON messages(thread_id, id)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Password reset tokens are part of the authentication flow and may be absent
+	// from older databases created before password reset was introduced.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS password_reset_tokens (
+			token TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			expires_at TIMESTAMPTZ NOT NULL,
+			used BOOLEAN NOT NULL DEFAULT FALSE
+		)
+	`)
 	if err != nil {
 		db.Close()
 		return nil, err

@@ -22,7 +22,7 @@ type PublicPageData struct {
 }
 
 func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
-	const contactEmail = "omalegrace209@gmail.com"
+	const contactEmail = mainAdminEmail
 
 	pages := map[string]PublicPageData{
 		"/about": {

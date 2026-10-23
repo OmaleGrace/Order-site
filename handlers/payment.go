@@ -20,7 +20,13 @@ import (
 var paymentHTTPClient = &http.Client{Timeout: 20 * time.Second}
 
 func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
-	reference := r.URL.Query().Get("reference")
+	secret := strings.TrimSpace(os.Getenv("PAYSTACK_SECRET_KEY"))
+	if secret == "" {
+		errors.Render(w, "Payment service is not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	reference := strings.TrimSpace(r.URL.Query().Get("reference"))
 
 	if reference == "" {
 		errors.Render(w, "Payment reference missing", http.StatusBadRequest)
@@ -39,7 +45,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	req.Header.Set(
 		"Authorization",
-		"Bearer "+os.Getenv("PAYSTACK_SECRET_KEY"),
+		"Bearer "+secret,
 	)
 
 	resp, err := paymentHTTPClient.Do(req)
@@ -182,6 +188,12 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	secret := strings.TrimSpace(os.Getenv("PAYSTACK_SECRET_KEY"))
+	if secret == "" {
+		errors.Render(w, "Payment service is not configured", http.StatusServiceUnavailable)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		errors.Render(w, "Could not read webhook", http.StatusBadRequest)
@@ -194,7 +206,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash := hmac.New(sha512.New, []byte(os.Getenv("PAYSTACK_SECRET_KEY")))
+	hash := hmac.New(sha512.New, []byte(secret))
 	hash.Write(body)
 
 	expectedSignature := hex.EncodeToString(hash.Sum(nil))

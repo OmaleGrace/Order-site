@@ -5,8 +5,23 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"net/http"
+	"strings"
 	"time"
 )
+
+// SecureCookie reports whether a cookie should be marked Secure for this request.
+// Local development commonly runs over plain HTTP, while production is normally
+// terminated at an HTTPS reverse proxy.
+func SecureCookie(r *http.Request) bool {
+	if r == nil {
+		return false
+	}
+	if r.TLS != nil {
+		return true
+	}
+	return strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https")
+}
 
 // HashToken is what gets stored in the database. The browser keeps the real
 // token; the database only keeps its fingerprint, so a leaked copy of the

@@ -84,7 +84,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   middleware.SecureCookie(r),
 			SameSite: http.SameSiteLaxMode,
 			MaxAge:   60 * 60 * 24,
 		})
@@ -186,7 +186,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			Value:    token,
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   middleware.SecureCookie(r),
 			SameSite: http.SameSiteLaxMode,
 			MaxAge:   60 * 60 * 24,
 		})
