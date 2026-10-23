@@ -86,7 +86,7 @@ func loadSchema() (string, error) {
 }
 
 // NewDB gives a test a clean database built from schema.sql, with vendor 1 (an active
-// shop, like Grace's Kitchen) already in place. Only one test uses the database at a time.
+// shop) already in place. Only one test uses the database at a time.
 func NewDB(t *testing.T) *sql.DB {
 	t.Helper()
 

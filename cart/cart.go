@@ -86,6 +86,7 @@ func ClearCart(db *sql.DB, userID int) error {
 
 	return err
 }
+
 // OtherVendorInCart returns the name of a different vendor whose dishes are
 // already in the cart, or "" when the cart is empty or all from the same vendor.
 func OtherVendorInCart(db *sql.DB, userID, menuItemID int) (string, error) {

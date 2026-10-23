@@ -23,6 +23,7 @@ type VendorProfilePage struct {
 	OffersPickup     bool
 	OffersDelivery   bool
 	DeliveryFeeNaira string
+	DeliveryAreas    string
 	Notice           string
 }
 
@@ -47,6 +48,27 @@ func (h *Handlers) VendorProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.DeliveryFeeNaira = fmt.Sprintf("%.2f", float64(feeKobo)/100)
+	areaRows, areaErr := h.DB.Query(`SELECT state, lga FROM vendor_delivery_areas WHERE vendor_id = $1 ORDER BY state, lga`, vendorID)
+	if areaErr != nil {
+		log.Printf("vendor profile: delivery areas query failed: %v", areaErr)
+		errors.Render(w, "Could not load delivery areas", http.StatusInternalServerError)
+		return
+	}
+	for areaRows.Next() {
+		var state, lga string
+		if err := areaRows.Scan(&state, &lga); err != nil {
+			areaRows.Close()
+			errors.Render(w, "Could not read delivery areas", http.StatusInternalServerError)
+			return
+		}
+		p.DeliveryAreas += state + " | " + lga + "\n"
+	}
+	if err := areaRows.Err(); err != nil {
+		areaRows.Close()
+		errors.Render(w, "Could not read delivery areas", http.StatusInternalServerError)
+		return
+	}
+	areaRows.Close()
 	p.Notice = r.URL.Query().Get("msg")
 
 	tmpl, err := brand.ParseE("templates/vendor-profile.html")
@@ -125,6 +147,16 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	areas, areaErr := parseDeliveryAreas(r.FormValue("delivery_areas"))
+	if areaErr != nil {
+		back("Delivery areas: " + areaErr.Error())
+		return
+	}
+	if delivery && len(areas) == 0 {
+		back("Add at least one delivery area before enabling delivery. Use one State | LGA per line.")
+		return
+	}
+
 	feeKobo := 0
 	if delivery {
 		raw := strings.TrimSpace(r.FormValue("delivery_fee"))
@@ -139,14 +171,35 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 		feeKobo = int(math.Round(naira * 100))
 	}
 
-	_, err := h.DB.Exec(`
+	tx, err := h.DB.Begin()
+	if err != nil {
+		errors.Render(w, "Could not save your shop details", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+	_, err = tx.Exec(`
 		UPDATE vendors
 		SET description = $1, area = $2, address = $3, phone = $4, logo_url = $5,
 		    offers_pickup = $6, offers_delivery = $7, delivery_fee_kobo = $8
 		WHERE id = $9
 	`, description, area, address, phone, logo, pickup, delivery, feeKobo, vendorID)
+	if err == nil {
+		_, err = tx.Exec(`DELETE FROM vendor_delivery_areas WHERE vendor_id = $1`, vendorID)
+	}
+	if err == nil {
+		for _, deliveryArea := range areas {
+			if _, err = tx.Exec(`INSERT INTO vendor_delivery_areas (vendor_id, state, lga) VALUES ($1, $2, $3)`, vendorID, deliveryArea[0], deliveryArea[1]); err != nil {
+				break
+			}
+		}
+	}
 	if err != nil {
 		log.Printf("vendor profile: save failed: %v", err)
+		errors.Render(w, "Could not save your shop details", http.StatusInternalServerError)
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		log.Printf("vendor profile: commit failed: %v", err)
 		errors.Render(w, "Could not save your shop details", http.StatusInternalServerError)
 		return
 	}

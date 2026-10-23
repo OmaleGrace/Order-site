@@ -133,6 +133,7 @@ var (
 	OTPSendIP         = NewLimiter(10, time.Hour)
 	OTPVerifyUser     = NewLimiter(10, time.Hour)
 	ApplyLimiter      = NewLimiter(10, time.Hour)
+	VendorAILimiter   = NewLimiter(10, time.Hour)
 	PayLimiter        = NewLimiter(20, time.Hour)
 	LoginFailsByEmail = NewLimiter(5, 15*time.Minute)
 	ForgotByEmail     = NewLimiter(3, time.Hour)

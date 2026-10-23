@@ -77,6 +77,8 @@
         <header class="admin-header">
         <h1>🍴 {{if .IsAdmin}}{{brandName}} · Admin{{else}}{{.VendorName}}{{end}}</h1>
         {{if .IsAdmin}}
+        <a href="/admin">Overview</a>
+        <a href="/admin/users">Users</a>
         <a href="/admin/orders">Orders</a>
         <a href="/admin/menu" class="active">Menu</a>
         <a href="/admin/vendors">Vendors</a>
@@ -86,6 +88,7 @@
         <a href="/vendor/menu" class="active">My menu</a>
         <a href="/vendor/orders">Orders</a>
         <a href="/vendor/profile">Shop profile</a>
+        {{if not .IsAdmin}}<a href="/vendor/ai">AI writing</a>{{end}}
         <a href="/vendor/billing">Billing</a>
         {{end}}
         <a href="/">View site</a>

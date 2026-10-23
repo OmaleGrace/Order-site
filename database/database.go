@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 
 	_ "github.com/lib/pq"
 )
@@ -20,7 +21,23 @@ func Connect() (*sql.DB, error) {
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, err
+		db.Close()
+		return nil, fmt.Errorf("could not reach PostgreSQL using DATABASE_URL: %w", err)
+	}
+
+	// A newly-created hosted PostgreSQL database has no application tables.
+	// Bootstrap the checked-in schema only when the core users table is absent;
+	// never reapply the schema dump to an existing database.
+	var usersTable sql.NullString
+	if err := db.QueryRow(`SELECT to_regclass('public.users')`).Scan(&usersTable); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("could not inspect database schema: %w", err)
+	}
+	if !usersTable.Valid {
+		if err := bootstrapSchema(db); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("database is empty and schema bootstrap failed: %w", err)
+		}
 	}
 
 	// Create cart_items table
@@ -35,6 +52,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -44,6 +62,7 @@ func Connect() (*sql.DB, error) {
 		ADD COLUMN IF NOT EXISTS image_url TEXT
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -59,6 +78,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -73,6 +93,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -82,6 +103,7 @@ func Connect() (*sql.DB, error) {
 		ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -94,6 +116,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -103,6 +126,7 @@ func Connect() (*sql.DB, error) {
 		ADD COLUMN IF NOT EXISTS commission_kobo INTEGER NOT NULL DEFAULT 0
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -118,6 +142,28 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Store the exact Nigerian state/LGA combinations each vendor serves.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS vendor_delivery_areas (
+			id SERIAL PRIMARY KEY,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			state TEXT NOT NULL,
+			lga TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (vendor_id, state, lga)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_vendor_delivery_areas_vendor ON vendor_delivery_areas(vendor_id)`)
+	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
@@ -132,8 +178,45 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
 		return nil, err
 	}
 
 	return db, nil
+}
+
+// bootstrapSchema applies schema.sql to a truly empty database. The checked-in
+// file is a pg_dump schema export, so psql-only meta commands and session setup
+// statements are removed before sending the SQL through database/sql.
+func bootstrapSchema(db *sql.DB) error {
+	data, err := os.ReadFile("schema.sql")
+	if err != nil {
+		return fmt.Errorf("read schema.sql from the project root: %w", err)
+	}
+	schemaSQL := cleanSchemaDump(string(data))
+	if schemaSQL == "" {
+		return fmt.Errorf("schema.sql contains no SQL")
+	}
+	if _, err := db.Exec(schemaSQL); err != nil {
+		return err
+	}
+	return nil
+}
+
+func cleanSchemaDump(dump string) string {
+	var statements []string
+	for _, line := range strings.Split(dump, "\n") {
+		trimmed := strings.TrimSpace(line)
+		switch {
+		case strings.HasPrefix(trimmed, `\`),
+			strings.HasPrefix(trimmed, "--"),
+			strings.HasPrefix(trimmed, "SET "),
+			strings.HasPrefix(trimmed, "SELECT pg_catalog.set_config"),
+			strings.HasPrefix(trimmed, "CREATE SCHEMA public"),
+			strings.HasPrefix(trimmed, "COMMENT ON SCHEMA public"):
+			continue
+		}
+		statements = append(statements, line)
+	}
+	return strings.TrimSpace(strings.Join(statements, "\n"))
 }

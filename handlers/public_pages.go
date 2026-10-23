@@ -27,7 +27,7 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 	pages := map[string]PublicPageData{
 		"/about": {
 			Title: "About Us",
-			Intro: "Grace's Kitchen helps customers discover meals from participating food vendors and place orders online.",
+			Intro: brand.Name() + " helps customers discover meals from participating food vendors and place orders online.",
 			Sections: []PublicPageSection{
 				{
 					Heading: "What we do",
@@ -225,7 +225,7 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 		},
 		"/contact": {
 			Title: "Contact Us",
-			Intro: "Have a question about Grace's Kitchen? You can reach us using the contact details below.",
+			Intro: "Have a question about " + brand.Name() + "? You can reach us using the contact details below.",
 			Sections: []PublicPageSection{
 				{
 					Heading: "Email",
@@ -245,7 +245,7 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 
 		"/privacy": {
 			Title: "Privacy Policy",
-			Intro: "This policy explains how Grace's Kitchen handles information when you visit or use the website.",
+			Intro: "This policy explains how " + brand.Name() + " handles information when you visit or use the website.",
 			Sections: []PublicPageSection{
 				{
 					Heading: "Information we may collect",
@@ -310,7 +310,7 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 
 		"/terms": {
 			Title: "Terms of Service",
-			Intro: "These terms describe the basic conditions for using Grace's Kitchen. By using the website, you agree to use it responsibly and comply with applicable requirements.",
+			Intro: "These terms describe the basic conditions for using " + brand.Name() + ". By using the website, you agree to use it responsibly and comply with applicable requirements.",
 			Sections: []PublicPageSection{
 				{
 					Heading: "Using the website",

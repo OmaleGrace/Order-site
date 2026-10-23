@@ -393,6 +393,23 @@ CREATE TABLE public.vendors (
 
 
 --
+-- Name: vendor_delivery_areas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vendor_delivery_areas (
+    id integer NOT NULL,
+    vendor_id integer NOT NULL,
+    state text NOT NULL,
+    lga text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT vendor_delivery_areas_vendor_state_lga_key UNIQUE (vendor_id, state, lga)
+);
+
+CREATE SEQUENCE public.vendor_delivery_areas_id_seq START WITH 1 INCREMENT BY 1 CACHE 1;
+ALTER SEQUENCE public.vendor_delivery_areas_id_seq OWNED BY public.vendor_delivery_areas.id;
+ALTER TABLE ONLY public.vendor_delivery_areas ALTER COLUMN id SET DEFAULT nextval('public.vendor_delivery_areas_id_seq'::regclass);
+
+--
 -- Name: vendors_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -581,11 +598,27 @@ ALTER TABLE ONLY public.vendor_payments
 
 
 --
+-- Name: vendor_delivery_areas vendor_delivery_areas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_delivery_areas
+    ADD CONSTRAINT vendor_delivery_areas_pkey PRIMARY KEY (id);
+
+
 -- Name: vendors vendors_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vendors
     ADD CONSTRAINT vendors_pkey PRIMARY KEY (id);
+
+
+-- Name: vendor_delivery_areas vendor_delivery_areas_vendor_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vendor_delivery_areas
+    ADD CONSTRAINT vendor_delivery_areas_vendor_id_fkey FOREIGN KEY (vendor_id) REFERENCES public.vendors(id) ON DELETE CASCADE;
+
+CREATE INDEX idx_vendor_delivery_areas_vendor ON public.vendor_delivery_areas USING btree (vendor_id);
 
 
 --

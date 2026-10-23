@@ -11,12 +11,8 @@ var nigerianStates = []string{
 }
 
 func validState(s string) bool {
-	for _, st := range nigerianStates {
-		if st == s {
-			return true
-		}
-	}
-	return false
+	_, ok := canonicalState(s)
+	return ok
 }
 
 // normalizeNigerianPhone accepts 0XXXXXXXXXX, 234XXXXXXXXXX and +234XXXXXXXXXX

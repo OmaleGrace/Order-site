@@ -10,10 +10,15 @@ import (
 
 // Name returns the business name for this copy of the app.
 func Name() string {
-	if n := os.Getenv("BUSINESS_NAME"); n != "" {
-		return n
+	if n := strings.TrimSpace(os.Getenv("BUSINESS_NAME")); n != "" {
+		// Keep an old deployment environment value from silently restoring the
+		// previous brand after the codebase has been rebranded.
+		legacy := strings.EqualFold(n, "Grace's Kitchen") || strings.EqualFold(n, "Grace’s Kitchen") || strings.EqualFold(n, "Grace Ordering Site")
+		if !legacy {
+			return n
+		}
 	}
-	return "Grace's Kitchen"
+	return "ENIE"
 }
 
 var adsensePublisherPattern = regexp.MustCompile(`^pub-[0-9]{10,20}$`)

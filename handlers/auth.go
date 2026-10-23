@@ -91,7 +91,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 		// Automatically redirect admins to the admin dashboard
 		if isAdmin {
-			http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)
+			http.Redirect(w, r, "/admin", http.StatusSeeOther)
 			return
 		}
 

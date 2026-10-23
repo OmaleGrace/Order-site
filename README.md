@@ -1,6 +1,6 @@
-# Grace's Kitchen — Full-Stack Food Ordering App
+# ENIE — Food Marketplace Platform
 
-A full-stack food ordering web application for a single restaurant, built with Go and PostgreSQL. The application supports customer accounts (including Google sign-in), menu browsing with search and category filters, cart management, Paystack payments, email notifications, order tracking, and protected admin order management — all wrapped in a consistent, restaurant-branded design across every page.
+A Go and PostgreSQL food marketplace connecting customers with participating food vendors. The application supports customer accounts (including Google sign-in), vendor shops and menus, search and category filters, cart management, Paystack payments, email notifications, order tracking, vendor tools, and protected admin management.
 
 ## Live Project
 
@@ -32,12 +32,37 @@ A full-stack food ordering web application for a single restaurant, built with G
 
 ### Admin
 
-* Automatic admin detection after login
-* Protected admin-only dashboard
-* View customer information and orders
-* View ordered items and quantities
-* View order totals and dates
+* Responsive admin overview with platform totals and organised navigation cards
+* View and search all registered users, including join date, role, shop count, and order count
+* Main-admin-only user deletion; the main admin account is protected from deletion
+* Deleting a user suspends and detaches any shop they owned, while related account data is removed according to database relationships
+* Manage orders, vendors, menu items, earnings, payouts, and vendor applications
+* View ordered items and quantities, totals, dates, and delivery information
 * Update order status (customer is notified by email automatically)
+
+### Vendor AI writing assistant
+
+* Optional AI-powered menu descriptions and social media promotional captions
+* Uses `OPENAI_API_KEY` on the server; no key is sent to the browser
+* Vendors must review and manually publish drafts; generation does not alter live menu content
+* Configure `OPENAI_MODEL` optionally; defaults to `gpt-4o-mini`
+
+### Vendor delivery areas
+
+* Vendors configure delivery coverage as one `State | LGA` entry per line in Shop Profile
+* Nigerian states are validated and canonicalised
+* Delivery checkout rejects state/LGA combinations that the selected vendor has not configured
+* Vendors must configure at least one delivery area before enabling delivery
+
+## Main administrator setup
+
+The main administrator email configured for user-management access is `omalegrace2009@gmail.com`. For safety, that account must already have `users.is_admin = TRUE` in the production database; the app does not promote an account based on email alone. If it is not already an admin, set the flag for the existing account through your database provider's SQL console:
+
+```sql
+UPDATE users SET is_admin = TRUE WHERE LOWER(email) = 'omalegrace2009@gmail.com';
+```
+
+Keep database credentials private and do not commit a `.env` file. The app creates the `vendor_delivery_areas` table automatically when it connects to PostgreSQL. See [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for instructions to use hosted PostgreSQL without installing it locally, and copy `.env.example` to `.env` as a starting point.
 
 ## Tech Stack
 
@@ -181,7 +206,9 @@ The project includes automated tests covering major application areas, including
 * Admin authorization
 * Cart operations (add, remove, update quantity)
 * Menu loading, search, and category filtering
-* Checkout
+* Checkout and vendor delivery-area restrictions
+* Vendor AI draft generation input validation
+* Database schema bootstrap helper
 * Payment callbacks
 * Payment webhooks
 * Orders
@@ -189,7 +216,7 @@ The project includes automated tests covering major application areas, including
 * HTTP handlers
 * Middleware
 
-Run the complete test suite with:
+The integration tests require a dedicated local PostgreSQL test database (see `TEST_DATABASE_URL` in `testutil/testutil.go`). Never point tests at production data. Run the complete test suite with:
 
 ```bash
 go test ./...
@@ -209,14 +236,22 @@ go vet ./...
 
 ## Local Development
 
-### 1. Clone the repository
+### 1. Clone or extract the project
 
 ```bash
 git clone https://github.com/OmaleGrace/Order-site
 cd Order-site
 ```
 
-### 2. Run the application
+### 2. Configure environment variables and PostgreSQL
+
+Copy `.env.example` to `.env`, then set `DATABASE_URL` to a working hosted PostgreSQL connection URL. This lets you develop without installing PostgreSQL or Docker locally. Read [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for the setup steps. Never commit `.env` or share its secrets.
+
+When `DATABASE_URL` points to a truly empty database, the application bootstraps the schema from `schema.sql` before running additive migrations. Existing databases are not reset or overwritten.
+
+### 3. Run the application
+
+Use the Go version required by `go.mod` (Go 1.26.0):
 
 ```bash
 go run .
@@ -246,9 +281,7 @@ The same Go application can run locally or in production through environment-bas
 
 ## Project Status
 
-**Completed and deployed.**
-
-The core customer ordering flow, payment processing, email notifications, Google OAuth sign-in, password reset, menu search and filtering, order tracking, admin management, authentication, security improvements, a redesigned and consistent UI, testing, and production deployment are all implemented.
+**Actively being improved.** The existing marketplace and ordering flows are in place. Current work includes delivery-area enforcement, stronger first-run database setup, ENIE branding, administrator user management, vendor UX improvements, and the optional AI writing assistant. A full release should only be marked verified after running the complete test suite against a dedicated test database and exercising the deployed checkout/payment flow.
 
 ## What I Learned
 

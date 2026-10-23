@@ -174,7 +174,7 @@ func (h *Handlers) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if isAdmin {
-		http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)
+		http.Redirect(w, r, "/admin", http.StatusSeeOther)
 		return
 	}
 

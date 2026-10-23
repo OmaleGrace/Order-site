@@ -66,6 +66,8 @@ func main() {
 	mux.HandleFunc("GET /login", middleware.Logging(h.Login))
 	mux.HandleFunc("POST /login", middleware.Logging(middleware.RateLimit(middleware.LoginIPLimiter, h.Login)))
 	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
+	mux.HandleFunc("GET /vendor/ai", middleware.Logging(h.VendorAI))
+	mux.HandleFunc("POST /vendor/ai/generate", middleware.Logging(middleware.RateLimit(middleware.VendorAILimiter, h.VendorAIGenerate)))
 	mux.HandleFunc("POST /vendor/profile/save", middleware.Logging(h.VendorProfileSave))
 	mux.HandleFunc("GET /signup", middleware.Logging(h.Signup))
 	mux.HandleFunc("POST /signup", middleware.Logging(middleware.RateLimit(middleware.SignupIPLimiter, h.Signup)))
@@ -96,6 +98,9 @@ func main() {
 			middleware.RequireLogin(db, h.Cart),
 		),
 	)
+	mux.HandleFunc("GET /admin", middleware.Logging(middleware.Admin(db, h.AdminDashboard)))
+	mux.HandleFunc("GET /admin/users", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminUsers)))
+	mux.HandleFunc("POST /admin/users/delete", middleware.Logging(middleware.SuperAdmin(db, "omalegrace2009@gmail.com", h.AdminUserDelete)))
 	mux.HandleFunc("GET /admin/applications", middleware.Logging(middleware.Admin(db, h.AdminApplications)))
 	mux.HandleFunc("POST /admin/applications/review", middleware.Logging(middleware.Admin(db, h.AdminApplicationReview)))
 	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))

@@ -48,6 +48,7 @@
         <a href="/vendor/orders">Orders</a>
         <a href="/vendor/menu">My menu</a>
         <a href="/vendor/profile" class="active">Shop profile</a>
+        <a href="/vendor/ai">AI writing</a>
         <a href="/vendor/billing">Billing</a>
         <a href="/">View site</a>
     </header>
@@ -92,6 +93,11 @@
                 <div class="grid">
                     <label class="check"><input type="checkbox" name="offers_pickup" id="offers_pickup" {{if .OffersPickup}}checked{{end}}> Pickup</label>
                     <label class="check"><input type="checkbox" name="offers_delivery" id="offers_delivery" {{if .OffersDelivery}}checked{{end}}> I deliver</label>
+                    <div class="full">
+                        <label class="field" for="delivery_areas">Delivery areas (Nigerian state and LGA)</label>
+                        <textarea name="delivery_areas" id="delivery_areas" placeholder="Lagos | Ikeja&#10;Lagos | Surulere&#10;Ogun | Ado-Odo/Ota">{{.DeliveryAreas}}</textarea>
+                        <small>Enter one supported area per line in the format <strong>State | LGA</strong>. Delivery checkout will only accept a matching state and LGA. Add at least one area when delivery is enabled.</small>
+                    </div>
                     <div class="full">
                         <label class="field" for="delivery_fee">Delivery fee (₦)</label>
                         <input type="number" name="delivery_fee" id="delivery_fee" min="0" step="0.01" value="{{.DeliveryFeeNaira}}">

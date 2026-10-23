@@ -267,9 +267,9 @@ func TestAdminLogin(t *testing.T) {
 		)
 	}
 
-	if location := w.Header().Get("Location"); location != "/admin/orders" {
+	if location := w.Header().Get("Location"); location != "/admin" {
 		t.Fatalf(
-			"expected redirect to /admin/orders, got %s",
+			"expected redirect to /admin, got %s",
 			location,
 		)
 	}

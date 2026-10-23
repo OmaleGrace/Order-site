@@ -92,8 +92,9 @@ func TestCheckoutCreatesOrder(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/checkout",
-		nil,
+		strings.NewReader("delivery_method=pickup"),
 	)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	req.AddCookie(&http.Cookie{
 		Name:  "session_token",
@@ -143,6 +144,52 @@ func TestCheckoutCreatesOrder(t *testing.T) {
 
 	if quantity != 2 {
 		t.Fatalf("expected quantity 2, got %d", quantity)
+	}
+}
+
+func TestCheckoutRejectsDeliveryOutsideVendorArea(t *testing.T) {
+	db := setupTestDB(t)
+	defer db.Close()
+
+	var userID, menuItemID int
+	if err := db.QueryRow(`INSERT INTO users (name, email, password) VALUES ('Delivery User', 'delivery-area@example.com', 'hashed') RETURNING id`).Scan(&userID); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRow(`INSERT INTO menu_items (name, description, price_kobo, vendor_id) VALUES ('Jollof Rice', 'Rice', 350000, 1) RETURNING id`).Scan(&menuItemID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO cart_items (user_id, menu_item_id, quantity, price_kobo_at_addition) VALUES ($1, $2, 1, 350000)`, userID, menuItemID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`UPDATE vendors SET offers_delivery = TRUE WHERE id = 1`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`INSERT INTO vendor_delivery_areas (vendor_id, state, lga) VALUES (1, 'Lagos', 'Ikeja')`); err != nil {
+		t.Fatal(err)
+	}
+	token, err := middleware.CreateSession(db, userID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	form := "delivery_method=delivery&delivery_state=Lagos&delivery_lga=Surulere&delivery_address=12+Example+Street&delivery_phone=08012345678"
+	req := httptest.NewRequest(http.MethodPost, "/checkout", strings.NewReader(form))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	w := httptest.NewRecorder()
+	New(db).Checkout(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected outside-area delivery to be rejected with 400, got %d: %s", w.Code, w.Body.String())
+	}
+	if !strings.Contains(w.Body.String(), "does not deliver to the selected state and LGA") {
+		t.Fatalf("expected clear delivery-area error, got %q", w.Body.String())
+	}
+	var orders int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM orders WHERE user_id = $1`, userID).Scan(&orders); err != nil {
+		t.Fatal(err)
+	}
+	if orders != 0 {
+		t.Fatalf("expected no order to be created, found %d", orders)
 	}
 }
 

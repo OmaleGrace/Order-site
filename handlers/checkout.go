@@ -144,16 +144,35 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			errors.Render(w, "This shop does not offer delivery.", http.StatusBadRequest)
 			return
 		}
-		if !validState(state) {
+		canonical, ok := canonicalState(state)
+		if !ok {
 			errors.Render(w, "Choose your state.", http.StatusBadRequest)
 			return
 		}
+		state = canonical
 		if n := len([]rune(lga)); n < 3 || n > 60 {
 			errors.Render(w, "Enter your local government area.", http.StatusBadRequest)
 			return
 		}
 		if n := len([]rune(address)); n < 8 || n > 250 {
 			errors.Render(w, "Enter your house address (8 to 250 characters).", http.StatusBadRequest)
+			return
+		}
+		var areaConfigured bool
+		if err := h.DB.QueryRow(`
+			SELECT EXISTS (
+				SELECT 1 FROM vendor_delivery_areas
+				WHERE vendor_id = $1
+				  AND LOWER(TRIM(state)) = LOWER(TRIM($2))
+				  AND LOWER(TRIM(lga)) = LOWER(TRIM($3))
+			)
+		`, vendorID, state, lga).Scan(&areaConfigured); err != nil {
+			fmt.Println("Delivery area check error:", err)
+			errors.Render(w, "Could not verify this shop's delivery area", http.StatusInternalServerError)
+			return
+		}
+		if !areaConfigured {
+			errors.Render(w, "This shop does not deliver to the selected state and LGA. Choose another area or select pickup.", http.StatusBadRequest)
 			return
 		}
 		if deliveryPhone == "" {
