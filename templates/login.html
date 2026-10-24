@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - {{brandName}}</title>
@@ -9,9 +10,19 @@
 </head>
 
 <body>
-    <main>
+    <main class="auth-main">
+        <section class="auth-story" aria-label="Welcome to ENIE">
+            <a href="/" class="auth-brand"><img src="/static/img/enie-logo.png" alt="ENIE logo"><span>{{brandName}}</span></a>
+            <p class="auth-eyebrow">GOOD FOOD. GREAT MOMENTS.</p>
+            <h2>Your next favourite meal is just a few clicks away.</h2>
+            <p>Discover local kitchens, order the meals you love, and keep every order in one easy place.</p>
+            <div class="auth-perks"><span>Fresh local kitchens</span><span>Simple ordering</span><span>One account, all your favourites</span></div>
+        </section>
         <div class="auth-wrapper">
-            <h1>Welcome Back</h1>
+            <div class="auth-mobile-brand"><img src="/static/img/enie-logo.png" alt="ENIE logo"><span>{{brandName}}</span></div>
+            <p class="auth-kicker">WELCOME BACK</p>
+            <h1>Good to see you again.</h1>
+            <p class="auth-subtext">Log in to continue your ENIE experience.</p>
 
             <form action="/login" method="post" novalidate>
                 <div class="form-group">

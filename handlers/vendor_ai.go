@@ -17,7 +17,7 @@ import (
 	"Order-site/errors"
 )
 
-const defaultGeminiModel = "gemini-3.8-flash"
+const defaultGeminiModel = "gemini-2.5-flash"
 
 var vendorAIHTTPClient = &http.Client{
 	Timeout: 35 * time.Second,
@@ -69,6 +69,29 @@ type geminiResponse struct {
 	} `json:"error,omitempty"`
 }
 
+type openAIRequest struct {
+	Model       string          `json:"model"`
+	Messages    []openAIMessage `json:"messages"`
+	MaxTokens   int             `json:"max_tokens,omitempty"`
+	Temperature float64         `json:"temperature,omitempty"`
+}
+
+type openAIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type openAIResponse struct {
+	Choices []struct {
+		Message openAIMessage `json:"message"`
+	} `json:"choices"`
+	Error *struct {
+		Message string `json:"message"`
+		Type    string `json:"type"`
+		Code    string `json:"code"`
+	} `json:"error,omitempty"`
+}
+
 func geminiAPIKey() string {
 	return strings.TrimSpace(os.Getenv("GEMINI_API_KEY"))
 }
@@ -79,6 +102,79 @@ func geminiModel() string {
 		return defaultGeminiModel
 	}
 	return model
+}
+
+func openAIKey() string { return strings.TrimSpace(os.Getenv("OPENAI_API_KEY")) }
+
+func openAIModel() string {
+	model := strings.TrimSpace(os.Getenv("OPENAI_MODEL"))
+	if model == "" {
+		return "gpt-4o-mini"
+	}
+	return model
+}
+
+func aiConfigured() bool { return openAIKey() != "" || geminiAPIKey() != "" }
+
+// generateAIDraft follows the provider documented in .env.example (OpenAI) and
+// retains Gemini support for deployments that already configured GEMINI_API_KEY.
+func generateAIDraft(ctx context.Context, systemPrompt, userPrompt string, maxOutputTokens int) (string, error) {
+	if key := openAIKey(); key != "" {
+		return generateOpenAIDraft(ctx, key, openAIModel(), systemPrompt, userPrompt, maxOutputTokens)
+	}
+	if key := geminiAPIKey(); key != "" {
+		return generateGeminiDraft(ctx, key, geminiModel(), systemPrompt, userPrompt, maxOutputTokens)
+	}
+	return "", fmt.Errorf("AI is not configured: set OPENAI_API_KEY or GEMINI_API_KEY")
+}
+
+func generateOpenAIDraft(ctx context.Context, apiKey, model, systemPrompt, userPrompt string, maxOutputTokens int) (string, error) {
+	payload := openAIRequest{
+		Model: model,
+		Messages: []openAIMessage{
+			{Role: "system", Content: systemPrompt},
+			{Role: "user", Content: userPrompt},
+		},
+		MaxTokens:   maxOutputTokens,
+		Temperature: 0.7,
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal OpenAI request: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("create OpenAI request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(apiKey))
+	resp, err := vendorAIHTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("OpenAI request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return "", fmt.Errorf("read OpenAI response: %w", err)
+	}
+	var decoded openAIResponse
+	if err := json.Unmarshal(responseBody, &decoded); err != nil {
+		return "", fmt.Errorf("decode OpenAI response: %w", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		if decoded.Error != nil && decoded.Error.Message != "" {
+			return "", fmt.Errorf("OpenAI API error (HTTP %d): %s", resp.StatusCode, decoded.Error.Message)
+		}
+		return "", fmt.Errorf("OpenAI API returned HTTP %d", resp.StatusCode)
+	}
+	if len(decoded.Choices) == 0 {
+		return "", fmt.Errorf("OpenAI returned no choices")
+	}
+	result := strings.TrimSpace(decoded.Choices[0].Message.Content)
+	if result == "" {
+		return "", fmt.Errorf("OpenAI returned an empty response")
+	}
+	return result, nil
 }
 
 func generateGeminiDraft(
@@ -237,10 +333,8 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiKey := geminiAPIKey()
-
-	if apiKey == "" {
-		p.Notice = "AI writing is not configured yet. Add GEMINI_API_KEY to your local .env or hosting environment to enable it."
+	if !aiConfigured() {
+		p.Notice = "AI writing is not configured yet. Add OPENAI_API_KEY or GEMINI_API_KEY to your local .env or hosting environment to enable it."
 		h.renderVendorAI(w, p, http.StatusOK)
 		return
 	}
@@ -316,18 +410,16 @@ Do not include or request sensitive payment credentials, passwords, PINs, or OTP
 Return only the message the vendor can review and send.`
 	}
 
-	result, err := generateGeminiDraft(
+	result, err := generateAIDraft(
 		r.Context(),
-		apiKey,
-		geminiModel(),
 		systemPrompt,
 		requestPrompt,
 		350,
 	)
 
 	if err != nil {
-		log.Printf("vendor AI: Gemini request failed: %v", err)
-		p.Notice = "AI generation failed. Check your Gemini API configuration or try again later."
+		log.Printf("vendor AI: provider request failed: %v", err)
+		p.Notice = "AI generation failed. Check your OpenAI/Gemini API key, model setting, and provider quota, then try again."
 		h.renderVendorAI(w, p, http.StatusBadGateway)
 		return
 	}

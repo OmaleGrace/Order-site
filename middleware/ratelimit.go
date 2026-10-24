@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net"
 	"net/http"
 	"os"
@@ -114,8 +115,15 @@ func ClientIP(r *http.Request) string {
 func RateLimit(l *Limiter, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !l.Hit(ClientIP(r)) {
-			w.Header().Set("Retry-After", "900")
-			http.Error(w, "Too many requests. Please wait a few minutes and try again.", http.StatusTooManyRequests)
+			w.Header().Set("Retry-After", "60")
+			message := "You've reached the short-term AI request limit. Please wait about a minute, then try again."
+			if strings.Contains(r.Header.Get("Accept"), "application/json") {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusTooManyRequests)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+				return
+			}
+			http.Error(w, message, http.StatusTooManyRequests)
 			return
 		}
 		next(w, r)
@@ -133,7 +141,8 @@ var (
 	OTPSendIP         = NewLimiter(10, time.Hour)
 	OTPVerifyUser     = NewLimiter(10, time.Hour)
 	ApplyLimiter      = NewLimiter(10, time.Hour)
-	VendorAILimiter   = NewLimiter(10, time.Hour)
+	VendorAILimiter   = NewLimiter(20, 15*time.Minute)
+	MessageAILimiter  = NewLimiter(20, 15*time.Minute)
 	PayLimiter        = NewLimiter(20, time.Hour)
 	LoginFailsByEmail = NewLimiter(5, 15*time.Minute)
 	ForgotByEmail     = NewLimiter(3, time.Hour)

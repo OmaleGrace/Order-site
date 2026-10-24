@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - {{brandName}}</title>
@@ -9,10 +10,19 @@
 </head>
 
 <body>
-    <main>
-
+    <main class="auth-main">
+        <section class="auth-story" aria-label="Join ENIE">
+            <a href="/" class="auth-brand"><img src="/static/img/enie-logo.png" alt="ENIE logo"><span>{{brandName}}</span></a>
+            <p class="auth-eyebrow">GOOD FOOD. GREAT MOMENTS.</p>
+            <h2>Make room for something delicious.</h2>
+            <p>Join ENIE to explore local food vendors, save the dishes you love, and make ordering feel effortless.</p>
+            <div class="auth-perks"><span>Discover nearby vendors</span><span>Save favourite dishes</span><span>Track your orders</span></div>
+        </section>
         <div class="auth-wrapper">
-            <h1>Create Your Account</h1>
+            <div class="auth-mobile-brand"><img src="/static/img/enie-logo.png" alt="ENIE logo"><span>{{brandName}}</span></div>
+            <p class="auth-kicker">JOIN THE TABLE</p>
+            <h1>Create your ENIE account.</h1>
+            <p class="auth-subtext">A little closer to the food you love.</p>
             <div class="form-banner" id="form-banner" role="status" aria-live="polite" hidden></div>
 
             <form action="/signup" method="post" novalidate>

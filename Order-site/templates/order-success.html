@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/order-success.css">
+</head>
+
+<body>
+    <main>
+        <div class="success-wrapper">
+            <div class="success-icon">🎉</div>
+
+            <h1>Order Placed Successfully!</h1>
+
+            <p>Your payment was successful and your order has been received.</p>
+            <p class="thanks">Thank you for ordering from {{brandName}}.</p>
+
+            <div class="success-actions">
+                <a href="/orders" class="btn-primary">Track My Order</a>
+                <a href="/menu" class="btn-outline">Continue Shopping</a>
+            </div>
+
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </main>
+</body>
+</html>

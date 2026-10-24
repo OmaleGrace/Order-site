@@ -147,3 +147,80 @@ img.zoomable { cursor: zoom-in; }
 .vendor-banner.soon { background: #f7f0dd; border-color: #e4d6a5; color: #78652c; }
 .vendor-banner a { padding: 7px 18px; border-radius: 999px; background: var(--terracotta); color: #fff; text-decoration: none; font-weight: 700; white-space: nowrap; }
 .vendor-banner.soon a { background: #78652c; }
+
+/* ENIE design-system refinements shared across every page */
+:root { --orange:#ed9845; --green-soft:#eaf2eb; --page-width:1180px; }
+::selection { background:#f6d5a8; color:#163b29; }
+:focus-visible { outline:3px solid rgba(237,152,69,.75); outline-offset:3px; }
+button, input, select, textarea { accent-color:var(--green); }
+button { cursor:pointer; }
+main { animation:enie-enter .24s ease-out both; }
+@keyframes enie-enter { from { opacity:.75; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+.site-logo { width:42px; height:42px; object-fit:cover; border-radius:12px; vertical-align:middle; box-shadow:0 3px 10px rgba(23,74,50,.12); }
+.logo { display:inline-flex; align-items:center; gap:9px; }
+a, button, input, select, textarea { transition-timing-function:ease; }
+button:not(:disabled), input[type="submit"] { transition:filter .18s,transform .18s,box-shadow .18s; }
+button:not(:disabled):hover, input[type="submit"]:hover { filter:brightness(.97); }
+.card, .panel, .account-card, .auth-wrapper, .vendor-card, .menu-card, .dish-card, .order-card, .message-card {
+  border-radius:var(--radius);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]), select, textarea {
+  max-width:100%; border-radius:12px;
+}
+table { border-collapse:separate; border-spacing:0; width:100%; }
+th { text-align:left; color:#526458; font-size:.82rem; letter-spacing:.025em; }
+td, th { padding:12px 14px; border-bottom:1px solid var(--line); }
+tbody tr:hover { background:rgba(234,242,235,.45); }
+@media(max-width:640px) {
+  h1 { overflow-wrap:anywhere; }
+  .site-logo { width:36px; height:36px; }
+  .btn-primary, .btn-secondary, .btn-outline { padding:11px 16px; }
+}
+
+/* Consistent, responsive polish for the marketplace, vendor tools, chat and admin screens */
+:where(.card, .panel, .section-card, .content-card, .thread-list, .message-panel) {
+  background:var(--card);
+  border:1px solid rgba(23,74,50,.09);
+  border-radius:20px;
+  box-shadow:0 10px 28px rgba(23,74,50,.055);
+}
+:where(main, .page-container, .container) > h1,
+:where(main, .page-container, .container) .heading h1 {
+  color:var(--green);
+  letter-spacing:-.035em;
+}
+:where(.button, .btn, button.button, a.button) {
+  border-radius:12px;
+  font-weight:750;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+:where(.button, .btn, button.button, a.button):hover {
+  transform:translateY(-1px);
+  box-shadow:0 7px 16px rgba(23,74,50,.10);
+}
+:where(input:not([type=checkbox]):not([type=radio]):not([type=submit]), select, textarea) {
+  border:1px solid #dce4db;
+  background:#fff;
+}
+:where(input:not([type=checkbox]):not([type=radio]):not([type=submit]), select, textarea):focus {
+  outline:none;
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(23,74,50,.09);
+}
+:where(.site-header, .main-header, .account-header, .navbar) {
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(23,74,50,.09);
+}
+:where(.site-header nav, .main-header nav, .navbar nav) a {
+  text-decoration:none;
+  font-weight:650;
+}
+:where(.site-header nav, .main-header nav, .navbar nav) a:hover { color:var(--terracotta); }
+:where(.notice, .alert, .message-notice) { border-radius:12px; }
+:where(.empty, .empty-state) { padding:30px 20px; text-align:center; }
+@media(max-width:760px) {
+  :where(.card, .panel, .section-card, .content-card, .thread-list, .message-panel) { border-radius:16px; }
+  :where(table) { display:block; max-width:100%; overflow-x:auto; white-space:nowrap; }
+  :where(.page-container, .container) { padding-left:16px; padding-right:16px; }
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Orders - {{brandName}}</title>
+
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/admin-orders.css">
+</head>
+
+<body>
+
+<header class="admin-header">
+
+    <div class="brand">
+        <a href="/" class="brand-name"><img src="/static/img/enie-logo.png" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+        <span>Admin Dashboard</span>
+    </div>
+
+    <nav>
+        <a href="/admin">Overview</a>
+        <a href="/admin/users">Users</a>
+        <a href="/admin/orders" class="active">Orders</a>
+        <a href="/admin/menu">Manage menu</a>
+        <a href="/admin/vendors">Vendors</a>
+        <a href="/admin/earnings">Earnings</a>
+        <a href="/admin/applications">Applications</a>
+        <a href="/menu">View menu</a>
+        <a href="/logout">Logout</a>
+    </nav>
+
+</header>
+
+
+<main class="admin-container">
+
+    <div class="page-heading">
+        <div>
+            <h1>Order Dashboard</h1>
+            <p>Manage and track customer orders.</p>
+        </div>
+    </div>
+
+
+    {{if .}}
+
+        <section class="orders-list">
+
+            {{range .}}
+
+                <article class="order-card">
+
+                    <div class="order-top">
+
+                        <div>
+                            <h2>Order #{{.ID}}</h2>
+                            <span class="order-date">{{.CreatedAt}}</span>
+                        </div>
+
+                        <span class="status status-{{.Status}}">{{.Status}}</span>
+
+                    </div>
+
+
+                    <div class="customer-info">
+
+                        <div>
+                            <span class="label">Customer</span>
+                            <strong>{{.Name}}</strong>
+                        </div>
+
+                        <div>
+                            <span class="label">Email</span>
+                            <strong>{{.Email}}</strong>
+                        </div>
+
+                    </div>
+                {{if eq .DeliveryMethod "delivery"}}
+                <div class="delivery-box">
+                    <strong>🛵 Deliver to</strong>
+                    <p>{{.DeliveryAddress}}</p>
+                    <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
+                    {{if .DeliveryFeeKobo}}<p class="delivery-fee">Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>{{end}}
+                </div>
+                {{else}}
+                <div class="delivery-box pickup">
+                    <strong>🛍️ Pickup</strong>
+                    <p>The customer will collect this order.</p>
+                </div>
+                {{end}}
+
+
+
+
+                    <div class="order-items">
+
+                        <h3>Items</h3>
+
+                        <ul>
+                            {{range .Items}}
+                                <li>
+                                    <span>{{.Name}} × {{.Quantity}}</span>
+                                    <strong>₦{{naira .PriceKobo}}</strong>
+                                </li>
+                            {{end}}
+                        </ul>
+
+                    </div>
+
+
+                    <div class="order-bottom">
+
+                        <div class="total">
+                            <span>Total</span>
+                            <strong>₦{{naira .TotalKobo}}</strong>
+                        </div>
+
+
+                        <form
+                            action="/admin/orders/status"
+                            method="post"
+                            class="status-form"
+                        >
+
+                            <input type="hidden" name="order_id" value="{{.ID}}">
+
+                            <select name="status">
+                                <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                                <option value="paid" {{if eq .Status "paid"}}selected{{end}}>Paid</option>
+                                <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
+                                <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
+                                <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
+                                <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>Cancelled</option>
+                            </select>
+
+                            <button type="submit">Update Status</button>
+
+                        </form>
+
+                    </div>
+
+                </article>
+
+            {{end}}
+
+        </section>
+
+    {{else}}
+
+        <section class="empty-orders">
+
+            <div class="empty-icon">📦</div>
+
+            <h2>No orders yet</h2>
+
+            <p>Customer orders will appear here when they are placed.</p>
+
+        </section>
+
+    {{end}}
+
+</main>
+
+</body>
+</html>

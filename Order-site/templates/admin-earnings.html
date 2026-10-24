@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <style>
+        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px 5vw; background: rgba(253, 248, 240, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
+        .admin-header a { text-decoration: none; font-weight: 600; }
+        .admin-header a:hover { color: var(--red); }
+        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
+
+        main { max-width: 1000px; margin: 0 auto; padding: 24px 5vw 70px; }
+        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
+
+        .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 22px; box-shadow: var(--shadow); }
+        .card h2 { margin: 0 0 14px; font-size: 1.1rem; color: var(--green); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+        input { width: 100%; padding: 11px 13px; border: 2px solid var(--line); border-radius: 12px; font: inherit; background: #fff; }
+        input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(20, 83, 45, 0.12); }
+        small { display: block; margin-top: 5px; color: var(--muted); font-size: 0.82rem; }
+
+        button { padding: 9px 16px; border: 0; border-radius: 999px; font: inherit; font-weight: 700; font-size: 0.85rem; cursor: pointer; background: var(--green); color: #fff; transition: background 0.15s ease, transform 0.15s ease; }
+        button:hover { background: var(--green-dark); transform: translateY(-1px); }
+        button.secondary { background: #efe6d6; color: var(--ink); }
+        button.secondary:hover { background: #e4d8c2; }
+        button.danger { background: #fff; color: var(--red); border: 2px solid #f3c5c1; }
+        button.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
+        .save-btn { margin-top: 16px; padding: 11px 24px; font-size: 0.95rem; }
+
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        th { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        td.row-actions { white-space: nowrap; }
+        td.row-actions form { display: inline; margin: 0; }
+
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
+        .badge-active { background: #e0f2e9; color: var(--green); }
+        .badge-pending { background: #fff3cd; color: #8a6d00; }
+        .badge-suspended { background: #fdeceb; color: var(--red-dark); }
+        .muted { color: var(--muted); font-size: 0.85rem; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+            .totals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+        .total-box { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+        .total-box span { display: block; color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+        .total-box strong { display: block; font-size: 1.5rem; color: var(--green); margin-top: 4px; }
+        .payout-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .payout-form input { width: 120px; padding: 8px 10px; }
+        .payout-form input.note { width: 150px; }
+        .owed { font-weight: 800; color: var(--red); }
+        @media (max-width: 700px) { .totals { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <h1><img src="/static/img/enie-logo.png" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span> · Admin</h1>
+        <a href="/admin">Overview</a>
+        <a href="/admin/users">Users</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/menu">Menu</a>
+        <a href="/admin/vendors">Vendors</a>
+        <a href="/admin/earnings" class="active">Earnings</a>
+        <a href="/admin/applications">Applications</a>
+        <a href="/">View site</a>
+    </header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <div class="totals">
+            <div class="total-box"><span>Customers paid (all shops)</span><strong>₦{{money .TotalSalesKobo}}</strong></div>
+            <div class="total-box"><span>Your {{.CommissionPercent}}% commission</span><strong>₦{{money .TotalCommission}}</strong></div>
+            <div class="total-box"><span>You still owe vendors</span><strong>₦{{money .TotalOwedKobo}}</strong></div>
+        </div>
+
+        <div class="card">
+            <h2>Money per vendor</h2>
+            <p class="muted">Customers pay into your Paystack account. The commission is yours; the rest belongs to the vendor. After you send a vendor their money, record it here so the balance goes down. Only paid orders are counted, and the commission is on food only, not delivery fees.</p>
+            <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Vendor / verified bank account</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Record a payout</th></tr>
+                </thead>
+                <tbody>
+                    {{range .Rows}}
+                    <tr>
+                        <td><strong>{{.Name}}</strong>{{if .AccountVerified}}<div class="muted">✅ {{.AccountName}} · {{.BankName}} ({{.BankCode}})<br>Account: <strong>{{.AccountNumber}}</strong></div>{{else}}<div class="muted">⚠️ Bank account not verified</div>{{end}}</td>
+                        <td>{{.Orders}}</td>
+                        <td>₦{{money .SalesKobo}}</td>
+                        <td>₦{{money .CommissionKobo}}</td>
+                        <td>₦{{money .PaidOutKobo}}</td>
+                        <td class="owed">₦{{money .BalanceKobo}}</td>
+                        <td>
+                            {{if and (gt .BalanceKobo 0) .AccountVerified}}
+                            <form action="/admin/earnings/payout" method="post" class="payout-form">
+                                <input type="hidden" name="vendor_id" value="{{.VendorID}}">
+                                <input type="number" name="amount" min="1" step="0.01" max="{{money2 .BalanceKobo}}" placeholder="₦ amount" required>
+                                <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)">
+                                <button type="submit">Record</button>
+                            </form>
+                            {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else}}<span class="muted">nothing owed</span>{{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="7" class="muted">No vendors yet.</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

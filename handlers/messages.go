@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +17,14 @@ import (
 )
 
 const maxChatMessageRunes = 2000
+
+// writeChatAIError returns a consistent JSON error for chat and AI endpoints.
+func writeChatAIError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
 
 type ChatThreadSummary struct {
 	ID             int
@@ -51,12 +60,27 @@ type MessagesPage struct {
 func currentChatUserID(h *Handlers, w http.ResponseWriter, r *http.Request) (int, bool) {
 	cookie, err := r.Cookie("session_token")
 	if err != nil || cookie.Value == "" {
+		if strings.Contains(r.Header.Get("Accept"), "application/json") {
+			writeChatAIError(w, http.StatusUnauthorized, "Your session has expired. Please log in again.")
+			return 0, false
+		}
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return 0, false
 	}
 	userID, err := middleware.GetUserID(h.DB, cookie.Value)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		if err == sql.ErrNoRows {
+			// An expired or revoked session should be cleared before returning to login.
+			http.SetCookie(w, &http.Cookie{Name: "session_token", Value: "", Path: "/", HttpOnly: true, Secure: middleware.SecureCookie(r), SameSite: http.SameSiteLaxMode, MaxAge: -1})
+			if strings.Contains(r.Header.Get("Accept"), "application/json") {
+				writeChatAIError(w, http.StatusUnauthorized, "Your session has expired. Please log in again.")
+				return 0, false
+			}
+			http.Redirect(w, r, "/login?next="+url.QueryEscape(r.URL.RequestURI()), http.StatusSeeOther)
+			return 0, false
+		}
+		log.Printf("messages: session lookup failed: %v", err)
+		errors.Render(w, "Could not verify your session. Please try again.", http.StatusInternalServerError)
 		return 0, false
 	}
 	return userID, true
@@ -280,7 +304,7 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 // MessageAIDraft creates an unsent draft reply for the shop owner from the latest customer message.
 func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		writeChatAIError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 	userID, ok := currentChatUserID(h, w, r)
@@ -289,7 +313,7 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	threadID, err := strconv.Atoi(r.PathValue("threadID"))
 	if err != nil || threadID < 1 {
-		http.Error(w, "Conversation not found", http.StatusNotFound)
+		writeChatAIError(w, http.StatusNotFound, "Conversation not found")
 		return
 	}
 	var customerID int
@@ -300,30 +324,30 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRow(`SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(v.area, ''), v.offers_pickup, v.offers_delivery, COALESCE(v.delivery_fee_kobo, 0)
 		FROM message_threads t JOIN vendors v ON v.id=t.vendor_id WHERE t.id=$1`, threadID).Scan(&customerID, &ownerID, &shopName, &area, &offersPickup, &offersDelivery, &deliveryFeeKobo)
 	if err == sql.ErrNoRows {
-		http.Error(w, "Conversation not found", http.StatusNotFound)
+		writeChatAIError(w, http.StatusNotFound, "Conversation not found")
 		return
 	}
 	if err != nil {
-		http.Error(w, "Could not load conversation", http.StatusInternalServerError)
+		writeChatAIError(w, http.StatusInternalServerError, "Could not load conversation")
 		return
 	}
 	if !ownerID.Valid || int(ownerID.Int64) != userID {
-		http.Error(w, "Only the shop owner can draft an AI reply", http.StatusForbidden)
+		writeChatAIError(w, http.StatusForbidden, "Only the shop owner can draft an AI reply")
 		return
 	}
 	var customerMessage string
 	err = h.DB.QueryRow(`SELECT body FROM messages WHERE thread_id=$1 AND sender_user_id=$2 ORDER BY id DESC LIMIT 1`, threadID, customerID).Scan(&customerMessage)
 	if err == sql.ErrNoRows {
-		http.Error(w, "The customer has not sent a message yet", http.StatusBadRequest)
+		writeChatAIError(w, http.StatusBadRequest, "The customer has not sent a message yet")
 		return
 	}
 	if err != nil {
-		http.Error(w, "Could not load the customer message", http.StatusInternalServerError)
+		log.Printf("AI chat: failed loading latest customer message thread=%d customer=%d: %v", threadID, customerID, err)
+		writeChatAIError(w, http.StatusInternalServerError, "Could not load the customer message")
 		return
 	}
-		apiKey := geminiAPIKey()
-	if apiKey == "" {
-		http.Error(w, "AI replies are not configured yet", http.StatusServiceUnavailable)
+	if !aiConfigured() {
+		writeChatAIError(w, http.StatusServiceUnavailable, "AI replies are not configured yet. Add OPENAI_API_KEY or GEMINI_API_KEY to the server environment.")
 		return
 	}
 
@@ -363,10 +387,8 @@ Return only the reply draft. Do not send the message.`
 		customerMessage +
 		"\nDraft a helpful reply the vendor can review before sending."
 
-	draft, err := generateGeminiDraft(
+	draft, err := generateAIDraft(
 		r.Context(),
-		apiKey,
-		geminiModel(),
 		systemPrompt,
 		userPrompt,
 		250,
@@ -374,7 +396,7 @@ Return only the reply draft. Do not send the message.`
 
 	if err != nil {
 		log.Printf("Gemini message draft failed: %v", err)
-		http.Error(w, "AI reply generation failed; please try again", http.StatusBadGateway)
+		writeChatAIError(w, http.StatusBadGateway, "AI reply generation failed. Check your AI API quota/key or try again later.")
 		return
 	}
 
@@ -385,8 +407,10 @@ Return only the reply draft. Do not send the message.`
 		"draft": draft,
 	})
 }
+
 // SendMessage persists a plain-text message from either participant.
-func (h *Handlers) SendMessage(w http.ResponseWriter, r *http.Request) {	if r.Method != http.MethodPost {
+func (h *Handlers) SendMessage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
 		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}

@@ -40,8 +40,11 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	var phone *string
 
 	err = h.DB.QueryRow(`
-		SELECT name, email, auth_provider, COALESCE(profile_picture, ''),
-		       phone, TO_CHAR(created_at, 'FMMonth YYYY')
+		SELECT name, email,
+		       COALESCE(to_jsonb(users)->>'auth_provider', 'local'),
+		       COALESCE(to_jsonb(users)->>'profile_picture', ''),
+		       NULLIF(to_jsonb(users)->>'phone', ''),
+		       COALESCE(TO_CHAR(created_at, 'FMMonth YYYY'), 'ENIE member')
 		FROM users
 		WHERE id = $1
 	`, userID).Scan(
@@ -54,9 +57,17 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		errors.Render(w, "Could not load account", http.StatusInternalServerError)
-		log.Printf("account: query failed: %v", err)
-		return
+		log.Printf("account: extended profile query failed for user %d: %v", userID, err)
+		// Older deployed databases may not yet have every optional profile column.
+		// Fall back to the stable core fields so the account page remains accessible.
+		if fallbackErr := h.DB.QueryRow(`SELECT name, email FROM users WHERE id = $1`, userID).Scan(&data.Name, &data.Email); fallbackErr != nil {
+			log.Printf("account: fallback profile query failed for user %d: %v", userID, fallbackErr)
+			errors.Render(w, "Could not load account", http.StatusInternalServerError)
+			return
+		}
+		data.AuthProvider = "local"
+		data.MemberSince = "ENIE member"
+		phone = nil
 	}
 
 	if phone != nil {
@@ -70,14 +81,18 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	`, userID).Scan(&data.OrderCount, &data.TotalSpentKobo)
 
 	if err != nil {
-		errors.Render(w, "Could not load account", http.StatusInternalServerError)
-		return
+		log.Printf("account: order summary query failed for user %d: %v", userID, err)
+		// Keep the account usable even if historical order-summary data is unavailable.
+		data.OrderCount = 0
+		data.TotalSpentKobo = 0
 	}
 
 	data.Updated = r.URL.Query().Get("updated") == "true"
 
 	var vendorCount int
-	h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount)
+	if err := h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount); err != nil {
+		log.Printf("account: vendor lookup failed for user %d: %v", userID, err)
+	}
 	data.IsVendor = vendorCount > 0
 
 	tmpl := template.Must(

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop profile - {{.Name}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <style>
+        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px 5vw; background: rgba(253, 248, 240, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
+        .admin-header a { text-decoration: none; font-weight: 600; }
+        .admin-header a:hover { color: var(--red); }
+        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
+
+        main { max-width: 760px; margin: 0 auto; padding: 24px 5vw 70px; }
+        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
+
+        .card { background: var(--card); border-radius: var(--radius); padding: 22px; margin-bottom: 22px; box-shadow: var(--shadow); }
+        .card h2 { margin: 0 0 4px; font-size: 1.15rem; color: var(--green); }
+        .card .sub { margin: 0 0 16px; color: var(--muted); font-size: 0.9rem; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .full { grid-column: 1 / -1; }
+        label.field { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
+        input[type="text"], input[type="tel"], input[type="number"], textarea {
+            width: 100%; padding: 11px 13px; border: 2px solid var(--line); border-radius: 12px; font: inherit; background: #fff;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(20, 83, 45, 0.12); }
+        input.invalid { border-color: #c0392b; }
+        input.invalid:focus { box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.12); }
+        textarea { resize: vertical; min-height: 90px; }
+        small { display: block; margin-top: 5px; color: var(--muted); font-size: 0.82rem; }
+        .field-error { color: #c0392b; font-size: 0.85rem; margin: 5px 0 0; min-height: 1.1em; }
+
+        .check { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px; background: #fff; font-weight: 600; cursor: pointer; }
+        .check input { width: 18px; height: 18px; accent-color: var(--green); }
+
+        .save-btn { margin-top: 18px; padding: 12px 28px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: inherit; font-weight: 700; cursor: pointer; box-shadow: 0 6px 16px rgba(200, 56, 42, 0.28); }
+        .save-btn:hover:not(:disabled) { background: var(--red-dark); }
+        .save-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="admin-header">
+        <h1>🍴 {{.Name}}</h1>
+        <a href="/vendor/orders">Orders</a>
+        <a href="/vendor/menu">My menu</a>
+        <a href="/vendor/profile" class="active">Shop profile</a>
+        <a href="/vendor/ai">AI writing</a>
+        <a href="/vendor/billing">Billing</a>
+        <a href="/">View site</a>
+    </header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <form action="/vendor/profile/save" method="post" id="profile-form" novalidate>
+
+            <div class="card">
+                <h2>About your shop</h2>
+                <p class="sub">Everything here, including your phone and address, is visible to customers on your public shop page.</p>
+                <div class="grid">
+                    <div class="full">
+                        <label class="field" for="description">Description</label>
+                        <textarea name="description" id="description" maxlength="300" placeholder="What do you cook? What are you known for?">{{.Description}}</textarea>
+                        <small>Up to 300 characters.</small>
+                    </div>
+                    <div>
+                        <label class="field" for="area">Area</label>
+                        <input type="text" name="area" id="area" maxlength="60" value="{{.Area}}" placeholder="e.g. Yaba, Lagos">
+                    </div>
+                    <div>
+                        <label class="field" for="phone">Phone</label>
+                        <input type="tel" name="phone" id="phone" maxlength="20" value="{{.Phone}}" placeholder="e.g. 08012345678">
+                        <p class="field-error" id="phone-error" aria-live="polite"></p>
+                    </div>
+                    <div class="full">
+                        <label class="field" for="address">Address</label>
+                        <input type="text" name="address" id="address" maxlength="150" value="{{.Address}}" placeholder="Where customers can collect their orders">
+                    </div>
+                    <div class="full">
+                        <label class="field" for="logo_url">Logo link (optional)</label>
+                        <input type="text" name="logo_url" id="logo_url" maxlength="500" value="{{.LogoURL}}" placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>How customers get their food</h2>
+                <p class="sub">Choose at least one.</p>
+                <div class="grid">
+                    <label class="check"><input type="checkbox" name="offers_pickup" id="offers_pickup" {{if .OffersPickup}}checked{{end}}> Pickup</label>
+                    <label class="check"><input type="checkbox" name="offers_delivery" id="offers_delivery" {{if .OffersDelivery}}checked{{end}}> I deliver</label>
+                    <div class="full">
+                        <label class="field" for="delivery_areas">Delivery areas (Nigerian state and LGA)</label>
+                        <textarea name="delivery_areas" id="delivery_areas" placeholder="Lagos | Ikeja&#10;Lagos | Surulere&#10;Ogun | Ado-Odo/Ota">{{.DeliveryAreas}}</textarea>
+                        <small>Enter one supported area per line in the format <strong>State | LGA</strong>. Delivery checkout will only accept a matching state and LGA. Add at least one area when delivery is enabled.</small>
+                    </div>
+                    <div class="full">
+                        <label class="field" for="delivery_fee">Delivery fee (₦)</label>
+                        <input type="number" name="delivery_fee" id="delivery_fee" min="0" step="0.01" value="{{.DeliveryFeeNaira}}">
+                        <small>A flat fee added to every delivery order. Use 0 for free delivery. Ignored if you don't deliver.</small>
+                        <p class="field-error" id="choice-error" aria-live="polite"></p>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="save-btn" id="save-btn">Save shop details</button>
+        </form>
+
+        <section class="card">
+            <h2>Vendor payout account</h2>
+            <p class="sub">Add the bank account where you want to receive your sales balance. ENIE verifies the account name through Paystack. Your account details are private and are not shown on your public shop page.</p>
+            {{if .PayoutVerified}}<div class="notice">Verified account: <strong>{{.PayoutAccountName}}</strong> · {{.PayoutBankName}} · account ending {{.PayoutAccountNumber}}</div>{{else}}<p class="sub">Status: not verified. Verify an account before ENIE can record a payout to it.</p>{{end}}
+            <form action="/vendor/payout-account/verify" method="post">
+                <div class="grid">
+                    <div><label class="field" for="payout_bank_name">Bank name</label><input type="text" name="payout_bank_name" id="payout_bank_name" maxlength="100" value="{{.PayoutBankName}}" placeholder="e.g. Access Bank" required></div>
+                    <div><label class="field" for="payout_bank_code">Paystack bank code</label><input type="text" name="payout_bank_code" id="payout_bank_code" maxlength="12" value="{{.PayoutBankCode}}" placeholder="Bank code from Paystack" required><small>Use the bank code listed by Paystack for your bank.</small></div>
+                    <div class="full"><label class="field" for="payout_account_number">10-digit account number</label><input type="text" inputmode="numeric" pattern="[0-9]{10}" name="payout_account_number" id="payout_account_number" maxlength="10" placeholder="Enter your 10-digit account number" required><small>For privacy, the saved account number is masked on this page.</small></div>
+                    <div class="full"><button class="save-btn" type="submit">Verify and save bank account</button></div>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+    (function () {
+        var phoneEl = document.getElementById('phone');
+        var phoneMsg = document.getElementById('phone-error');
+        var pickup = document.getElementById('offers_pickup');
+        var delivery = document.getElementById('offers_delivery');
+        var choiceMsg = document.getElementById('choice-error');
+        var saveBtn = document.getElementById('save-btn');
+        var touched = false;
+
+        // Same rules as the server. An empty phone number is allowed here.
+        function checkPhone() {
+            var v = phoneEl.value.trim();
+            if (v === '') return '';
+            if (!/^\+?[0-9 \-]+$/.test(v)) return 'Use only numbers, spaces, + and -';
+
+            var d = v.replace(/[^0-9]/g, '');
+            var international = v.charAt(0) === '+' || d.indexOf('234') === 0;
+
+            if (international) {
+                if (d.indexOf('234') !== 0) return 'Start with 234 after the + sign, for example +2348012345678';
+                if (d.length < 13) return 'Too short: after +234 you need 10 more digits (you have ' + (d.length - 3) + ')';
+                if (d.length > 13) return 'Too long: after +234 you need exactly 10 digits (you have ' + (d.length - 3) + ')';
+                d = '0' + d.slice(3);
+            } else {
+                if (d.charAt(0) !== '0') return 'Start with 0, for example 08012345678, or with +234';
+                if (d.length < 11) return 'Too short: a Nigerian number has 11 digits (you have ' + d.length + ')';
+                if (d.length > 11) return 'Too long: a Nigerian number has 11 digits (you have ' + d.length + ')';
+            }
+
+            if ('789'.indexOf(d.charAt(1)) === -1) return 'Enter a valid Nigerian mobile number, for example 08012345678';
+            return '';
+        }
+
+        function checkChoice() {
+            return (pickup.checked || delivery.checked) ? '' : 'Choose at least one: pickup or delivery';
+        }
+
+        function refresh() {
+            var pe = checkPhone();
+            var ce = checkChoice();
+            phoneMsg.textContent = touched ? pe : '';
+            phoneEl.classList.toggle('invalid', touched && pe !== '');
+            choiceMsg.textContent = ce;
+            saveBtn.disabled = pe !== '' || ce !== '';
+        }
+
+        ['input', 'blur'].forEach(function (ev) {
+            phoneEl.addEventListener(ev, function () { touched = true; refresh(); });
+        });
+        pickup.addEventListener('change', refresh);
+        delivery.addEventListener('change', refresh);
+
+        // An old saved number that does not meet the rule is shown straight away
+        touched = phoneEl.value.trim() !== '';
+        refresh();
+    })();
+    </script>
+<script src="/static/js/vendor-banner.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin dashboard - {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
+  <style>
+    :root{--admin-ink:#18352b;--admin-muted:#68776f;--admin-line:#e4eae5;--admin-card:#fff;--admin-bg:#f5f8f5}
+    body{margin:0;background:var(--admin-bg);color:var(--admin-ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:18px clamp(18px,4vw,56px);background:#fff;border-bottom:1px solid var(--admin-line)}
+    .brand{font-size:1.2rem;font-weight:800;color:var(--admin-ink);text-decoration:none}.brand small{display:block;font-size:.78rem;font-weight:500;color:var(--admin-muted)}
+    nav{display:flex;gap:8px;flex-wrap:wrap}nav a{padding:9px 12px;border-radius:10px;color:var(--admin-ink);text-decoration:none;font-weight:650;font-size:.9rem}nav a:hover,nav a.active{background:#e7f2e9;color:#14532d}
+    main{max-width:1200px;margin:auto;padding:32px clamp(18px,4vw,56px) 64px}.welcome{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:24px}.welcome h1{margin:0;font-size:clamp(1.8rem,4vw,2.5rem)}.welcome p{margin:8px 0 0;color:var(--admin-muted)}
+    .badge{background:#e5f3e8;color:#14532d;padding:8px 12px;border-radius:999px;font-weight:700;font-size:.84rem}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0 34px}.stat,.tile{background:var(--admin-card);border:1px solid var(--admin-line);border-radius:18px;padding:22px;box-shadow:0 6px 24px #18352b08}.stat .icon{font-size:1.5rem}.stat strong{display:block;font-size:2rem;margin:10px 0 2px}.stat span{color:var(--admin-muted);font-size:.9rem}
+    h2{font-size:1.25rem;margin:0 0 14px}.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.tile{text-decoration:none;color:inherit;transition:transform .15s,border-color .15s}.tile:hover{transform:translateY(-2px);border-color:#92b7a0}.tile .icon{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#edf5ee;font-size:1.4rem;margin-bottom:14px}.tile h3{margin:0 0 6px;font-size:1.05rem}.tile p{margin:0;color:var(--admin-muted);font-size:.92rem;line-height:1.5}.tile .go{display:inline-block;margin-top:16px;font-weight:750;color:#17623c}
+    .note{margin-top:24px;background:#fff8e8;border:1px solid #f0dfb5;padding:15px 18px;border-radius:14px;color:#75551a}
+    @media(max-width:900px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.stats,.tiles{grid-template-columns:1fr}.stat{padding:18px}}
+  </style>
+</head>
+<body>
+<header class="top"><a class="brand" href="/admin"><img src="/static/img/enie-logo.png" alt="{{brandName}}" class="site-logo"> {{brandName}}<small>Platform administration</small></a><nav>
+  <a class="active" href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/users">Users</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu">Menu</a><a href="/admin/earnings">Earnings</a><a href="/admin/applications">Applications</a><a href="/" target="_blank" rel="noopener">View site ↗</a><a href="/logout">Log out</a>
+</nav></header>
+<main>
+  <section class="welcome"><div><h1>Admin overview</h1><p>Manage the marketplace from one organised workspace.</p></div><span class="badge">● Admin access</span></section>
+  <section class="stats" aria-label="Platform totals">
+    <article class="stat"><span class="icon">👥</span><strong>{{.Users}}</strong><span>Registered users</span></article>
+    <article class="stat"><span class="icon">🏪</span><strong>{{.Vendors}}</strong><span>Vendor shops</span></article>
+    <article class="stat"><span class="icon">🧾</span><strong>{{.Orders}}</strong><span>Total orders</span></article>
+    <article class="stat"><span class="icon">🍲</span><strong>{{.MenuItems}}</strong><span>Menu items</span></article>
+  </section>
+  <h2>Manage your platform</h2>
+  <section class="tiles">
+    <a class="tile" href="/admin/users"><span class="icon">👥</span><h3>Users</h3><p>View registered accounts, see activity totals, and remove accounts when necessary.</p><span class="go">Manage users →</span></a>
+    <a class="tile" href="/admin/orders"><span class="icon">🧾</span><h3>Orders</h3><p>Review customer orders, delivery details, items, totals, and order status.</p><span class="go">View orders →</span></a>
+    <a class="tile" href="/admin/vendors"><span class="icon">🏪</span><h3>Vendors</h3><p>Manage shop ownership, activation, verification, and vendor status.</p><span class="go">Manage vendors →</span></a>
+    <a class="tile" href="/admin/menu"><span class="icon">🍲</span><h3>Menu</h3><p>Review and manage the dishes available across the marketplace.</p><span class="go">Manage menu →</span></a>
+    <a class="tile" href="/admin/earnings"><span class="icon">💳</span><h3>Earnings & payouts</h3><p>Review platform earnings and record vendor payouts.</p><span class="go">View earnings →</span></a>
+    <a class="tile" href="/admin/applications"><span class="icon">📋</span><h3>Vendor applications</h3><p>Review businesses applying to sell through {{brandName}}.</p><span class="go">Review applications{{if .Applications}} · {{.Applications}} pending{{end}} →</span></a>
+  </section>
+  <p class="note">Account safety: user deletion is restricted to the main administrator account and cannot be used to delete that protected account.</p>
+</main></body></html>

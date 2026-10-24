@@ -71,7 +71,7 @@ func main() {
 	mux.HandleFunc("POST /messages/start", middleware.Logging(middleware.RequireLogin(db, h.StartMessageThread)))
 	mux.HandleFunc("GET /messages/{threadID}", middleware.Logging(middleware.RequireLogin(db, h.MessageThread)))
 	mux.HandleFunc("GET /messages/{threadID}/updates", middleware.Logging(middleware.RequireLogin(db, h.MessageUpdates)))
-	mux.HandleFunc("POST /messages/{threadID}/ai-draft", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.VendorAILimiter, h.MessageAIDraft))))
+	mux.HandleFunc("POST /messages/{threadID}/ai-draft", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.MessageAILimiter, h.MessageAIDraft))))
 	mux.HandleFunc("POST /messages/{threadID}/send", middleware.Logging(middleware.RequireLogin(db, h.SendMessage)))
 	mux.HandleFunc("POST /vendor/ai/generate", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.VendorAILimiter, h.VendorAIGenerate))))
 	mux.HandleFunc("POST /vendor/profile/save", middleware.Logging(h.VendorProfileSave))
