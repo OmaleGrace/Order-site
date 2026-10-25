@@ -42,7 +42,11 @@ type ChatMessage struct {
 	Body      string
 	CreatedAt time.Time
 	Mine      bool
+	Status    string // "sent", "delivered" or "read"; only shown on the sender's own messages
 }
+
+// chatStatusSQL turns delivered_at/read_at into the tick state shown to the sender.
+const chatStatusSQL = `CASE WHEN m.read_at IS NOT NULL THEN 'read' WHEN m.delivered_at IS NOT NULL THEN 'delivered' ELSE 'sent' END`
 
 type MessagesPage struct {
 	Threads       []ChatThreadSummary
@@ -55,6 +59,13 @@ type MessagesPage struct {
 	Error         string
 	IsVendor      bool
 	UserID        int
+	// The other person in the conversation. When it is a shop (the viewer is the customer) clicking
+	// their name opens the shop page; when it is a customer (the viewer is the shop owner) it only
+	// shows their profile picture.
+	OtherIsShop  bool
+	OtherName    string
+	OtherPicture string
+	ShopURL      string
 }
 
 func currentChatUserID(h *Handlers, w http.ResponseWriter, r *http.Request) (int, bool) {
@@ -93,6 +104,13 @@ func (h *Handlers) MessagesInbox(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p := MessagesPage{UserID: userID, Notice: r.URL.Query().Get("msg")}
+	// Opening the inbox means every message waiting for this user has now reached them.
+	if _, err := h.DB.Exec(`UPDATE messages m SET delivered_at = NOW()
+		FROM message_threads t JOIN vendors v ON v.id = t.vendor_id
+		WHERE m.thread_id = t.id AND (t.customer_id = $1 OR v.owner_user_id = $1)
+		AND m.sender_user_id <> $1 AND m.delivered_at IS NULL`, userID); err != nil {
+		log.Printf("messages inbox: mark delivered failed: %v", err)
+	}
 	rows, err := h.DB.Query(`
 		SELECT t.id,
 		       CASE WHEN t.customer_id = $1 THEN v.name ELSE COALESCE(c.name, 'Customer') END,
@@ -192,10 +210,12 @@ func (h *Handlers) MessageThread(w http.ResponseWriter, r *http.Request) {
 	p := MessagesPage{ThreadID: threadID, UserID: userID, Notice: r.URL.Query().Get("msg")}
 	var customerID int
 	var ownerID sql.NullInt64
-	var customerName string
-	if err := h.DB.QueryRow(`SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(c.name, 'Customer')
+	var customerName, customerPicture, shopSlug string
+	var shopActive bool
+	if err := h.DB.QueryRow(`SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(c.name, 'Customer'),
+			COALESCE(c.profile_picture, ''), COALESCE(v.slug, ''), COALESCE(v.status = 'active' AND v.paid_until > NOW(), false)
 		FROM message_threads t JOIN vendors v ON v.id = t.vendor_id JOIN users c ON c.id = t.customer_id
-		WHERE t.id = $1`, threadID).Scan(&customerID, &ownerID, &p.ShopName, &customerName); err != nil {
+		WHERE t.id = $1`, threadID).Scan(&customerID, &ownerID, &p.ShopName, &customerName, &customerPicture, &shopSlug, &shopActive); err != nil {
 		if err == sql.ErrNoRows {
 			errors.Render(w, "Conversation not found", http.StatusNotFound)
 		} else {
@@ -210,11 +230,19 @@ func (h *Handlers) MessageThread(w http.ResponseWriter, r *http.Request) {
 	p.IsVendor = ownerID.Valid && userID == int(ownerID.Int64)
 	if p.IsVendor {
 		p.Title = customerName
+		p.OtherName = customerName
+		p.OtherPicture = customerPicture
 	} else {
 		p.Title = p.ShopName
+		p.OtherName = p.ShopName
+		p.OtherIsShop = true
+		// The public shop page only exists while the shop is active and paid up.
+		if shopActive && shopSlug != "" {
+			p.ShopURL = "/v/" + url.PathEscape(shopSlug)
+		}
 	}
-	_, _ = h.DB.Exec(`UPDATE messages SET read_at = NOW() WHERE thread_id = $1 AND sender_user_id <> $2 AND read_at IS NULL`, threadID, userID)
-	rows, err := h.DB.Query(`SELECT m.id, m.sender_user_id, COALESCE(u.name, 'User'), m.body, m.created_at
+	_, _ = h.DB.Exec(`UPDATE messages SET delivered_at = COALESCE(delivered_at, NOW()), read_at = NOW() WHERE thread_id = $1 AND sender_user_id <> $2 AND read_at IS NULL`, threadID, userID)
+	rows, err := h.DB.Query(`SELECT m.id, m.sender_user_id, COALESCE(u.name, 'User'), m.body, m.created_at, `+chatStatusSQL+`
 		FROM messages m JOIN users u ON u.id = m.sender_user_id WHERE m.thread_id = $1 ORDER BY m.id ASC LIMIT 500`, threadID)
 	if err != nil {
 		errors.Render(w, "Could not load messages", http.StatusInternalServerError)
@@ -223,7 +251,7 @@ func (h *Handlers) MessageThread(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	for rows.Next() {
 		var msg ChatMessage
-		if err := rows.Scan(&msg.ID, &msg.SenderID, &msg.Sender, &msg.Body, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&msg.ID, &msg.SenderID, &msg.Sender, &msg.Body, &msg.CreatedAt, &msg.Status); err != nil {
 			errors.Render(w, "Could not load messages", http.StatusInternalServerError)
 			return
 		}
@@ -262,7 +290,9 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 	if err != nil || after < 0 {
 		after = 0
 	}
-	rows, err := h.DB.Query(`SELECT m.id, m.sender_user_id, COALESCE(u.name, 'User'), m.body, m.created_at
+	// The page only counts as "read" when the tab is actually on screen; a hidden tab still receives messages.
+	visible := r.URL.Query().Get("visible") == "1"
+	rows, err := h.DB.Query(`SELECT m.id, m.sender_user_id, COALESCE(u.name, 'User'), m.body, m.created_at, `+chatStatusSQL+`
 		FROM messages m JOIN users u ON u.id=m.sender_user_id WHERE m.thread_id=$1 AND m.id>$2 ORDER BY m.id ASC LIMIT 100`, threadID, after)
 	if err != nil {
 		http.Error(w, "Could not load messages", http.StatusInternalServerError)
@@ -276,12 +306,13 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 		Body      string `json:"body"`
 		CreatedAt string `json:"created_at"`
 		Mine      bool   `json:"mine"`
+		Status    string `json:"status"`
 	}
 	updates := make([]update, 0)
 	for rows.Next() {
 		var m update
 		var created time.Time
-		if err := rows.Scan(&m.ID, &m.SenderID, &m.Sender, &m.Body, &created); err != nil {
+		if err := rows.Scan(&m.ID, &m.SenderID, &m.Sender, &m.Body, &created, &m.Status); err != nil {
 			http.Error(w, "Could not read messages", http.StatusInternalServerError)
 			return
 		}
@@ -293,10 +324,29 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not read messages", http.StatusInternalServerError)
 		return
 	}
-	_, _ = h.DB.Exec(`UPDATE messages SET read_at=NOW() WHERE thread_id=$1 AND sender_user_id<>$2 AND read_at IS NULL`, threadID, userID)
+	if visible {
+		// Tab is open and visible: everything from the other person is delivered and read.
+		_, _ = h.DB.Exec(`UPDATE messages SET delivered_at=COALESCE(delivered_at, NOW()), read_at=NOW() WHERE thread_id=$1 AND sender_user_id<>$2 AND read_at IS NULL`, threadID, userID)
+	} else {
+		// Tab is in the background: delivered, but not read yet.
+		_, _ = h.DB.Exec(`UPDATE messages SET delivered_at=NOW() WHERE thread_id=$1 AND sender_user_id<>$2 AND delivered_at IS NULL`, threadID, userID)
+	}
+	// Delivery and reading always happen in order, so two numbers describe every message this user has sent:
+	// anything with an id up to delivered_up_to is delivered, anything up to read_up_to is read.
+	var deliveredUpTo, readUpTo int64
+	if err := h.DB.QueryRow(`SELECT
+			COALESCE(MAX(id) FILTER (WHERE delivered_at IS NOT NULL OR read_at IS NOT NULL), 0),
+			COALESCE(MAX(id) FILTER (WHERE read_at IS NOT NULL), 0)
+		FROM messages WHERE thread_id=$1 AND sender_user_id=$2`, threadID, userID).Scan(&deliveredUpTo, &readUpTo); err != nil {
+		log.Printf("message updates: status lookup failed: %v", err)
+	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
-	if err := json.NewEncoder(w).Encode(updates); err != nil {
+	if err := json.NewEncoder(w).Encode(struct {
+		Messages      []update `json:"messages"`
+		DeliveredUpTo int64    `json:"delivered_up_to"`
+		ReadUpTo      int64    `json:"read_up_to"`
+	}{updates, deliveredUpTo, readUpTo}); err != nil {
 		log.Printf("message updates JSON failed: %v", err)
 	}
 }

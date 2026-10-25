@@ -815,6 +815,7 @@ CREATE TABLE public.messages (
     sender_user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     body text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 2000),
     created_at timestamp with time zone DEFAULT now() NOT NULL,
+    delivered_at timestamp with time zone,
     read_at timestamp with time zone
 );
 

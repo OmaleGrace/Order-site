@@ -1,16 +1,189 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Writing Assistant - {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
-<style>
-:root{--ink:#18352b;--muted:#68776f;--line:#e4eae5;--green:#14532d;--bg:#f5f8f5}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,sans-serif}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px clamp(16px,4vw,52px);background:white;border-bottom:1px solid var(--line)}.brand{font-weight:800;color:var(--ink);text-decoration:none}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{padding:9px 12px;border-radius:10px;text-decoration:none;color:var(--ink);font-weight:650}.nav a:hover{background:#e7f2e9}main{max-width:1000px;margin:auto;padding:30px 18px 64px}.intro{margin-bottom:22px}.intro h1{font-size:clamp(1.8rem,4vw,2.5rem);margin:0}.intro p{color:var(--muted);line-height:1.6}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:clamp(18px,3vw,28px);margin-bottom:20px;box-shadow:0 6px 24px #18352b08}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}label{display:block;font-weight:700;font-size:.9rem;margin-bottom:6px}input,select,textarea{width:100%;padding:12px 13px;border:1px solid #ccd8cf;border-radius:11px;font:inherit;background:white;color:var(--ink)}textarea{min-height:100px;resize:vertical}small,.muted{display:block;color:var(--muted);font-size:.86rem;line-height:1.5;margin-top:6px}.button{display:inline-block;background:var(--green);color:white;border:0;border-radius:11px;padding:12px 18px;font:inherit;font-weight:750;cursor:pointer}.notice{background:#fff6e5;color:#79551b;border:1px solid #f1ddb0;padding:13px 15px;border-radius:12px;margin:16px 0}.result{white-space:pre-wrap;line-height:1.75;background:#f7faf7;border:1px solid var(--line);border-radius:12px;padding:18px;margin:12px 0}.copy{background:#e7f2e9;color:var(--green);border:0;border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer}.tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tool{border:1px solid var(--line);border-radius:13px;padding:14px}.tool strong{display:block;margin-bottom:5px}@media(max-width:600px){.grid,.tools{grid-template-columns:1fr}.full{grid-column:auto}}
-</style></head>
-<body><header class="top"><a class="brand" href="/"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}} · Vendor tools</a><nav class="nav"><a href="/vendor/orders">Orders</a><a href="/messages">Customer messages</a><a href="/vendor/menu">My menu</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing">Billing</a></nav></header>
-<main><section class="intro"><h1>AI writing assistant</h1><p>Create a first draft for <strong>{{.VendorName}}</strong> in seconds. Use it to improve dish descriptions or prepare social media promotions. Review and edit the result before publishing.</p><div class="tools"><div class="tool"><strong>🍛 Menu descriptions</strong><span class="muted">Make a dish sound clear and appetising without inventing ingredients.</span></div><div class="tool"><strong>📣 Promotional captions</strong><span class="muted">Draft a social post with a call to action and relevant hashtags.</span></div><div class="tool"><strong>💬 WhatsApp broadcasts</strong><span class="muted">Prepare respectful messages for customers.</span></div><div class="tool"><strong>🗓️ Campaign planning</strong><span class="muted">Plan a small three-post campaign.</span></div><div class="tool"><strong>⭐ Review replies</strong><span class="muted">Respond professionally to customer feedback.</span></div><div class="tool"><strong>💬 Customer chat reply</strong><span class="muted">Paste a customer question and draft a helpful reply for you to review and send.</span></div><div class="tool"><strong>💡 Menu ideas & pricing</strong><span class="muted">Brainstorm menu options and a pricing worksheet.</span></div></div></section>
-{{if .Notice}}<div class="notice" role="status">{{.Notice}}</div>{{end}}
-<section class="card"><form action="/vendor/ai/generate" method="post"><div class="grid"><div><label for="tool">What do you want to create?</label><select id="tool" name="tool"><option value="description" {{if eq .Tool "description"}}selected{{end}}>Menu description</option><option value="social" {{if eq .Tool "social"}}selected{{end}}>Social media promotion</option><option value="menu_ideas" {{if eq .Tool "menu_ideas"}}selected{{end}}>Menu item ideas</option><option value="whatsapp" {{if eq .Tool "whatsapp"}}selected{{end}}>WhatsApp broadcast</option><option value="campaign" {{if eq .Tool "campaign"}}selected{{end}}>3-post campaign plan</option><option value="review_reply" {{if eq .Tool "review_reply"}}selected{{end}}>Customer review reply</option><option value="pricing" {{if eq .Tool "pricing"}}selected{{end}}>Pricing worksheet</option><option value="customer_chat" {{if eq .Tool "customer_chat"}}selected{{end}}>Customer chat reply</option></select></div><div><label for="dish_name">Dish or product name</label><input id="dish_name" name="dish_name" maxlength="100" value="{{.DishName}}" placeholder="e.g. Jollof rice with grilled chicken or customer topic"></div><div class="full"><label for="customer_message">Customer message <span class="muted" style="display:inline">(for Customer chat reply)</span></label><textarea id="customer_message" name="customer_message" maxlength="1200" placeholder="Paste the customer question or message here. Remove private information first.">{{.CustomerMessage}}</textarea><small>Up to 1,200 characters. Do not paste phone numbers, addresses, payment details, passwords, PINs, or OTPs.</small></div><div class="full"><label for="details">Shop facts / details to use</label><textarea id="details" name="details" maxlength="700" placeholder="For customer chat, add confirmed prices, delivery areas, opening hours, or other facts the assistant may use. For other tools, mention ingredients, portion, or flavour.">{{.Details}}</textarea><small>Up to 700 characters. The assistant must not invent missing information.</small></div><div class="full"><label for="tone">Tone</label><input id="tone" name="tone" maxlength="80" value="{{.Tone}}" placeholder="e.g. warm, playful, premium"></div><div class="full"><button class="button" type="submit">✨ Generate draft</button><small>Generated text is a draft only. It is not automatically published or saved to your menu.</small></div></div></form></section>
-{{if .Result}}<section class="card"><h2>Your draft</h2><div class="result" id="ai-result">{{.Result}}</div><button class="copy" type="button" id="copy-result">Copy draft</button><span class="muted" id="copy-status" aria-live="polite"></span></section>{{end}}
-</main><script>(function(){var b=document.getElementById('copy-result');if(b){b.addEventListener('click',function(){var text=document.getElementById('ai-result').innerText;navigator.clipboard.writeText(text).then(function(){document.getElementById('copy-status').textContent=' Copied.'}).catch(function(){document.getElementById('copy-status').textContent=' Select the draft text and copy it manually.'})})}var tool=document.getElementById('tool'),dish=document.getElementById('dish_name'),message=document.getElementById('customer_message');function syncAIFields(){var chat=tool.value==='customer_chat';dish.required=!chat;message.required=chat;dish.closest('div').style.opacity=chat?'.75':'1';message.closest('div').style.borderLeft=chat?'3px solid #14532d':''}if(tool){tool.addEventListener('change',syncAIFields);syncAIFields()}})();</script>
-</body></html>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <meta name="theme-color" content="#174a32">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Writing Assistant - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/vendor-ai.css">
+</head>
+<body class="ai-page">
+<header class="ai-topbar">
+    <a class="ai-brand" href="/">
+        <img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo">
+        <span class="ai-brand-copy">{{brandName}}<small>Vendor workspace</small></span>
+    </a>
+    <nav class="ai-nav" aria-label="Vendor navigation">
+        <a href="/vendor/orders">Orders</a>
+        <a href="/messages">Messages</a>
+        <a href="/vendor/menu">My menu</a>
+        <a href="/vendor/profile">Shop profile</a>
+        <a href="/vendor/billing">Billing</a>
+        <a class="active" href="/vendor/ai" aria-current="page">AI assistant</a>
+    </nav>
+</header>
+
+<main class="ai-main">
+    <section class="ai-hero">
+        <div>
+            <div class="ai-kicker">AI-powered vendor tools</div>
+            <h1>Turn your shop ideas into polished content.</h1>
+            <p>Create strong first drafts for your menu, promotions, customer replies and campaigns. The assistant works from the facts you provide, so you stay in control before anything is published or sent.</p>
+        </div>
+        <aside class="ai-hero-card" aria-label="AI assistant guidance">
+            <div class="ai-orb">✦</div>
+            <strong>Your content, your approval.</strong>
+            <span>Review every generated draft, adjust the wording, and publish or send it only when it feels right for your shop.</span>
+        </aside>
+    </section>
+
+    {{if .Notice}}<div class="ai-notice" role="status">{{.Notice}}</div>{{end}}
+
+    <section class="ai-workspace">
+        <section class="ai-card ai-form-card">
+            <div class="ai-card-head">
+                <div>
+                    <h2>Create a draft</h2>
+                    <p>Choose a task, add the relevant facts, then generate a draft for <strong>{{.VendorName}}</strong>.</p>
+                </div>
+                <span class="ai-step" aria-hidden="true">01</span>
+            </div>
+
+            <form class="ai-form" action="/vendor/ai/generate" method="post">
+                <div class="ai-field full">
+                    <label for="tool">What do you want to create?</label>
+                    <select id="tool" name="tool">
+                        <option value="description" {{if eq .Tool "description"}}selected{{end}}>Menu description</option>
+                        <option value="social" {{if eq .Tool "social"}}selected{{end}}>Social media promotion</option>
+                        <option value="menu_ideas" {{if eq .Tool "menu_ideas"}}selected{{end}}>Menu item ideas</option>
+                        <option value="whatsapp" {{if eq .Tool "whatsapp"}}selected{{end}}>WhatsApp broadcast</option>
+                        <option value="campaign" {{if eq .Tool "campaign"}}selected{{end}}>3-post campaign plan</option>
+                        <option value="review_reply" {{if eq .Tool "review_reply"}}selected{{end}}>Customer review reply</option>
+                        <option value="pricing" {{if eq .Tool "pricing"}}selected{{end}}>Pricing worksheet</option>
+                        <option value="customer_chat" {{if eq .Tool "customer_chat"}}selected{{end}}>Customer chat reply</option>
+                    </select>
+                    <small class="ai-help">Pick the format that best matches your goal. You can edit the result afterwards.</small>
+                </div>
+
+                <div class="ai-field" id="dish-field">
+                    <label for="dish_name">Dish or product name</label>
+                    <input id="dish_name" name="dish_name" maxlength="100" value="{{.DishName}}" placeholder="e.g. Jollof rice with grilled chicken">
+                    <small class="ai-help">Use a clear name customers will recognize.</small>
+                </div>
+
+                <div class="ai-field">
+                    <label for="tone">Tone <span class="optional">optional</span></label>
+                    <input id="tone" name="tone" maxlength="80" value="{{.Tone}}" placeholder="e.g. warm, playful, premium">
+                    <small class="ai-help">Leave blank for a natural, professional tone.</small>
+                </div>
+
+                <div class="ai-field full">
+                    <label for="customer_message">Customer message <span class="optional">(customer chat only)</span></label>
+                    <textarea id="customer_message" name="customer_message" maxlength="1200" placeholder="Paste the customer question or message here. Remove private information first.">{{.CustomerMessage}}</textarea>
+                    <small class="ai-help">Up to 1,200 characters. Never paste phone numbers, addresses, payment details, passwords, PINs or OTPs.</small>
+                </div>
+
+                <div class="ai-field full">
+                    <label for="details">Shop facts and details</label>
+                    <textarea id="details" name="details" maxlength="700" placeholder="Add confirmed prices, ingredients, portion size, delivery areas, opening hours, flavours, or other facts the assistant should use.">{{.Details}}</textarea>
+                    <small class="ai-help">Only include facts you can confirm. The assistant should not invent missing information.</small>
+                </div>
+
+                <div class="ai-field full">
+                    <div class="ai-submit-row">
+                        <button class="ai-button" type="submit"><span aria-hidden="true">✦</span> Generate draft</button>
+                        <span class="ai-disclaimer">Generated text is a draft only. It is not automatically published, saved to your menu, or sent to customers.</span>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <aside class="ai-card ai-tools">
+            <h2>What you can create</h2>
+            <p>Quickly switch between common vendor tasks.</p>
+            <div class="ai-tool-list">
+                <button class="ai-tool" type="button" data-tool="description"><strong>🍛 Menu descriptions</strong><span>Clear, appetising copy based on your facts.</span></button>
+                <button class="ai-tool" type="button" data-tool="social"><strong>📣 Promotions</strong><span>Social captions with a useful call to action.</span></button>
+                <button class="ai-tool" type="button" data-tool="whatsapp"><strong>💬 WhatsApp broadcasts</strong><span>Respectful customer-facing messages.</span></button>
+                <button class="ai-tool" type="button" data-tool="campaign"><strong>🗓️ Campaign planning</strong><span>A simple three-post content plan.</span></button>
+                <button class="ai-tool" type="button" data-tool="review_reply"><strong>⭐ Review replies</strong><span>Professional responses to feedback.</span></button>
+                <button class="ai-tool" type="button" data-tool="customer_chat"><strong>💬 Customer chat reply</strong><span>A helpful draft for a customer question.</span></button>
+                <button class="ai-tool" type="button" data-tool="menu_ideas"><strong>💡 Menu ideas</strong><span>Brainstorm new menu options.</span></button>
+                <button class="ai-tool" type="button" data-tool="pricing"><strong>₦ Pricing worksheet</strong><span>Organize a practical pricing draft.</span></button>
+            </div>
+        </aside>
+    </section>
+
+    {{if .Result}}
+    <section class="ai-card ai-result" style="margin-top:22px">
+        <div class="ai-result-head">
+            <div>
+                <h2>Your draft is ready</h2>
+                <p>Review the wording and facts before using it.</p>
+            </div>
+            <div>
+                <button class="ai-copy" type="button" id="copy-result">Copy draft</button>
+                <span class="ai-copy-status" id="copy-status" aria-live="polite"></span>
+            </div>
+        </div>
+        <div class="ai-output" id="ai-result">{{.Result}}</div>
+        <div class="ai-footer-note"><span aria-hidden="true">✓</span><span>Tip: AI can help with wording, but you should verify prices, ingredients, availability and other shop-specific facts yourself.</span></div>
+    </section>
+    {{end}}
+</main>
+
+<script>
+(function(){
+  var tool=document.getElementById('tool');
+  var dish=document.getElementById('dish_name');
+  var message=document.getElementById('customer_message');
+  var dishField=document.getElementById('dish-field');
+  var messageField=message ? message.closest('.ai-field') : null;
+  var toolButtons=document.querySelectorAll('.ai-tool');
+
+  function syncAIFields(){
+    if(!tool) return;
+    var chat=tool.value==='customer_chat';
+    if(dish) dish.required=!chat;
+    if(message) message.required=chat;
+    if(dishField) dishField.classList.toggle('chat-mode',chat);
+    if(messageField) messageField.classList.toggle('chat-mode',!chat);
+    toolButtons.forEach(function(btn){
+      btn.classList.toggle('active',btn.getAttribute('data-tool')===tool.value);
+    });
+  }
+
+  if(tool){
+    tool.addEventListener('change',syncAIFields);
+    toolButtons.forEach(function(btn){
+      btn.addEventListener('click',function(){
+        tool.value=btn.getAttribute('data-tool');
+        tool.dispatchEvent(new Event('change'));
+        if(tool.value==='customer_chat' && message) message.focus();
+        else if(dish) dish.focus();
+      });
+    });
+    syncAIFields();
+  }
+
+  var copy=document.getElementById('copy-result');
+  if(copy){
+    copy.addEventListener('click',function(){
+      var output=document.getElementById('ai-result');
+      var status=document.getElementById('copy-status');
+      if(!output) return;
+      navigator.clipboard.writeText(output.innerText).then(function(){
+        status.textContent='Copied';
+        setTimeout(function(){status.textContent=''},1800);
+      }).catch(function(){
+        status.textContent='Select the draft and copy manually.';
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -222,6 +222,18 @@ func Connect() (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
+	// delivered_at powers the chat ticks: sent (neither set), delivered (delivered_at set), read (read_at set).
+	_, err = db.Exec(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	// Messages that were already read before this column existed must also count as delivered.
+	_, err = db.Exec(`UPDATE messages SET delivered_at = read_at WHERE delivered_at IS NULL AND read_at IS NOT NULL`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_message_threads_customer_updated ON message_threads(customer_id, updated_at DESC)`)
 	if err != nil {
 		db.Close()

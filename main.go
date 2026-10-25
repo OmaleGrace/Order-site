@@ -37,7 +37,6 @@ func main() {
 
 	h := handlers.New(db)
 
-	// Create our own router.
 	mux := http.NewServeMux()
 
 	// Static files
