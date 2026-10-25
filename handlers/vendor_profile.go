@@ -54,8 +54,8 @@ func (h *Handlers) VendorProfile(w http.ResponseWriter, r *http.Request) {
 
 	p.DeliveryFeeNaira = fmt.Sprintf("%.2f", float64(feeKobo)/100)
 
-var savedAccount string
-if err := h.DB.QueryRow(`
+	var savedAccount string
+	if err := h.DB.QueryRow(`
 	SELECT COALESCE(payout_bank_name,''),
 	       COALESCE(payout_bank_code,''),
 	       COALESCE(payout_account_number,''),
@@ -64,20 +64,20 @@ if err := h.DB.QueryRow(`
 	FROM vendors
 	WHERE id = $1
 `, vendorID).Scan(
-	&p.PayoutBankName,
-	&p.PayoutBankCode,
-	&savedAccount,
-	&p.PayoutAccountName,
-	&p.PayoutVerified,
-); err != nil {
-	log.Printf("vendor profile: payout account query failed: %v", err)
-	errors.Render(w, "Could not load payout account details", http.StatusInternalServerError)
-	return
-}
+		&p.PayoutBankName,
+		&p.PayoutBankCode,
+		&savedAccount,
+		&p.PayoutAccountName,
+		&p.PayoutVerified,
+	); err != nil {
+		log.Printf("vendor profile: payout account query failed: %v", err)
+		errors.Render(w, "Could not load payout account details", http.StatusInternalServerError)
+		return
+	}
 
-if len(savedAccount) == 10 {
-	p.PayoutAccountNumber = "••••••" + savedAccount[6:]
-}
+	if len(savedAccount) == 10 {
+		p.PayoutAccountNumber = "••••••" + savedAccount[6:]
+	}
 	areaRows, areaErr := h.DB.Query(`SELECT state, lga FROM vendor_delivery_areas WHERE vendor_id = $1 ORDER BY state, lga`, vendorID)
 	if areaErr != nil {
 		log.Printf("vendor profile: delivery areas query failed: %v", areaErr)

@@ -7,6 +7,23 @@
     <title>Sign Up - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/auth.css">
+    <style>
+        .signup-name-grid,.signup-location-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .signup-name-grid .form-group,.signup-location-grid .form-group{margin-bottom:0}
+        .signup-section-label{margin:25px 0 12px;padding-top:2px;color:var(--green);font-size:.78rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+        .optional-label{color:var(--muted);font-size:.76rem;font-weight:650}
+        .terms-box{display:flex;align-items:flex-start;gap:11px;margin:5px 0 18px;padding:13px 14px;border:1px solid #dce4db;border-radius:13px;background:#f8faf7}
+        .terms-box input{width:19px;height:19px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--green);cursor:pointer}
+        .terms-box label{margin:0;color:#526057;font-size:.82rem;line-height:1.55;cursor:pointer}
+        .terms-box a{color:var(--green);font-weight:800;text-decoration:none}
+        .terms-box a:hover{text-decoration:underline}
+        .terms-box.invalid{border-color:#c0392b;background:#fff8f7}
+        .select-wrap{position:relative}
+        .select-wrap select{width:100%;box-sizing:border-box;padding:14px 15px;border:1.5px solid #dce4db;border-radius:13px;font:inherit;background:#fbfcfa;color:#25362c;appearance:auto}
+        .select-wrap select:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 4px rgba(23,74,50,.10)}
+        .signup-submit-note{margin:10px 0 0;color:var(--muted);font-size:.75rem;line-height:1.45;text-align:center}
+        @media(max-width:560px){.signup-name-grid,.signup-location-grid{grid-template-columns:1fr;gap:0}.signup-name-grid .form-group,.signup-location-grid .form-group{margin-bottom:18px}}
+    </style>
 </head>
 
 <body>
@@ -22,19 +39,33 @@
             <div class="auth-mobile-brand"><img src="/static/img/enie-mark.svg" alt="ENIE logo"><span>{{brandName}}</span></div>
             <p class="auth-kicker">Join the table</p>
             <h1>Create your ENIE account.</h1>
-            <p class="auth-subtext">A little closer to the food you love.</p>
+            <p class="auth-subtext">Tell us a little about yourself so we can give you a better experience.</p>
             <div class="form-banner" id="form-banner" role="status" aria-live="polite" hidden></div>
 
             <form action="/signup" method="post" novalidate>
+                <p class="signup-section-label">Personal details</p>
+                <div class="signup-name-grid">
+                    <div class="form-group">
+                        <label for="first_name">First name</label>
+                        <input type="text" id="first_name" name="first_name" autocomplete="given-name" maxlength="60" required>
+                        <p class="field-error" id="first-name-error" aria-live="polite"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="middle_name">Middle name <span class="optional-label">(optional)</span></label>
+                        <input type="text" id="middle_name" name="middle_name" autocomplete="additional-name" maxlength="60">
+                        <p class="field-error" id="middle-name-error" aria-live="polite"></p>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
-                    <p class="field-error" id="name-error" aria-live="polite"></p>
+                    <label for="last_name">Last name</label>
+                    <input type="text" id="last_name" name="last_name" autocomplete="family-name" maxlength="60" required>
+                    <p class="field-error" id="last-name-error" aria-live="polite"></p>
                 </div>
 
+                <p class="signup-section-label">Contact & location</p>
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" autocomplete="email" required>
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" autocomplete="email" maxlength="254" required>
                     <p class="field-error" id="email-error" aria-live="polite"></p>
                 </div>
 
@@ -45,60 +76,71 @@
                     <p class="field-error" id="phone-error" aria-live="polite"></p>
                 </div>
 
-                <div class="form-group">
-                    <label for="delivery_area">Delivery area</label>
-                    <input type="text" id="delivery_area" name="delivery_area" autocomplete="address-level2" maxlength="120" placeholder="e.g. Yaba, Ikeja, Gwarinpa" required>
-                    <p class="field-help">Your neighbourhood or area helps us show relevant vendors and delivery options.</p>
-                    <p class="field-error" id="delivery-area-error" aria-live="polite"></p>
+                <div class="signup-location-grid">
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <div class="select-wrap">
+                            <select id="country" name="country" autocomplete="country-name" required>
+                                <option value="Nigeria" selected>Nigeria</option>
+                            </select>
+                        </div>
+                        <p class="field-error" id="country-error" aria-live="polite"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State</label>
+                        <div class="select-wrap">
+                            <select id="state" name="state" autocomplete="address-level1" required>
+                                <option value="">Select your state</option>
+                                <option>Abia</option><option>Adamawa</option><option>Akwa Ibom</option><option>Anambra</option>
+                                <option>Bauchi</option><option>Bayelsa</option><option>Benue</option><option>Borno</option>
+                                <option>Cross River</option><option>Delta</option><option>Ebonyi</option><option>Edo</option>
+                                <option>Ekiti</option><option>Enugu</option><option>FCT (Abuja)</option><option>Gombe</option>
+                                <option>Imo</option><option>Jigawa</option><option>Kaduna</option><option>Kano</option>
+                                <option>Katsina</option><option>Kebbi</option><option>Kogi</option><option>Kwara</option>
+                                <option>Lagos</option><option>Nasarawa</option><option>Niger</option><option>Ogun</option>
+                                <option>Ondo</option><option>Osun</option><option>Oyo</option><option>Plateau</option>
+                                <option>Rivers</option><option>Sokoto</option><option>Taraba</option><option>Yobe</option><option>Zamfara</option>
+                            </select>
+                        </div>
+                        <p class="field-error" id="state-error" aria-live="polite"></p>
+                    </div>
                 </div>
 
+                <p class="signup-section-label">Secure your account</p>
                 <div class="form-group password-field">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" autocomplete="new-password" required>
                     <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
-                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
-                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
+                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     </button>
                     <p class="field-error" id="password-error" aria-live="polite"></p>
-                    <p class="field-help">Use at least 8 characters with uppercase, lowercase, a number and a special character.</p>
+                    <p class="field-help">At least 8 characters with uppercase, lowercase, a number and a special character.</p>
                 </div>
 
                 <div class="form-group password-field">
                     <label for="confirm_password">Confirm password</label>
                     <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
                     <button type="button" class="toggle-password" data-target="confirm_password" aria-label="Show password">
-                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
-                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                            <line x1="1" y1="1" x2="23" y2="23"/>
-                        </svg>
+                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     </button>
                     <p class="field-error" id="confirm-password-error" aria-live="polite"></p>
                 </div>
 
+                <div class="terms-box" id="terms-box">
+                    <input type="checkbox" id="terms_accepted" name="terms_accepted" required>
+                    <label for="terms_accepted">I have read and agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and acknowledge the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</label>
+                </div>
+                <p class="field-error" id="terms-error" aria-live="polite"></p>
+
                 <button type="submit">Create Account</button>
+                <p class="signup-submit-note">Your account details are protected and used to provide the ENIE service.</p>
             </form>
 
             <div class="auth-divider"><span>or</span></div>
-
-            <a href="/auth/google" class="google-btn">
-                <img src="/static/img/google-icon.svg" alt="" class="google-icon">
-                Continue with Google
-            </a>
-
-            <p class="auth-footer">
-                Already have an account? <a href="/login">Login</a>
-            </p>
-
+            <a href="/auth/google" class="google-btn"><img src="/static/img/google-icon.svg" alt="" class="google-icon">Continue with Google</a>
+            <p class="auth-footer">Already have an account? <a href="/login">Login</a></p>
             <a href="/" class="back-link">← Back to Home</a>
         </div>
     </main>
@@ -116,37 +158,27 @@
     });
 
     (function () {
-        var nameEl = document.getElementById('name');
-        var emailEl = document.getElementById('email');
-        var phoneEl = document.getElementById('phone');
-        var areaEl = document.getElementById('delivery_area');
-        var passEl = document.getElementById('password');
-        var confirmEl = document.getElementById('confirm_password');
+        var first = document.getElementById('first_name');
+        var middle = document.getElementById('middle_name');
+        var last = document.getElementById('last_name');
+        var email = document.getElementById('email');
+        var phone = document.getElementById('phone');
+        var country = document.getElementById('country');
+        var state = document.getElementById('state');
+        var pass = document.getElementById('password');
+        var confirm = document.getElementById('confirm_password');
+        var terms = document.getElementById('terms_accepted');
+        var termsBox = document.getElementById('terms-box');
         var submitBtn = document.querySelector('form button[type="submit"]');
 
-        function checkName(v) {
-            var words = v.trim().split(/\s+/).filter(Boolean);
-            if (words.length < 2) return 'Enter your full name, with words separated by a space';
-            for (var i = 0; i < words.length; i++) {
-                if ([...words[i]].length < 3) return 'Each part of your name must be at least 3 letters';
-            }
-            return '';
+        function checkName(v, label, required) {
+            v = v.trim();
+            if (!v) return required ? label + ' is required' : '';
+            if ([...v].length < 2) return label + ' must be at least 2 letters';
+            return /^[\p{L}\s'\-]+$/u.test(v) ? '' : label + ' can only contain letters, spaces, hyphens or apostrophes';
         }
-
-        function checkEmail(v) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Enter a valid email address';
-        }
-
-        function checkPhone(v) {
-            var compact = v.trim().replace(/[\s-]/g, '');
-            return /^(?:0\d{10}|\+234\d{10}|234\d{10})$/.test(compact) ? '' : 'Enter a valid Nigerian phone number';
-        }
-
-        function checkArea(v) {
-            var value = v.trim();
-            return value.length >= 2 && value.length <= 120 ? '' : 'Enter your delivery area or neighbourhood';
-        }
-
+        function checkEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Enter a valid email address'; }
+        function checkPhone(v) { return /^(?:0\d{10}|\+234\d{10}|234\d{10})$/.test(v.trim().replace(/[\s-]/g, '')) ? '' : 'Enter a valid Nigerian phone number'; }
         function checkPassword(v) {
             if ([...v].length < 8) return 'Password must be at least 8 characters';
             if (!/\p{Lu}/u.test(v)) return 'Add a capital letter';
@@ -157,85 +189,46 @@
         }
 
         var fields = [
-            { el: nameEl, check: checkName, msg: document.getElementById('name-error') },
-            { el: emailEl, check: checkEmail, msg: document.getElementById('email-error') },
-            { el: phoneEl, check: checkPhone, msg: document.getElementById('phone-error') },
-            { el: areaEl, check: checkArea, msg: document.getElementById('delivery-area-error') },
-            { el: passEl, check: checkPassword, msg: document.getElementById('password-error') },
-            { el: confirmEl, check: function(v) { return v === passEl.value && v !== '' ? '' : 'Passwords do not match'; }, msg: document.getElementById('confirm-password-error') }
+            {el:first, check:function(v){return checkName(v,'First name',true)}, msg:document.getElementById('first-name-error')},
+            {el:middle, check:function(v){return checkName(v,'Middle name',false)}, msg:document.getElementById('middle-name-error')},
+            {el:last, check:function(v){return checkName(v,'Last name',true)}, msg:document.getElementById('last-name-error')},
+            {el:email, check:checkEmail, msg:document.getElementById('email-error')},
+            {el:phone, check:checkPhone, msg:document.getElementById('phone-error')},
+            {el:country, check:function(v){return v==='Nigeria'?'':'Select Nigeria as your country'}, msg:document.getElementById('country-error')},
+            {el:state, check:function(v){return v?'':'Select your state'}, msg:document.getElementById('state-error')},
+            {el:pass, check:checkPassword, msg:document.getElementById('password-error')},
+            {el:confirm, check:function(v){return v===pass.value&&v!==''?'':'Passwords do not match'}, msg:document.getElementById('confirm-password-error')}
         ];
-
-        function update(f) {
-            var err = f.check(f.el.value);
-            f.msg.textContent = err;
-            f.el.classList.toggle('invalid', err !== '');
+        function update(f) { var err=f.check(f.el.value); f.msg.textContent=err; if(f.el.tagName==='INPUT') f.el.classList.toggle('invalid',!!err); return err; }
+        function refresh() {
+            var valid=fields.every(function(f){return f.check(f.el.value)==='';}) && terms.checked;
+            submitBtn.disabled=!valid;
+            termsBox.classList.toggle('invalid', !terms.checked && termsBox.dataset.touched==='1');
+            document.getElementById('terms-error').textContent = (!terms.checked && termsBox.dataset.touched==='1') ? 'You must accept the terms before creating your account' : '';
         }
-
-        function refreshSubmit() {
-            submitBtn.disabled = !fields.every(function (f) {
-                return f.check(f.el.value) === '';
-            });
-        }
-
-        fields.forEach(function (f) {
-            f.el.addEventListener('input', function () { update(f); refreshSubmit(); });
-            f.el.addEventListener('blur', function () { if (f.el.value !== '') update(f); });
-        });
-
-        submitBtn.disabled = true;
+        fields.forEach(function(f){f.el.addEventListener('input',function(){update(f);refresh()});f.el.addEventListener('change',function(){update(f);refresh()});f.el.addEventListener('blur',function(){if(f.el.value)update(f);refresh()})});
+        terms.addEventListener('change',function(){termsBox.dataset.touched='1';refresh()});
+        termsBox.addEventListener('click',function(){termsBox.dataset.touched='1';setTimeout(refresh,0)});
+        submitBtn.disabled=true;
     })();
     </script>
 
-        <script>
+    <script>
     (function () {
         var form = document.querySelector('form[action="/signup"]');
         var banner = document.getElementById('form-banner');
         var btn = form.querySelector('button[type="submit"]');
-
-        function show(kind, text) {
-            banner.className = 'form-banner ' + kind;
-            banner.textContent = text;
-            banner.hidden = false;
-        }
-
-        form.addEventListener('submit', function (e) {
+        function show(kind,text){banner.className='form-banner '+kind;banner.textContent=text;banner.hidden=false;}
+        form.addEventListener('submit',function(e){
             e.preventDefault();
-            if (btn.disabled) return;
-
-            var label = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Creating account...';
-            banner.hidden = true;
-
-            fetch('/signup', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
-                },
-                body: new URLSearchParams(new FormData(form)).toString()
-            })
-                .then(function (r) {
-                    return r.json().then(function (d) { return { ok: r.ok, d: d }; });
-                })
-                .then(function (res) {
-                    if (res.ok && res.d.ok) {
-                        show('success', '✅ Account created successfully! Taking you to the menu...');
-                        form.querySelectorAll('input').forEach(function (i) { i.disabled = true; });
-                        btn.textContent = 'Account created';
-                        setTimeout(function () { location.href = res.d.redirect || '/menu'; }, 2500);
-                    } else {
-                        show('error', (res.d && res.d.error) || 'Something went wrong. Please try again.');
-                        btn.disabled = false;
-                        btn.textContent = label;
-                    }
-                })
-                .catch(function () {
-                    show('error', 'Could not reach the server. Check your connection and try again.');
-                    btn.disabled = false;
-                    btn.textContent = label;
-                });
+            if(btn.disabled)return;
+            var label=btn.textContent;btn.disabled=true;btn.textContent='Creating account...';banner.hidden=true;
+            fetch('/signup',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},body:new URLSearchParams(new FormData(form)).toString()})
+            .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d}})})
+            .then(function(res){
+                if(res.ok&&res.d.ok){show('success','✅ Account created successfully! Taking you to the menu...');form.querySelectorAll('input,select').forEach(function(i){i.disabled=true});btn.textContent='Account created';setTimeout(function(){location.href=res.d.redirect||'/menu'},1200)}
+                else{show('error',(res.d&&res.d.error)||'Something went wrong. Please try again.');btn.disabled=false;btn.textContent=label}
+            }).catch(function(){show('error','Could not reach the server. Check your connection and try again.');btn.disabled=false;btn.textContent=label});
         });
     })();
     </script>

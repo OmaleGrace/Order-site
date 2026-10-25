@@ -9,6 +9,26 @@ import (
 	"unicode/utf8"
 )
 
+func validateNamePart(value, label string, required bool) error {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		if required {
+			return errors.New(label + " is required")
+		}
+		return nil
+	}
+	if utf8.RuneCountInString(value) < 2 {
+		return errors.New(label + " must be at least 2 letters")
+	}
+	for _, r := range value {
+		if unicode.IsLetter(r) || r == '-' || r == '\'' || unicode.IsSpace(r) {
+			continue
+		}
+		return errors.New(label + " can only contain letters, spaces, hyphens or apostrophes")
+	}
+	return nil
+}
+
 func validateName(name string) error {
 	words := strings.Fields(name)
 	if len(words) < 2 {

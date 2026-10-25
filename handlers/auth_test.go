@@ -28,9 +28,17 @@ func setupTestDB(t *testing.T) *sql.DB {
 		CREATE TABLE IF NOT EXISTS users (
 			id SERIAL PRIMARY KEY,
 			name TEXT NOT NULL,
+			first_name TEXT NOT NULL DEFAULT '',
+			middle_name TEXT NOT NULL DEFAULT '',
+			last_name TEXT NOT NULL DEFAULT '',
 			email TEXT UNIQUE NOT NULL,
 			password TEXT NOT NULL,
-			is_admin BOOLEAN NOT NULL DEFAULT FALSE
+			is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+			phone TEXT,
+			country TEXT NOT NULL DEFAULT 'Nigeria',
+			state TEXT NOT NULL DEFAULT '',
+			terms_accepted_at TIMESTAMPTZ,
+			delivery_area TEXT
 		);
 
 		CREATE TABLE IF NOT EXISTS sessions (

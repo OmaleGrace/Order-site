@@ -250,6 +250,9 @@ CREATE TABLE public.sessions (
 CREATE TABLE public.users (
     id integer NOT NULL,
     name text NOT NULL,
+    first_name text NOT NULL DEFAULT ''::text,
+    middle_name text NOT NULL DEFAULT ''::text,
+    last_name text NOT NULL DEFAULT ''::text,
     email text NOT NULL,
     password text,
     auth_provider text DEFAULT 'local'::text NOT NULL,
@@ -257,7 +260,10 @@ CREATE TABLE public.users (
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     profile_picture text,
     phone text,
-    delivery_area text
+    country text NOT NULL DEFAULT 'Nigeria'::text,
+    state text NOT NULL DEFAULT ''::text,
+    delivery_area text,
+    terms_accepted_at timestamp with time zone
 );
 
 

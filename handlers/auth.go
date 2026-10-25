@@ -129,14 +129,32 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		name := strings.TrimSpace(r.FormValue("name"))
+		firstName := strings.TrimSpace(r.FormValue("first_name"))
+		middleName := strings.TrimSpace(r.FormValue("middle_name"))
+		lastName := strings.TrimSpace(r.FormValue("last_name"))
+		nameParts := []string{firstName}
+		if middleName != "" {
+			nameParts = append(nameParts, middleName)
+		}
+		nameParts = append(nameParts, lastName)
+		name := strings.Join(nameParts, " ")
 		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
 		phone := normalizePhone(strings.TrimSpace(r.FormValue("phone")))
-		deliveryArea := strings.TrimSpace(r.FormValue("delivery_area"))
+		country := strings.TrimSpace(r.FormValue("country"))
+		state := strings.TrimSpace(r.FormValue("state"))
 		password := r.FormValue("password")
 		confirmPassword := r.FormValue("confirm_password")
+		termsAccepted := r.FormValue("terms_accepted") == "on"
 
-		if err := validateName(name); err != nil {
+		if err := validateNamePart(firstName, "First name", true); err != nil {
+			signupFail(w, r, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validateNamePart(middleName, "Middle name", false); err != nil {
+			signupFail(w, r, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := validateNamePart(lastName, "Last name", true); err != nil {
 			signupFail(w, r, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -148,8 +166,12 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			signupFail(w, r, "Enter a valid Nigerian phone number, for example 08012345678 or +2348012345678", http.StatusBadRequest)
 			return
 		}
-		if len(deliveryArea) < 2 || len(deliveryArea) > 120 {
-			signupFail(w, r, "Enter your delivery area or neighbourhood", http.StatusBadRequest)
+		if country != "Nigeria" {
+			signupFail(w, r, "Please select Nigeria as your country", http.StatusBadRequest)
+			return
+		}
+		if !validState(state) {
+			signupFail(w, r, "Select a valid Nigerian state", http.StatusBadRequest)
 			return
 		}
 		if err := validatePassword(password); err != nil {
@@ -158,6 +180,10 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		}
 		if password != confirmPassword {
 			signupFail(w, r, "Passwords do not match", http.StatusBadRequest)
+			return
+		}
+		if !termsAccepted {
+			signupFail(w, r, "Please read and accept the Terms of Service and Privacy Policy before creating your account", http.StatusBadRequest)
 			return
 		}
 
@@ -175,8 +201,9 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		err = h.DB.QueryRow(
-			"INSERT INTO users (name, email, password, phone, delivery_area) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-			name, email, string(hashedPassword), phone, deliveryArea,
+			`INSERT INTO users (name, first_name, middle_name, last_name, email, password, phone, country, state, terms_accepted_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id`,
+			name, firstName, middleName, lastName, email, string(hashedPassword), phone, country, state,
 		).Scan(&userID)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
@@ -207,7 +234,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		})
 
 		go func() {
-			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", html.EscapeString(name))); err != nil {
+			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", html.EscapeString(firstName))); err != nil {
 				fmt.Println("Welcome email error:", err)
 			}
 		}()
