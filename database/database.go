@@ -103,6 +103,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_picture TEXT;
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS delivery_area TEXT;
 	`)
 	if err != nil {
 		db.Close()

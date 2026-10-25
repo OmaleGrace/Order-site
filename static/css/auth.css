@@ -89,3 +89,4 @@ form button[type="submit"]:disabled { opacity:.48; cursor:not-allowed; box-shado
  .auth-main { padding:12px; }
  .auth-wrapper { padding:25px 20px 23px; border-radius:22px; }
 }
+.field-help { color: var(--muted); font-size: .76rem; line-height: 1.45; margin: 6px 0 0; }

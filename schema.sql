@@ -256,7 +256,8 @@ CREATE TABLE public.users (
     is_admin boolean DEFAULT false NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
     profile_picture text,
-    phone text
+    phone text,
+    delivery_area text
 );
 
 

@@ -15,7 +15,7 @@ func TestSignupSuccess(t *testing.T) {
 
 	h := New(db)
 
-	form := "name=Test+User&email=test%40example.com&password=secret123"
+	form := "name=Test+User&email=test%40example.com&phone=08012345678&delivery_area=Yaba&password=Secret123%21&confirm_password=Secret123%21"
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -59,7 +59,7 @@ func TestSignupSuccess(t *testing.T) {
 
 	if err := bcrypt.CompareHashAndPassword(
 		[]byte(storedPassword),
-		[]byte("secret123"),
+		[]byte("Secret123!"),
 	); err != nil {
 		t.Fatal("stored password is not a valid bcrypt hash")
 	}
@@ -80,7 +80,7 @@ func TestSignupDuplicateEmail(t *testing.T) {
 
 	h := New(db)
 
-	form := "name=Another+User&email=duplicate%40example.com&password=secret123"
+	form := "name=Another+User&email=duplicate%40example.com&phone=08012345679&delivery_area=Yaba&password=Secret123%21&confirm_password=Secret123%21"
 
 	req := httptest.NewRequest(
 		http.MethodPost,

@@ -34,8 +34,22 @@
 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" autocomplete="email" required>
                     <p class="field-error" id="email-error" aria-live="polite"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone number</label>
+                    <input type="tel" id="phone" name="phone" inputmode="tel" autocomplete="tel" placeholder="08012345678" required>
+                    <p class="field-help">Used for order and delivery updates.</p>
+                    <p class="field-error" id="phone-error" aria-live="polite"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="delivery_area">Delivery area</label>
+                    <input type="text" id="delivery_area" name="delivery_area" autocomplete="address-level2" maxlength="120" placeholder="e.g. Yaba, Ikeja, Gwarinpa" required>
+                    <p class="field-help">Your neighbourhood or area helps us show relevant vendors and delivery options.</p>
+                    <p class="field-error" id="delivery-area-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group password-field">
@@ -52,6 +66,23 @@
                         </svg>
                     </button>
                     <p class="field-error" id="password-error" aria-live="polite"></p>
+                    <p class="field-help">Use at least 8 characters with uppercase, lowercase, a number and a special character.</p>
+                </div>
+
+                <div class="form-group password-field">
+                    <label for="confirm_password">Confirm password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+                    <button type="button" class="toggle-password" data-target="confirm_password" aria-label="Show password">
+                        <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;">
+                            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                    </button>
+                    <p class="field-error" id="confirm-password-error" aria-live="polite"></p>
                 </div>
 
                 <button type="submit">Create Account</button>
@@ -87,7 +118,10 @@
     (function () {
         var nameEl = document.getElementById('name');
         var emailEl = document.getElementById('email');
+        var phoneEl = document.getElementById('phone');
+        var areaEl = document.getElementById('delivery_area');
         var passEl = document.getElementById('password');
+        var confirmEl = document.getElementById('confirm_password');
         var submitBtn = document.querySelector('form button[type="submit"]');
 
         function checkName(v) {
@@ -103,6 +137,16 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim()) ? '' : 'Enter a valid email address';
         }
 
+        function checkPhone(v) {
+            var compact = v.trim().replace(/[\s-]/g, '');
+            return /^(?:0\d{10}|\+234\d{10}|234\d{10})$/.test(compact) ? '' : 'Enter a valid Nigerian phone number';
+        }
+
+        function checkArea(v) {
+            var value = v.trim();
+            return value.length >= 2 && value.length <= 120 ? '' : 'Enter your delivery area or neighbourhood';
+        }
+
         function checkPassword(v) {
             if ([...v].length < 8) return 'Password must be at least 8 characters';
             if (!/\p{Lu}/u.test(v)) return 'Add a capital letter';
@@ -115,7 +159,10 @@
         var fields = [
             { el: nameEl, check: checkName, msg: document.getElementById('name-error') },
             { el: emailEl, check: checkEmail, msg: document.getElementById('email-error') },
-            { el: passEl, check: checkPassword, msg: document.getElementById('password-error') }
+            { el: phoneEl, check: checkPhone, msg: document.getElementById('phone-error') },
+            { el: areaEl, check: checkArea, msg: document.getElementById('delivery-area-error') },
+            { el: passEl, check: checkPassword, msg: document.getElementById('password-error') },
+            { el: confirmEl, check: function(v) { return v === passEl.value && v !== '' ? '' : 'Passwords do not match'; }, msg: document.getElementById('confirm-password-error') }
         ];
 
         function update(f) {

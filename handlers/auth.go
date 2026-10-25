@@ -131,7 +131,10 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 		name := strings.TrimSpace(r.FormValue("name"))
 		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
+		phone := normalizePhone(strings.TrimSpace(r.FormValue("phone")))
+		deliveryArea := strings.TrimSpace(r.FormValue("delivery_area"))
 		password := r.FormValue("password")
+		confirmPassword := r.FormValue("confirm_password")
 
 		if err := validateName(name); err != nil {
 			signupFail(w, r, err.Error(), http.StatusBadRequest)
@@ -141,8 +144,20 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			signupFail(w, r, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if phone == "" || normalizeNigerianPhone(phone) == "" {
+			signupFail(w, r, "Enter a valid Nigerian phone number, for example 08012345678 or +2348012345678", http.StatusBadRequest)
+			return
+		}
+		if len(deliveryArea) < 2 || len(deliveryArea) > 120 {
+			signupFail(w, r, "Enter your delivery area or neighbourhood", http.StatusBadRequest)
+			return
+		}
 		if err := validatePassword(password); err != nil {
 			signupFail(w, r, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if password != confirmPassword {
+			signupFail(w, r, "Passwords do not match", http.StatusBadRequest)
 			return
 		}
 
@@ -160,8 +175,8 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		err = h.DB.QueryRow(
-			"INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id",
-			name, email, string(hashedPassword),
+			"INSERT INTO users (name, email, password, phone, delivery_area) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+			name, email, string(hashedPassword), phone, deliveryArea,
 		).Scan(&userID)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
