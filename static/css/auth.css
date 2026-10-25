@@ -32,7 +32,7 @@
 }
 .auth-brand, .auth-mobile-brand { display:flex; align-items:center; gap:12px; text-decoration:none; font-weight:900; letter-spacing:-.04em; }
 .auth-brand { color:#fff; font-size:1.55rem; margin-bottom:auto; }
-.auth-brand img { width:70px; height:70px; border-radius:18px; object-fit:cover; }
+.auth-brand img { width:56px; height:56px; border-radius:16px; object-fit:contain; box-shadow:0 0 0 1.5px rgba(255,255,255,.3); }
 .auth-eyebrow, .auth-kicker { font-size:.75rem; letter-spacing:.16em; font-weight:850; }
 .auth-eyebrow { margin:clamp(40px,8vh,100px) 0 16px; color:#f3b46b; }
 .auth-story h2 { max-width:500px; margin:0; font-size:clamp(2.2rem,4.3vw,4.2rem); line-height:1.04; letter-spacing:-.055em; }
@@ -46,10 +46,10 @@
     padding:clamp(26px,4vw,46px);
 }
 .auth-wrapper h1 { margin:0 0 7px; font-size:clamp(1.8rem,3vw,2.35rem); line-height:1.1; letter-spacing:-.04em; color:var(--green); }
-.auth-kicker { margin:0 0 12px; color:#b96549; }
+.auth-kicker { margin:0 0 12px; color:#c2500e; }
 .auth-subtext { color:var(--muted); margin:0 0 26px; font-size:.96rem; }
 .auth-mobile-brand { display:none; color:var(--green); font-size:1.3rem; margin-bottom:24px; }
-.auth-mobile-brand img { width:50px; height:50px; object-fit:cover; border-radius:12px; }
+.auth-mobile-brand img { width:44px; height:44px; object-fit:contain; }
 .form-group { position:relative; margin-bottom:18px; }
 .form-group label { display:block; margin-bottom:7px; font-size:.88rem; font-weight:750; color:#34473a; }
 .form-group input { width:100%; padding:14px 15px; border:1.5px solid #dce4db; border-radius:13px; font:inherit; background:#fbfcfa; transition:border-color .18s,box-shadow .18s,background .18s; }
@@ -78,7 +78,7 @@ form button[type="submit"]:disabled { opacity:.48; cursor:not-allowed; box-shado
 .form-banner { margin:0 0 16px; padding:12px 14px; border-radius:12px; font-weight:650; font-size:.92rem; text-align:center; }
 .form-banner[hidden] { display:none; }
 .form-banner.success { background:#e6f4ea; border:1px solid #b7dfc3; color:var(--green); }
-.form-banner.error { background:#fdeceb; border:1px solid #f3c5c1; color:#98503a; }
+.form-banner.error { background:#fdeceb; border:1px solid #f3c5c1; color:#9f3f08; }
 @media(max-width:900px) {
  .auth-main { grid-template-columns:1fr; justify-items:center; padding:22px; gap:22px; }
  .auth-story { display:none; }

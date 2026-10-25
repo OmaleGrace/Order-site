@@ -119,11 +119,30 @@ func aiConfigured() bool { return openAIKey() != "" || geminiAPIKey() != "" }
 // generateAIDraft follows the provider documented in .env.example (OpenAI) and
 // retains Gemini support for deployments that already configured GEMINI_API_KEY.
 func generateAIDraft(ctx context.Context, systemPrompt, userPrompt string, maxOutputTokens int) (string, error) {
+	var lastErr error
 	if key := openAIKey(); key != "" {
-		return generateOpenAIDraft(ctx, key, openAIModel(), systemPrompt, userPrompt, maxOutputTokens)
+		out, err := callWithRetry(ctx, func() (string, error) {
+			return generateOpenAIDraft(ctx, key, openAIModel(), systemPrompt, userPrompt, maxOutputTokens)
+		})
+		if err == nil {
+			return out, nil
+		}
+		lastErr = err
+		if geminiAPIKey() != "" {
+			log.Printf("AI: OpenAI failed, trying Gemini: %v", err)
+		}
 	}
 	if key := geminiAPIKey(); key != "" {
-		return generateGeminiDraft(ctx, key, geminiModel(), systemPrompt, userPrompt, maxOutputTokens)
+		out, err := callWithRetry(ctx, func() (string, error) {
+			return generateGeminiDraft(ctx, key, geminiModel(), systemPrompt, userPrompt, maxOutputTokens)
+		})
+		if err == nil {
+			return out, nil
+		}
+		lastErr = err
+	}
+	if lastErr != nil {
+		return "", lastErr
 	}
 	return "", fmt.Errorf("AI is not configured: set OPENAI_API_KEY or GEMINI_API_KEY")
 }
@@ -150,7 +169,7 @@ func generateOpenAIDraft(ctx context.Context, apiKey, model, systemPrompt, userP
 	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(apiKey))
 	resp, err := vendorAIHTTPClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("OpenAI request failed: %w", err)
+		return "", &aiProviderError{Provider: "OpenAI", Cause: err}
 	}
 	defer resp.Body.Close()
 	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -163,9 +182,9 @@ func generateOpenAIDraft(ctx context.Context, apiKey, model, systemPrompt, userP
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if decoded.Error != nil && decoded.Error.Message != "" {
-			return "", fmt.Errorf("OpenAI API error (HTTP %d): %s", resp.StatusCode, decoded.Error.Message)
+			return "", &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode, Message: decoded.Error.Message}
 		}
-		return "", fmt.Errorf("OpenAI API returned HTTP %d", resp.StatusCode)
+		return "", &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode}
 	}
 	if len(decoded.Choices) == 0 {
 		return "", fmt.Errorf("OpenAI returned no choices")
@@ -239,7 +258,7 @@ func generateGeminiDraft(
 
 	resp, err := vendorAIHTTPClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("Gemini request failed: %w", err)
+		return "", &aiProviderError{Provider: "Gemini", Cause: err}
 	}
 	defer resp.Body.Close()
 
@@ -255,10 +274,10 @@ func generateGeminiDraft(
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if decoded.Error != nil && decoded.Error.Message != "" {
-			return "", fmt.Errorf("Gemini API error: %s", decoded.Error.Message)
+			return "", &aiProviderError{Provider: "Gemini", Status: resp.StatusCode, Message: decoded.Error.Message}
 		}
 
-		return "", fmt.Errorf("Gemini API returned HTTP %d", resp.StatusCode)
+		return "", &aiProviderError{Provider: "Gemini", Status: resp.StatusCode}
 	}
 
 	if len(decoded.Candidates) == 0 {
@@ -334,7 +353,8 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !aiConfigured() {
-		p.Notice = "AI writing is not configured yet. Add OPENAI_API_KEY or GEMINI_API_KEY to your local .env or hosting environment to enable it."
+		log.Printf("vendor AI: requested but no OPENAI_API_KEY or GEMINI_API_KEY is set (operator hint: add one to the server environment)")
+		p.Notice = aiUnavailableMessage
 		h.renderVendorAI(w, p, http.StatusOK)
 		return
 	}
@@ -418,8 +438,8 @@ Return only the message the vendor can review and send.`
 	)
 
 	if err != nil {
-		log.Printf("vendor AI: provider request failed: %v", err)
-		p.Notice = "AI generation failed. Check your OpenAI/Gemini API key, model setting, and provider quota, then try again."
+		logAIFailure("vendor AI", err)
+		p.Notice = aiUserMessage(err)
 		h.renderVendorAI(w, p, http.StatusBadGateway)
 		return
 	}

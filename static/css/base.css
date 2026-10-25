@@ -1,12 +1,12 @@
 :root {
     --green: #174a32;
     --green-dark: #103823;
-    --terracotta: #b96549;
-    --red: #b96549;
-    --red-dark: #98503a;
+    --terracotta: #c2500e;
+    --red: #c2500e;
+    --red-dark: #9f3f08;
     --cream: #fbfaf6;
     --ink: #24352a;
-    --muted: #718075;
+    --muted: #5c6b61;
     --card: #ffffff;
     --line: #e5e8df;
     --radius: 18px;
@@ -149,14 +149,14 @@ img.zoomable { cursor: zoom-in; }
 .vendor-banner.soon a { background: #78652c; }
 
 /* ENIE design-system refinements shared across every page */
-:root { --orange:#ed9845; --green-soft:#eaf2eb; --page-width:1180px; }
+:root { --orange:#f26a1b; --green-soft:#eaf2eb; --page-width:1180px; }
 ::selection { background:#f6d5a8; color:#163b29; }
 :focus-visible { outline:3px solid rgba(237,152,69,.75); outline-offset:3px; }
 button, input, select, textarea { accent-color:var(--green); }
 button { cursor:pointer; }
 main { animation:enie-enter .24s ease-out both; }
 @keyframes enie-enter { from { opacity:.75; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
-.site-logo { width:42px; height:42px; object-fit:cover; border-radius:12px; vertical-align:middle; box-shadow:0 3px 10px rgba(23,74,50,.12); }
+.site-logo { width:40px; height:40px; object-fit:contain; border-radius:0; vertical-align:middle; box-shadow:none; }
 .logo { display:inline-flex; align-items:center; gap:9px; }
 a, button, input, select, textarea { transition-timing-function:ease; }
 button:not(:disabled), input[type="submit"] { transition:filter .18s,transform .18s,box-shadow .18s; }
@@ -223,4 +223,88 @@ tbody tr:hover { background:rgba(234,242,235,.45); }
   :where(.card, .panel, .section-card, .content-card, .thread-list, .message-panel) { border-radius:16px; }
   :where(table) { display:block; max-width:100%; overflow-x:auto; white-space:nowrap; }
   :where(.page-container, .container) { padding-left:16px; padding-right:16px; }
+}
+
+/* ==========================================================================
+   ENIE refresh (Oct 2026): one accent that matches the new logo, calmer type,
+   accessible contrast, left-aligned hero, quieter motion.
+   `body` prefixes are deliberate: page stylesheets load after this file.
+   ========================================================================== */
+:root {
+  --green: #174a32;
+  --green-dark: #0f3624;
+  --terracotta: #c2500e;      /* accent: passes AA on white and cream */
+  --red: #c2500e;
+  --red-dark: #9f3f08;
+  --orange: #f26a1b;          /* logo orange: decoration and focus only, not small text */
+  --ink: #1f2f26;
+  --muted: #5c6b61;
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(23,74,50,.06), 0 8px 22px rgba(23,74,50,.06);
+}
+body { line-height: 1.55; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3 { text-wrap: balance; }
+p, li { text-wrap: pretty; }
+body h1, body h2 { font-weight: 800; letter-spacing: -.03em; line-height: 1.12; }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 6px; }
+a:not([class]) { text-underline-offset: 3px; }
+
+/* Small labels: sentence case, readable size (no tracked all-caps) */
+body .hero-eyebrow, body .auth-eyebrow, body .auth-kicker, body .eyebrow,
+body .section-kicker, body .info-eyebrow {
+  text-transform: none; letter-spacing: 0; font-size: .95rem; font-weight: 700;
+}
+
+/* Buttons: colour change on hover, no jumping */
+body .btn-primary:hover, body .btn-secondary:hover, body .btn-outline:hover,
+body .home-search button:hover, body .button:hover, body .btn:hover { transform: none; }
+body .btn-primary, body .btn-secondary, body .btn-outline { min-height: 46px; }
+body .btn-primary:active, body .btn-outline:active { transform: translateY(1px); }
+
+/* Home and public pages: left-aligned hero with a clear reading edge */
+body .hero { text-align: left; }
+body .hero-content { max-width: var(--page-width); margin: 0 auto; }
+body .hero h1 { max-width: 15ch; margin: 0 0 18px; letter-spacing: -.035em; font-weight: 800; }
+body .hero-content > p:not(.hero-eyebrow) { max-width: 520px; margin: 0 0 26px; color: var(--muted); }
+body .home-search.hero-search { margin: 0 0 6px; }
+body .hero-actions, body .trust-row { justify-content: flex-start; }
+body .hero .btn-secondary { color: var(--green); background: #fff; border: 1px solid rgba(23,74,50,.28); }
+body .hero .btn-secondary:hover { background: var(--green-soft); }
+
+/* Status and form feedback stay readable */
+:where(.error, .alert-error) { color: #9b2c20; }
+:where(label) { color: var(--ink); }
+
+/* Touch devices: 16px inputs stop iOS zoom, 44px targets */
+@media (max-width: 640px) {
+  input:not([type=checkbox]):not([type=radio]), select, textarea { font-size: 16px; }
+  body .btn-primary, body .btn-secondary, body .btn-outline { min-height: 48px; }
+  body .hero h1 { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* More label classes from page stylesheets: sentence case instead of tracked caps */
+body .menu-eyebrow, body .page-eyebrow, body .price-label,
+body .customer-info .label, body .order-items h3 {
+  text-transform: none; letter-spacing: 0;
+}
+body .menu-eyebrow, body .page-eyebrow { font-size: .95rem; font-weight: 700; }
+body .price-label { font-size: .9rem; font-weight: 700; }
+
+/* Phones: keep the top navigation to one swipeable row instead of three wrapped lines */
+@media (max-width: 768px) {
+  body header nav {
+    flex-wrap: nowrap; overflow-x: auto; max-width: 100%;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 4px;
+  }
+  body header nav::-webkit-scrollbar { display: none; }
+  body header nav a { flex: 0 0 auto; white-space: nowrap; }
+}
+@media (max-width: 768px) {
+  body header nav, body .menu-nav { flex-wrap: nowrap !important; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
+  body .menu-nav { width: 100%; }
 }

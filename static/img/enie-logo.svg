@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 214 64" role="img" aria-label="ENIE - Good food. Great moments.">
+  <rect width="64" height="64" rx="16" fill="#174a32"/>
+  <path d="M21 40a16 16 0 0 1 32 0Z" fill="#fbfaf6"/>
+  <rect x="14" y="42.5" width="46" height="4.5" rx="2.25" fill="#fbfaf6"/>
+  <path d="M37 24.5c-.4-6 3.6-10.2 9.6-10.8.6 6.2-3.2 10.6-9.6 10.8Z" fill="#f26a1b"/>
+  <path d="M9.5 28.5h13M9.5 34.5h9" stroke="#f26a1b" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <g stroke="#174a32" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M102 19h-14v26h14M88 32h11"/>
+    <path d="M118 45V19l22 26V19"/>
+    <path d="M157 27v18"/>
+    <path d="M190 19h-14v26h14M176 32h11"/>
+  </g>
+  <path d="M157 22.5c-5.6-.6-7.4-6.2-6.2-11.6 5.8.4 8.4 5.4 6.2 11.6Z" fill="#f26a1b"/>
+</svg>

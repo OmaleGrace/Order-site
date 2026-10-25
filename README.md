@@ -54,16 +54,6 @@ A Go and PostgreSQL food marketplace connecting customers with participating foo
 * Delivery checkout rejects state/LGA combinations that the selected vendor has not configured
 * Vendors must configure at least one delivery area before enabling delivery
 
-## Main administrator setup
-
-The main administrator email configured for user-management access is `omalegrace2009@gmail.com`. For safety, that account must already have `users.is_admin = TRUE` in the production database; the app does not promote an account based on email alone. If it is not already an admin, set the flag for the existing account through your database provider's SQL console:
-
-```sql
-UPDATE users SET is_admin = TRUE WHERE LOWER(email) = 'omalegrace2009@gmail.com';
-```
-
-Keep database credentials private and do not commit a `.env` file. The app creates the `vendor_delivery_areas` table automatically when it connects to PostgreSQL. See [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for instructions to use hosted PostgreSQL without installing it locally, and copy `.env.example` to `.env` as a starting point.
-
 ## Tech Stack
 
 ### Backend

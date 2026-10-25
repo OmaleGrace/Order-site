@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="/static/img/enie-logo.png">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Messages | {{brandName}}</title>
 <link rel="stylesheet" href="/static/css/base.css">
@@ -12,7 +12,7 @@
 main{max-width:980px;margin:0 auto;padding:28px 16px 60px}.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}.heading h1{margin:0;font-size:clamp(1.7rem,4vw,2.3rem)}.muted{color:var(--muted);line-height:1.5}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:0 5px 20px #18352b08}.notice{background:#fff6e5;border:1px solid #f1ddb0;color:#79551b;padding:12px 14px;border-radius:12px;margin:0 0 16px}.thread-list{display:grid;gap:10px}.thread-link{display:block;border:1px solid var(--line);border-radius:13px;padding:15px;text-decoration:none;color:inherit;background:#fff}.thread-link:hover{border-color:#9ab8a2;background:#fbfdfb}.thread-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.thread-top strong{font-size:1.02rem}.thread-preview{margin:7px 0 0;color:var(--muted);overflow-wrap:anywhere}.badge{display:inline-block;background:#e7f2e9;color:var(--green);border-radius:999px;padding:3px 8px;font-size:.78rem;font-weight:750}.empty{text-align:center;padding:38px 16px;color:var(--muted)}.chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:16px}.chat-head h2{margin:0}.back{color:var(--green);font-weight:750;text-decoration:none}.messages{display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow:auto;padding:2px 2px 18px}.bubble{max-width:min(82%,650px);padding:11px 14px;border-radius:15px;background:#f0f3f0;align-self:flex-start;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.5}.bubble.mine{align-self:flex-end;background:#e1f1e5}.bubble .sender{font-size:.78rem;font-weight:800;display:block;margin-bottom:4px}.bubble time{display:block;color:var(--muted);font-size:.72rem;margin-top:5px}.composer{border-top:1px solid var(--line);padding-top:15px}.composer textarea{width:100%;min-height:90px;resize:vertical;border:1px solid #cbd8ce;border-radius:12px;padding:12px;font:inherit}.composer-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:9px}.button{background:var(--green);color:#fff;border:0;border-radius:10px;padding:11px 17px;font:inherit;font-weight:750;cursor:pointer}.button.secondary{background:#e7f2e9;color:var(--green)}.hint{font-size:.83rem;color:var(--muted)}@media(max-width:560px){.bubble{max-width:94%}.card{padding:13px}}
 </style></head>
 <body>
-<header class="top"><a class="brand" href="/"><img src="/static/img/enie-logo.png" alt="{{brandName}}" class="site-logo"> {{brandName}} · Messages</a><nav class="nav"><a href="/menu">Menu</a><a href="/account">Account</a><a href="/vendor/orders">Orders</a><a href="/vendor/profile">Shop profile</a><a href="/messages">Messages</a></nav></header>
+<header class="top"><a class="brand" href="/"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}} · Messages</a><nav class="nav"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/account">Account</a></nav></header>
 <main>
 {{if .Notice}}<div class="notice" role="status">{{.Notice}}</div>{{end}}
 {{if gt .ThreadID 0}}
@@ -68,7 +68,7 @@ main{max-width:980px;margin:0 auto;padding:28px 16px 60px}.heading{display:flex;
           const contentType = response.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             const errorData = await response.json();
-            status.textContent = errorData.error || 'Could not draft a reply. Check AI configuration and try again.';
+            status.textContent = errorData.error || 'Could not draft a reply right now. Please try again in a moment.';
           } else {
             const text = await response.text();
             status.textContent = text || 'Could not draft a reply. Check AI configuration and try again.';

@@ -347,7 +347,8 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !aiConfigured() {
-		writeChatAIError(w, http.StatusServiceUnavailable, "AI replies are not configured yet. Add OPENAI_API_KEY or GEMINI_API_KEY to the server environment.")
+		log.Printf("message AI: requested but no OPENAI_API_KEY or GEMINI_API_KEY is set (operator hint: add one to the server environment)")
+		writeChatAIError(w, http.StatusServiceUnavailable, aiUnavailableMessage)
 		return
 	}
 
@@ -395,8 +396,8 @@ Return only the reply draft. Do not send the message.`
 	)
 
 	if err != nil {
-		log.Printf("Gemini message draft failed: %v", err)
-		writeChatAIError(w, http.StatusBadGateway, "AI reply generation failed. Check your AI API quota/key or try again later.")
+		logAIFailure("message AI", err)
+		writeChatAIError(w, http.StatusBadGateway, aiUserMessage(err))
 		return
 	}
 
