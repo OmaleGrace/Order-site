@@ -32,6 +32,11 @@ func HashToken(token string) string {
 }
 
 func CreateSession(db *sql.DB, userID int) (string, error) {
+	return CreateSessionWithDuration(db, userID, 24*time.Hour)
+}
+
+// CreateSessionWithDuration creates a secure server-side session for the requested duration.
+func CreateSessionWithDuration(db *sql.DB, userID int, duration time.Duration) (string, error) {
 	b := make([]byte, 32)
 
 	if _, err := rand.Read(b); err != nil {
@@ -39,7 +44,7 @@ func CreateSession(db *sql.DB, userID int) (string, error) {
 	}
 
 	token := hex.EncodeToString(b)
-	expiresAt := time.Now().Add(24 * time.Hour)
+	expiresAt := time.Now().Add(duration)
 
 	_, err := db.Exec(`
 		INSERT INTO sessions (token, user_id, expires_at)

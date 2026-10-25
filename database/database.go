@@ -110,6 +110,8 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS state TEXT NOT NULL DEFAULT '';
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMPTZ;
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS delivery_area TEXT;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_contact TEXT NOT NULL DEFAULT 'email';
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN NOT NULL DEFAULT FALSE;
 	`)
 	if err != nil {
 		db.Close()

@@ -263,7 +263,9 @@ CREATE TABLE public.users (
     country text NOT NULL DEFAULT 'Nigeria'::text,
     state text NOT NULL DEFAULT ''::text,
     delivery_area text,
-    terms_accepted_at timestamp with time zone
+    terms_accepted_at timestamp with time zone,
+    preferred_contact text NOT NULL DEFAULT 'email'::text,
+    marketing_opt_in boolean DEFAULT false NOT NULL
 );
 
 

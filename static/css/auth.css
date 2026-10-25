@@ -93,3 +93,9 @@ form button[type="submit"]:disabled { opacity:.48; cursor:not-allowed; box-shado
 
 /* Expanded signup form */
 .auth-wrapper:has(form[action="/signup"]) { max-width: 560px; }
+
+
+/* Auth interaction enhancements */
+.login-options{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:-3px 0 10px;font-size:.86rem}.login-options>a{color:var(--green);font-weight:750;text-decoration:none}.login-options>a:hover{text-decoration:underline}.remember-box{display:flex;align-items:center;gap:8px;color:#526057;cursor:pointer}.remember-box input{width:17px;height:17px;accent-color:var(--green);cursor:pointer}.caps-lock{display:none;margin:0 0 12px;color:#9a4c10;font-size:.78rem;font-weight:700}.caps-lock.visible{display:block}.login-security-note{text-align:center;color:var(--muted);font-size:.74rem;line-height:1.45;margin:11px 0 0}.optional-check{display:flex;align-items:flex-start;gap:9px;margin:-3px 0 18px;padding:12px 13px;border:1px solid #e1e7e0;border-radius:12px;background:#fafcf9;color:#59675e;font-size:.8rem;line-height:1.5;cursor:pointer}.optional-check input{width:18px;height:18px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--green);cursor:pointer}@media(max-width:560px){.login-options{align-items:flex-start;flex-direction:column-reverse;gap:9px}}
+
+.password-strength{display:flex;align-items:center;gap:9px;margin-top:8px;color:var(--muted);font-size:.72rem;font-weight:750}.password-strength-track{height:5px;flex:1;overflow:hidden;border-radius:99px;background:#e7ece7}.password-strength-track span{display:block;width:0;height:100%;border-radius:99px;background:var(--green);transition:width .18s}.password-strength span[data-score="1"]{color:#a33d22}.password-strength span[data-score="2"]{color:#a36b22}.password-strength span[data-score="3"]{color:#7d7620}.password-strength span[data-score="4"],.password-strength span[data-score="5"]{color:var(--green)}

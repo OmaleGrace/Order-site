@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"Order-site/brand"
 	emailer "Order-site/email"
@@ -37,6 +38,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 		email := strings.ToLower(strings.TrimSpace(r.FormValue("email")))
 		password := r.FormValue("password")
+		rememberMe := r.FormValue("remember_me") == "on"
 
 		// Too many wrong guesses for this email, or from this address: stop and wait.
 		// The same message is used whether or not the email exists.
@@ -73,7 +75,11 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		middleware.LoginFailsByEmail.Reset(email)
 
 		// Create a secure server-side session
-		token, err := middleware.CreateSession(h.DB, userID)
+		sessionDuration := 24 * time.Hour
+		if rememberMe {
+			sessionDuration = 30 * 24 * time.Hour
+		}
+		token, err := middleware.CreateSessionWithDuration(h.DB, userID, sessionDuration)
 		if err != nil {
 			errors.Render(w, "Could not create session", http.StatusInternalServerError)
 			return
@@ -86,7 +92,7 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   middleware.SecureCookie(r),
 			SameSite: http.SameSiteLaxMode,
-			MaxAge:   60 * 60 * 24,
+			MaxAge:   int(sessionDuration.Seconds()),
 		})
 
 		// Automatically redirect admins to the admin dashboard
@@ -145,6 +151,11 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		confirmPassword := r.FormValue("confirm_password")
 		termsAccepted := r.FormValue("terms_accepted") == "on"
+		preferredContact := strings.TrimSpace(r.FormValue("preferred_contact"))
+		if preferredContact == "" {
+			preferredContact = "email"
+		}
+		marketingOptIn := r.FormValue("marketing_opt_in") == "on"
 
 		if err := validateNamePart(firstName, "First name", true); err != nil {
 			signupFail(w, r, err.Error(), http.StatusBadRequest)
@@ -186,6 +197,10 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			signupFail(w, r, "Please read and accept the Terms of Service and Privacy Policy before creating your account", http.StatusBadRequest)
 			return
 		}
+		if preferredContact != "email" && preferredContact != "phone" {
+			signupFail(w, r, "Choose how you would like to receive account updates", http.StatusBadRequest)
+			return
+		}
 
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
@@ -201,9 +216,9 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 
 		var userID int
 		err = h.DB.QueryRow(
-			`INSERT INTO users (name, first_name, middle_name, last_name, email, password, phone, country, state, terms_accepted_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id`,
-			name, firstName, middleName, lastName, email, string(hashedPassword), phone, country, state,
+			`INSERT INTO users (name, first_name, middle_name, last_name, email, password, phone, country, state, terms_accepted_at, preferred_contact, marketing_opt_in)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10, $11) RETURNING id`,
+			name, firstName, middleName, lastName, email, string(hashedPassword), phone, country, state, preferredContact, marketingOptIn,
 		).Scan(&userID)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {

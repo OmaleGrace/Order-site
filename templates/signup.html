@@ -106,6 +106,22 @@
                     </div>
                 </div>
 
+                <p class="signup-section-label">Account preferences</p>
+                <div class="form-group">
+                    <label for="preferred_contact">Preferred way to receive updates</label>
+                    <div class="select-wrap">
+                        <select id="preferred_contact" name="preferred_contact" required>
+                            <option value="email" selected>Email</option>
+                            <option value="phone">Phone / SMS</option>
+                        </select>
+                    </div>
+                    <p class="field-help">We will use your choice for important account and order updates.</p>
+                </div>
+                <label class="optional-check">
+                    <input type="checkbox" name="marketing_opt_in" value="on">
+                    <span>Send me occasional offers, new vendor updates and food recommendations.</span>
+                </label>
+
                 <p class="signup-section-label">Secure your account</p>
                 <div class="form-group password-field">
                     <label for="password">Password</label>
@@ -115,6 +131,10 @@
                         <svg class="eye-icon eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     </button>
                     <p class="field-error" id="password-error" aria-live="polite"></p>
+                    <div class="password-strength" aria-live="polite">
+                        <div class="password-strength-track"><span id="password-strength-bar"></span></div>
+                        <span id="password-strength-label">Password strength</span>
+                    </div>
                     <p class="field-help">At least 8 characters with uppercase, lowercase, a number and a special character.</p>
                 </div>
 
@@ -210,6 +230,32 @@
         terms.addEventListener('change',function(){termsBox.dataset.touched='1';refresh()});
         termsBox.addEventListener('click',function(){termsBox.dataset.touched='1';setTimeout(refresh,0)});
         submitBtn.disabled=true;
+    })();
+    </script>
+
+    <script>
+    (function () {
+        var password = document.getElementById('password');
+        var bar = document.getElementById('password-strength-bar');
+        var label = document.getElementById('password-strength-label');
+        function strength(v){
+            var score=0;
+            if(v.length>=8) score++;
+            if(/[a-z]/.test(v)) score++;
+            if(/[A-Z]/.test(v)) score++;
+            if(/[0-9]/.test(v)) score++;
+            if(/[^A-Za-z0-9]/.test(v)) score++;
+            return score;
+        }
+        function update(){
+            var score=strength(password.value);
+            var labels=['Password strength','Very weak','Weak','Fair','Good','Strong'];
+            bar.style.width=(score*20)+'%';
+            label.textContent=labels[score];
+            label.dataset.score=String(score);
+        }
+        password.addEventListener('input',update);
+        update();
     })();
     </script>
 

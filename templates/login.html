@@ -46,9 +46,14 @@
                     </button>
                 </div>
 
-                <p class="forgot-password-link"><a href="/forgot-password">Forgot password?</a></p>
+                <div class="login-options">
+                    <label class="remember-box"><input type="checkbox" name="remember_me" id="remember_me"> <span>Keep me signed in for 30 days</span></label>
+                    <a href="/forgot-password">Forgot password?</a>
+                </div>
+                <p class="caps-lock" id="caps-lock" aria-live="polite">Caps Lock is on</p>
 
-                <button type="submit">Login</button>
+                <button type="submit">Login securely</button>
+                <p class="login-security-note"><span aria-hidden="true">🔒</span> Your password is protected and your session is securely managed.</p>
             </form>
 
             <div class="auth-divider"><span>or</span></div>
@@ -83,6 +88,13 @@
         var passEl = document.getElementById('password');
         var emailMsg = document.getElementById('email-error');
         var submitBtn = document.querySelector('form button[type="submit"]');
+        var capsLock = document.getElementById('caps-lock');
+        passEl.addEventListener('keydown', function(e){
+            if (typeof e.getModifierState === 'function') capsLock.classList.toggle('visible', e.getModifierState('CapsLock'));
+        });
+        passEl.addEventListener('keyup', function(e){
+            if (typeof e.getModifierState === 'function') capsLock.classList.toggle('visible', e.getModifierState('CapsLock'));
+        });
 
         function emailOk(v) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
