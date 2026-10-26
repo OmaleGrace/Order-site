@@ -3,6 +3,8 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"Order-site/brand"
 	"Order-site/menu"
@@ -25,8 +27,23 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 			ParseFiles("templates/menu.html"),
 	)
 
-	search := r.URL.Query().Get("search")
-	category := r.URL.Query().Get("category")
+	search := strings.TrimSpace(r.URL.Query().Get("search"))
+	category := strings.TrimSpace(r.URL.Query().Get("category"))
+	sortBy := r.URL.Query().Get("sort")
+	if sortBy != "price_asc" && sortBy != "price_desc" && sortBy != "name" {
+		sortBy = "relevance"
+	}
+	minPrice, _ := strconv.Atoi(r.URL.Query().Get("min_price"))
+	maxPrice, _ := strconv.Atoi(r.URL.Query().Get("max_price"))
+	if minPrice < 0 {
+		minPrice = 0
+	}
+	if maxPrice < 0 {
+		maxPrice = 0
+	}
+	// Values are entered as naira in the UI; the database stores kobo.
+	minPrice *= 100
+	maxPrice *= 100
 	if len([]rune(search)) > 80 {
 		search = string([]rune(search)[:80])
 	}
@@ -34,7 +51,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		category = string([]rune(category)[:40])
 	}
 
-	items, err := menu.GetAll(h.DB, search, category)
+	items, err := menu.GetAllWithOptions(h.DB, search, category, sortBy, minPrice, maxPrice)
 	if err != nil {
 		fmt.Println("Menu load error", err)
 		http.Error(w, "Could not load menu", http.StatusInternalServerError)
@@ -87,6 +104,9 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		Categories []string
 		Favs       map[int]bool
 		LoggedIn   bool
+		Sort       string
+		MinPrice   int
+		MaxPrice   int
 	}{
 		Items:      items,
 		Message:    message,
@@ -95,6 +115,9 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 		Categories: categories,
 		Favs:       favs,
 		LoggedIn:   loggedIn,
+		Sort:       sortBy,
+		MinPrice:   minPrice / 100,
+		MaxPrice:   maxPrice / 100,
 	}
 
 	err = tmpl.Execute(w, data)

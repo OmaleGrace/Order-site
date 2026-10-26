@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"Order-site/errors"
 )
@@ -46,6 +47,12 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 	if n, _ := res.RowsAffected(); n == 0 {
 		errors.Render(w, "Order not found", http.StatusNotFound)
 		return
+	}
+
+	var customerID int
+	if err := h.DB.QueryRow(`SELECT user_id FROM orders WHERE id=$1`, orderID).Scan(&customerID); err == nil {
+		statusLabel := strings.Title(strings.ReplaceAll(status, "_", " "))
+		_ = createNotification(h.DB, customerID, "order", "Order status updated", "Your order is now "+statusLabel+".", "/orders")
 	}
 
 	go func(id int, newStatus string) {

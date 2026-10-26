@@ -4,11 +4,21 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 )
+
+type AccountRecentOrder struct {
+	ID             int
+	Reference      string
+	TotalKobo      int
+	Status         string
+	CreatedAt      string
+	DeliveryMethod string
+}
 
 type AccountPageData struct {
 	Name           string
@@ -21,6 +31,9 @@ type AccountPageData struct {
 	TotalSpentKobo int
 	Updated        bool
 	IsVendor       bool
+	FavoriteCount  int
+	ActiveOrders   int
+	RecentOrders   []AccountRecentOrder
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +101,51 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Updated = r.URL.Query().Get("updated") == "true"
+
+	// These dashboard counts are intentionally separate from the main profile query
+	// so older deployments remain usable if optional account data is unavailable.
+	if err := h.DB.QueryRow(`SELECT COUNT(*) FROM favorites WHERE user_id = $1`, userID).Scan(&data.FavoriteCount); err != nil {
+		log.Printf("account: favorites count failed for user %d: %v", userID, err)
+		data.FavoriteCount = 0
+	}
+
+	if err := h.DB.QueryRow(`
+		SELECT COUNT(*) FROM orders
+		WHERE user_id = $1 AND status IN ('paid', 'preparing', 'ready')
+	`, userID).Scan(&data.ActiveOrders); err != nil {
+		log.Printf("account: active order count failed for user %d: %v", userID, err)
+		data.ActiveOrders = 0
+	}
+
+	recentRows, err := h.DB.Query(`
+		SELECT id, total_kobo, status, created_at, delivery_method
+		FROM orders
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT 3
+	`, userID)
+	if err == nil {
+		defer recentRows.Close()
+		for recentRows.Next() {
+			var orderID, totalKobo int
+			var status, deliveryMethod string
+			var createdAt time.Time
+			if err := recentRows.Scan(&orderID, &totalKobo, &status, &createdAt, &deliveryMethod); err != nil {
+				log.Printf("account: recent order scan failed for user %d: %v", userID, err)
+				break
+			}
+			data.RecentOrders = append(data.RecentOrders, AccountRecentOrder{
+				ID:             orderID,
+				Reference:      publicOrderReference(orderID, createdAt),
+				TotalKobo:      totalKobo,
+				Status:         status,
+				CreatedAt:      createdAt.Format("02 Jan 2006, 3:04 PM"),
+				DeliveryMethod: deliveryMethod,
+			})
+		}
+	} else {
+		log.Printf("account: recent orders query failed for user %d: %v", userID, err)
+	}
 
 	var vendorCount int
 	if err := h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount); err != nil {

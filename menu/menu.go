@@ -22,6 +22,10 @@ type MenuItem struct {
 const LiveVendorSQL = "v.status = 'active' AND v.paid_until > NOW()"
 
 func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
+	return GetAllWithOptions(db, search, category, "relevance", 0, 0)
+}
+
+func GetAllWithOptions(db *sql.DB, search, category, sortBy string, minPriceKobo, maxPriceKobo int) ([]MenuItem, error) {
 	query := `
 		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo,
 		       m.image_url, m.category, v.id, v.name, v.slug
@@ -46,7 +50,27 @@ func GetAll(db *sql.DB, search, category string) ([]MenuItem, error) {
 		argIndex++
 	}
 
-	query += " ORDER BY m.id"
+	if minPriceKobo > 0 {
+		query += " AND m.price_kobo >= $" + strconv.Itoa(argIndex)
+		args = append(args, minPriceKobo)
+		argIndex++
+	}
+	if maxPriceKobo > 0 {
+		query += " AND m.price_kobo <= $" + strconv.Itoa(argIndex)
+		args = append(args, maxPriceKobo)
+		argIndex++
+	}
+
+	switch sortBy {
+	case "price_asc":
+		query += " ORDER BY m.price_kobo ASC, m.name ASC"
+	case "price_desc":
+		query += " ORDER BY m.price_kobo DESC, m.name ASC"
+	case "name":
+		query += " ORDER BY m.name ASC"
+	default:
+		query += " ORDER BY m.id"
+	}
 
 	rows, err := db.Query(query, args...)
 	if err != nil {

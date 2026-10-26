@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -44,6 +45,12 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)
 		return
+	}
+
+	var customerID int
+	if err := h.DB.QueryRow(`SELECT user_id FROM orders WHERE id=$1`, orderID).Scan(&customerID); err == nil {
+		statusLabel := strings.Title(strings.ReplaceAll(status, "_", " "))
+		_ = createNotification(h.DB, customerID, "order", "Order status updated", "Your order is now "+statusLabel+".", "/orders")
 	}
 
 	go func(id int, newStatus string) {

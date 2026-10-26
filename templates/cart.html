@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <meta name="theme-color" content="#174a32">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cart - {{brandName}}</title>
+    <title>Your Cart - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
 </head>
-
 <body>
-
 <header class="cart-header">
     <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
-
-    <nav>
+    <nav aria-label="Checkout navigation">
         <a href="/menu">Menu</a>
         <a href="/orders">My Orders</a>
         <a href="/logout">Logout</a>
@@ -24,93 +23,111 @@
 </header>
 
 <main class="cart-container">
+    <div class="checkout-steps" aria-label="Order progress">
+        <span class="step active"><b>1</b> Cart</span>
+        <span class="step-line"></span>
+        <span class="step"><b>2</b> Checkout</span>
+        <span class="step-line"></span>
+        <span class="step"><b>3</b> Payment</span>
+    </div>
 
     <div class="cart-title">
-        <h1>Your Cart</h1>
-        <p>Review your items before placing your order.</p>
+        <div>
+            <p class="eyebrow">Ready when you are</p>
+            <h1>Your cart</h1>
+            <p>Review your order before choosing delivery or pickup.</p>
+        </div>
     </div>
 
     {{if .Message}}
-    <div class="cart-message">{{.Message}}</div>
+    <div class="cart-message" role="status">{{.Message}}</div>
     {{end}}
 
     {{if .Items}}
-
-        <section class="cart-items">
+    <div class="cart-layout">
+        <section class="cart-items" aria-labelledby="cart-items-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="cart-items-heading">Your items</h2>
+                    <p>Adjust quantities or remove anything you no longer want.</p>
+                </div>
+                <a href="/menu" class="text-action">＋ Add more</a>
+            </div>
 
             {{range .Items}}
             <article class="cart-item">
-
                 {{if .ImageURL}}
                 <img src="{{.ImageURL}}" alt="{{.Name}}" class="item-image zoomable" loading="lazy">
                 {{else}}
-                <div class="item-image no-image">🍽️</div>
+                <div class="item-image no-image" aria-hidden="true">🍽️</div>
                 {{end}}
 
                 <div class="item-info">
-                    <h2>{{.Name}}</h2>
-                    <p class="item-desc">{{.Description}}</p>
-
-                    <div class="quantity-controls">
-                        <form action="/cart/update" method="post">
-                            <input type="hidden" name="id" value="{{.MenuItemID}}">
-                            <input type="hidden" name="action" value="decrease">
-                            <button type="submit" class="qty-btn" aria-label="Decrease quantity">−</button>
-                        </form>
-
-                        <span class="quantity">{{.Quantity}}</span>
-
-                        <form action="/cart/update" method="post">
-                            <input type="hidden" name="id" value="{{.MenuItemID}}">
-                            <input type="hidden" name="action" value="increase">
-                            <button type="submit" class="qty-btn" aria-label="Increase quantity">+</button>
-                        </form>
+                    <div class="item-topline">
+                        <div>
+                            <h2>{{.Name}}</h2>
+                            {{if .Description}}<p class="item-desc">{{.Description}}</p>{{end}}
+                        </div>
+                        <strong class="item-price">₦{{naira .PriceKobo}}</strong>
                     </div>
 
-                    <strong class="item-price">₦{{naira .PriceKobo}} each</strong>
-
-                    <p class="item-subtotal">Subtotal: ₦{{naira (multiply .PriceKobo .Quantity)}}</p>
+                    <div class="item-actions">
+                        <div class="quantity-controls" aria-label="Quantity for {{.Name}}">
+                            <form action="/cart/update" method="post">
+                                <input type="hidden" name="id" value="{{.MenuItemID}}">
+                                <input type="hidden" name="action" value="decrease">
+                                <button type="submit" class="qty-btn" aria-label="Decrease {{.Name}} quantity">−</button>
+                            </form>
+                            <span class="quantity" aria-label="Quantity">{{.Quantity}}</span>
+                            <form action="/cart/update" method="post">
+                                <input type="hidden" name="id" value="{{.MenuItemID}}">
+                                <input type="hidden" name="action" value="increase">
+                                <button type="submit" class="qty-btn" aria-label="Increase {{.Name}} quantity">+</button>
+                            </form>
+                        </div>
+                        <span class="item-subtotal">₦{{naira (multiply .PriceKobo .Quantity)}}</span>
+                        <form action="/cart/remove" method="post" class="remove-form">
+                            <input type="hidden" name="id" value="{{.MenuItemID}}">
+                            <button type="submit" class="remove-btn">Remove</button>
+                        </form>
+                    </div>
                 </div>
-
-                <form action="/cart/remove" method="post" class="remove-form">
-                    <input type="hidden" name="id" value="{{.MenuItemID}}">
-                    <button type="submit" class="remove-btn">Remove</button>
-                </form>
-
             </article>
             {{end}}
 
-        </section>
-
-        <section class="cart-summary">
-            <div class="total-row">
-                <span>Total</span>
-                <strong>₦{{naira .Total}}</strong>
+            <div class="cart-reassurance">
+                <span>✓</span>
+                <div><strong>One shop per order</strong><p>ENIE keeps each order with one vendor so delivery and fulfillment stay simple.</p></div>
             </div>
+        </section>
 
+        <aside class="cart-summary" aria-labelledby="summary-heading">
+            <div class="summary-kicker">Order summary</div>
+            <h2 id="summary-heading">Your total</h2>
+            <div class="summary-line"><span>Food</span><strong>₦{{naira .Total}}</strong></div>
+            <div class="summary-line muted"><span>Delivery</span><span>Calculated at checkout</span></div>
+            <div class="summary-divider"></div>
+            <div class="total-row"><span>Food subtotal</span><strong>₦{{naira .Total}}</strong></div>
+            <p class="summary-note">Choose pickup or delivery on the next step. Your final total will include the applicable delivery fee.</p>
             <form action="/checkout/details" method="get">
-                <button type="submit" class="checkout-btn">Proceed to Checkout</button>
+                <button type="submit" class="checkout-btn">Continue to checkout <span aria-hidden="true">→</span></button>
             </form>
-        </section>
-
-    {{else}}
-
-        <section class="empty-cart">
-            <div class="empty-icon">🛒</div>
-            <h2>Your cart is empty</h2>
-            <p>Add some delicious meals from our menu to get started.</p>
-            <a href="/menu" class="menu-btn">Browse Menu</a>
-        </section>
-
-    {{end}}
-
-    <div class="cart-links">
-        <a href="/">← Back to Home</a>
+            <a href="/menu" class="continue-link">← Continue shopping</a>
+        </aside>
     </div>
-
+    {{else}}
+    <section class="empty-cart">
+        <div class="empty-icon" aria-hidden="true">🛒</div>
+        <p class="eyebrow">Nothing here yet</p>
+        <h2>Your cart is empty</h2>
+        <p>Add a meal from the menu and it will appear here.</p>
+        <a href="/menu" class="menu-btn">Browse food</a>
+    </section>
+    {{end}}
 </main>
 
 <script src="/static/js/lightbox.js"></script>
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

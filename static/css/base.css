@@ -308,3 +308,40 @@ body .price-label { font-size: .9rem; font-weight: 700; }
   body header nav, body .menu-nav { flex-wrap: nowrap !important; overflow-x: auto; max-width: 100%; scrollbar-width: none; }
   body .menu-nav { width: 100%; }
 }
+
+/* Global notification bell */
+.notification-nav-item {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    padding: 7px 10px !important;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+.notification-bell-icon { font-size: 1.02rem; line-height: 1; }
+.notification-nav-label { font-weight: 650; }
+.notification-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--terracotta, #c95c3a);
+    color: #fff;
+    font-size: .68rem;
+    line-height: 1;
+    font-weight: 800;
+    border: 2px solid #fff;
+}
+.notification-unread-badge[hidden] { display: none; }
+@media (max-width: 640px) {
+    .notification-nav-label { display: none; }
+    .notification-nav-item { width: 38px; justify-content: center; padding: 7px !important; }
+}

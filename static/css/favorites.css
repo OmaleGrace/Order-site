@@ -1,0 +1,11 @@
+
+.favorites-intro { max-width: 900px; margin: 0 auto; }
+.favorites-intro p { max-width: 620px; }
+.favorite-card-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.favorite-card-heading h2 { margin-bottom: 4px; }
+.favorite-vendor { margin:0 0 10px; color:var(--muted); font-size:.8rem; }
+.favorite-vendor a { color:var(--green); font-weight:750; text-decoration:none; }
+.favorite-vendor a:hover { text-decoration:underline; }
+.saved-badge { flex:0 0 auto; padding:5px 8px; border-radius:999px; background:#e7f6ed; color:var(--green); font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.favorites-intro + .menu-container { padding-top: 28px; }
+@media (max-width:560px){ .favorite-card-heading { gap:8px; } .saved-badge { font-size:.62rem; } }

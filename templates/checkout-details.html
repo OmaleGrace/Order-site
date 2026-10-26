@@ -1,137 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <meta name="theme-color" content="#174a32">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
-    <style>
-        .choice { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-        .choice label { flex: 1; min-width: 150px; display: flex; align-items: center; gap: 10px; padding: 13px 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; font-weight: 600; cursor: pointer; }
-        .choice label:has(input:checked) { border-color: var(--green); background: #f1f8f3; }
-        .choice input { accent-color: var(--green); width: 18px; height: 18px; }
-        .field { margin-bottom: 14px; }
-        .field label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-        .field input, .field textarea, .field select { width: 100%; padding: 11px 13px; border: 2px solid var(--line); border-radius: 12px; font: inherit; background: #fff; }
-        .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(20, 83, 45, 0.12); }
-        .field .invalid { border-color: #c0392b; }
-        .field .invalid:focus { box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.12); }
-        .field textarea { resize: vertical; min-height: 84px; }
-        .field small { display: block; margin-top: 5px; color: var(--muted); font-size: 0.82rem; }
-        .field-error { color: #c0392b; font-size: 0.85rem; margin: 5px 0 0; min-height: 1.1em; }
-        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .summary-line { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; }
-        .summary-line.muted { color: var(--muted); }
-        .pickup-note { padding: 12px 14px; background: #faf5ea; border-radius: 12px; margin-bottom: 14px; }
-        .checkout-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; transform: none; }
-        [hidden] { display: none !important; }
-        @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; gap: 0; } }
-    </style>
 </head>
-
 <body>
-
 <header class="cart-header">
     <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
-    <nav>
-        <a href="/menu">Menu</a>
+    <nav aria-label="Checkout navigation">
         <a href="/cart">Cart</a>
         <a href="/orders">My Orders</a>
     </nav>
 </header>
 
-<main class="cart-container">
+<main class="cart-container checkout-page">
+    <div class="checkout-steps" aria-label="Order progress">
+        <a class="step done" href="/cart"><b>✓</b> Cart</a>
+        <span class="step-line done"></span>
+        <span class="step active"><b>2</b> Checkout</span>
+        <span class="step-line"></span>
+        <span class="step"><b>3</b> Payment</span>
+    </div>
 
-    <div class="cart-title">
-        <h1>Checkout</h1>
-        <p>Ordering from <strong>{{.VendorName}}</strong></p>
+    <div class="cart-title checkout-heading">
+        <p class="eyebrow">Almost there</p>
+        <h1>Complete your order</h1>
+        <p>Ordering from <strong>{{.VendorName}}</strong>. Choose how you want to receive it, then review your total.</p>
     </div>
 
     <form action="/checkout" method="post" id="checkout-form" novalidate>
-
-        <section class="cart-summary" style="margin-top:0;margin-bottom:18px;">
-            <h2 style="margin:0 0 10px;font-size:1.1rem;">How do you want your food?</h2>
-
-            <div class="choice">
-                {{if .OffersPickup}}
-                <label><input type="radio" name="delivery_method" value="pickup" {{if eq .DefaultMethod "pickup"}}checked{{end}}> 🛍️ Pickup</label>
-                {{end}}
-                {{if .OffersDelivery}}
-                <label><input type="radio" name="delivery_method" value="delivery" {{if eq .DefaultMethod "delivery"}}checked{{end}}> 🛵 Delivery · {{if .DeliveryFeeKobo}}₦{{naira .DeliveryFeeKobo}}{{else}}Free{{end}}</label>
-                {{end}}
-            </div>
-
-            <div id="pickup-box" class="pickup-note" hidden>
-                {{if .PickupAddress}}Collect your order from: <strong>{{.PickupAddress}}</strong>{{else}}You will collect your order from the shop.{{end}}
-            </div>
-
-            <div id="delivery-box" hidden>
-                <div class="row2">
-                    <div class="field">
-                        <label for="delivery_state">State</label>
-                        <select name="delivery_state" id="delivery_state">
-                            <option value="">Select your state</option>
-                            {{range .States}}<option value="{{.}}">{{.}}</option>{{end}}
-                        </select>
-                        <p class="field-error" id="state-error" aria-live="polite"></p>
+        <div class="checkout-layout">
+            <div class="checkout-main">
+                <section class="checkout-card" aria-labelledby="fulfillment-heading">
+                    <div class="card-heading">
+                        <span class="number-badge">1</span>
+                        <div><h2 id="fulfillment-heading">How do you want your food?</h2><p>Choose pickup or delivery.</p></div>
                     </div>
 
-                    <div class="field">
-                        <label for="delivery_lga">Local government area</label>
-                        <input type="text" name="delivery_lga" id="delivery_lga" maxlength="60" placeholder="e.g. Ikeja" autocomplete="address-level2">
-                        <p class="field-error" id="lga-error" aria-live="polite"></p>
+                    <div class="choice">
+                        {{if .OffersPickup}}
+                        <label class="choice-card">
+                            <input type="radio" name="delivery_method" value="pickup" {{if eq .DefaultMethod "pickup"}}checked{{end}}>
+                            <span class="choice-icon">🛍️</span>
+                            <span><strong>Pickup</strong><small>Collect from the shop</small></span>
+                        </label>
+                        {{end}}
+                        {{if .OffersDelivery}}
+                        <label class="choice-card">
+                            <input type="radio" name="delivery_method" value="delivery" {{if eq .DefaultMethod "delivery"}}checked{{end}}>
+                            <span class="choice-icon">🛵</span>
+                            <span><strong>Delivery</strong><small>{{if .DeliveryFeeKobo}}₦{{naira .DeliveryFeeKobo}} delivery{{else}}Free delivery{{end}}</small></span>
+                        </label>
+                        {{end}}
                     </div>
-                </div>
 
-                <div class="field">
-                    <label for="delivery_address">House address</label>
-                    <textarea name="delivery_address" id="delivery_address" maxlength="250" placeholder="House number and street, and a landmark if you can" autocomplete="street-address"></textarea>
-                    <p class="field-error" id="address-error" aria-live="polite"></p>
-                    <small>The shop uses this to bring your order. Only this shop and the site admin can see it.</small>
-                </div>
+                    <div id="pickup-box" class="pickup-note" hidden>
+                        <strong>Pickup location</strong>
+                        <span>{{if .PickupAddress}}{{.PickupAddress}}{{else}}The shop's pickup location will be used.{{end}}</span>
+                    </div>
+
+                    <div id="delivery-box" class="delivery-fields" hidden>
+                        <div class="field-group-title">Delivery address</div>
+                        <div class="row2">
+                            <div class="field">
+                                <label for="delivery_state">State <span>*</span></label>
+                                <select name="delivery_state" id="delivery_state">
+                                    <option value="">Select your state</option>
+                                    {{range .States}}<option value="{{.}}">{{.}}</option>{{end}}
+                                </select>
+                                <p class="field-error" id="state-error" aria-live="polite"></p>
+                            </div>
+                            <div class="field">
+                                <label for="delivery_lga">Local government area <span>*</span></label>
+                                <input type="text" name="delivery_lga" id="delivery_lga" maxlength="60" placeholder="e.g. Ikeja" autocomplete="address-level2">
+                                <p class="field-error" id="lga-error" aria-live="polite"></p>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="delivery_address">House address <span>*</span></label>
+                            <textarea name="delivery_address" id="delivery_address" maxlength="250" placeholder="House number, street and a useful landmark" autocomplete="street-address"></textarea>
+                            <p class="field-error" id="address-error" aria-live="polite"></p>
+                            <small>Only the shop and authorized ENIE staff need this information to fulfill your order.</small>
+                        </div>
+                    </div>
+
+                    <div class="field phone-field">
+                        <label for="delivery_phone">Phone number <span id="phone-hint">(optional for pickup)</span></label>
+                        <input type="tel" name="delivery_phone" id="delivery_phone" maxlength="20" value="{{.Phone}}" placeholder="08012345678" autocomplete="tel">
+                        <p class="field-error" id="phone-error" aria-live="polite"></p>
+                        <small>For delivery, use a number the rider can reach you on.</small>
+                    </div>
+                </section>
+
+                <section class="checkout-card" aria-labelledby="review-heading">
+                    <div class="card-heading">
+                        <span class="number-badge">2</span>
+                        <div><h2 id="review-heading">Review your order</h2><p>Make sure everything looks right before payment.</p></div>
+                    </div>
+                    <div class="review-lines">
+                        {{range .Lines}}
+                        <div class="review-line"><span><strong>{{.Quantity}}×</strong> {{.Name}}</span><strong>₦{{naira .LineKobo}}</strong></div>
+                        {{end}}
+                    </div>
+                    <a href="/cart" class="edit-cart">← Edit items in cart</a>
+                </section>
             </div>
 
-            <div class="field">
-                <label for="delivery_phone">Phone number <span id="phone-hint">(optional for pickup)</span></label>
-                <input type="tel" name="delivery_phone" id="delivery_phone" maxlength="20" value="{{.Phone}}" placeholder="e.g. 08012345678" autocomplete="tel">
-                <p class="field-error" id="phone-error" aria-live="polite"></p>
-            </div>
-        </section>
-
-        <section class="cart-summary" style="margin-top:0;">
-            <h2 style="margin:0 0 10px;font-size:1.1rem;">Your order</h2>
-
-            {{range .Lines}}
-            <div class="summary-line"><span>{{.Name}} × {{.Quantity}}</span><span>₦{{naira .LineKobo}}</span></div>
-            {{end}}
-
-            <div class="summary-line muted"><span>Delivery</span><span id="fee-line">₦0</span></div>
-
-            <div class="total-row" style="margin-top:8px;">
-                <span>Total</span>
-                <strong id="total-line">₦{{naira .SubtotalKobo}}</strong>
-            </div>
-
-            <button type="submit" class="checkout-btn" id="pay-btn">Pay now</button>
-        </section>
-
+            <aside class="checkout-summary" aria-labelledby="final-total-heading">
+                <div class="summary-kicker">Final review</div>
+                <h2 id="final-total-heading">Order total</h2>
+                <div class="summary-line"><span>Food subtotal</span><strong>₦{{naira .SubtotalKobo}}</strong></div>
+                <div class="summary-line"><span>Delivery</span><strong id="fee-line">₦0</strong></div>
+                <div class="summary-divider"></div>
+                <div class="total-row"><span>Total</span><strong id="total-line">₦{{naira .SubtotalKobo}}</strong></div>
+                <p class="summary-note">You'll be securely redirected to Paystack to complete payment.</p>
+                <button type="submit" class="checkout-btn" id="pay-btn" disabled>Continue to secure payment <span aria-hidden="true">→</span></button>
+                <div class="secure-note"><span aria-hidden="true">🔒</span><span>Secure payment powered by Paystack. ENIE never sees your card PIN.</span></div>
+            </aside>
+        </div>
     </form>
 
-    <div class="cart-links">
-        <a href="/cart">← Back to cart</a>
-    </div>
-
+    <div class="cart-links"><a href="/cart">← Back to cart</a></div>
 </main>
 
 <script>
 (function () {
     var subtotal = {{.SubtotalKobo}};
     var fee = {{.DeliveryFeeKobo}};
-
     var form = document.getElementById('checkout-form');
     var radios = document.querySelectorAll('input[name="delivery_method"]');
     var stateEl = document.getElementById('delivery_state');
@@ -144,69 +147,30 @@
     var totalLine = document.getElementById('total-line');
     var hint = document.getElementById('phone-hint');
     var payBtn = document.getElementById('pay-btn');
-    var payLabel = payBtn.textContent;
+    var payLabel = payBtn.innerHTML;
 
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
-
-    function method() {
-        var c = document.querySelector('input[name="delivery_method"]:checked');
-        return c ? c.value : '';
-    }
-
+    function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
     function isDelivery() { return method() === 'delivery'; }
-
-    // Same rules as the server
-    function checkState() {
-        if (!isDelivery()) return '';
-        return stateEl.value === '' ? 'Choose your state' : '';
-    }
-
-    function checkLga() {
-        if (!isDelivery()) return '';
-        var n = [...lgaEl.value.trim()].length;
-        if (n === 0) return 'Enter your local government area';
-        if (n < 3) return 'The local government area is too short';
-        if (n > 60) return 'The local government area must be 60 characters or fewer';
-        return '';
-    }
-
-    function checkAddress() {
-        if (!isDelivery()) return '';
-        var n = [...addrEl.value.trim()].length;
-        if (n === 0) return 'Enter your house address';
-        if (n < 8) return 'Enter your house number and street (at least 8 characters)';
-        if (n > 250) return 'The address must be 250 characters or fewer';
-        return '';
-    }
-
+    function checkState() { return !isDelivery() || stateEl.value ? '' : 'Choose your state'; }
+    function checkLga() { if (!isDelivery()) return ''; var n = [...lgaEl.value.trim()].length; if (!n) return 'Enter your local government area'; if (n < 3) return 'The local government area is too short'; return n > 60 ? 'The local government area must be 60 characters or fewer' : ''; }
+    function checkAddress() { if (!isDelivery()) return ''; var n = [...addrEl.value.trim()].length; if (!n) return 'Enter your house address'; if (n < 8) return 'Enter your house number and street (at least 8 characters)'; return n > 250 ? 'The address must be 250 characters or fewer' : ''; }
     function checkPhone() {
         var v = phoneEl.value.trim();
-        if (v === '') return isDelivery() ? 'Enter a phone number the rider can reach you on' : '';
+        if (!v) return isDelivery() ? 'Enter a phone number the rider can reach you on' : '';
         if (!/^\+?[0-9 \-]+$/.test(v)) return 'Use only numbers, spaces, + and -';
-
         var d = v.replace(/[^0-9]/g, '');
         var international = v.charAt(0) === '+' || d.indexOf('234') === 0;
-
-        if (international) {
-            if (d.indexOf('234') !== 0) return 'Start with 234 after the + sign, for example +2348012345678';
-            if (d.length < 13) return 'Too short: after +234 you need 10 more digits (you have ' + (d.length - 3) + ')';
-            if (d.length > 13) return 'Too long: after +234 you need exactly 10 digits (you have ' + (d.length - 3) + ')';
-            d = '0' + d.slice(3);
-        } else {
-            if (d.charAt(0) !== '0') return 'Start with 0, for example 08012345678, or with +234';
-            if (d.length < 11) return 'Too short: a Nigerian number has 11 digits (you have ' + d.length + ')';
-            if (d.length > 11) return 'Too long: a Nigerian number has 11 digits (you have ' + d.length + ')';
-        }
-
-        if ('789'.indexOf(d.charAt(1)) === -1) return 'Enter a valid Nigerian mobile number, for example 08012345678';
+        if (international) { if (d.indexOf('234') !== 0) return 'Start with 234 after the + sign'; if (d.length < 13) return 'Enter a complete Nigerian number after +234'; }
+        else if (d.length !== 11 || d.charAt(0) !== '0') return 'Use an 11-digit Nigerian number starting with 0';
         return '';
     }
 
     var fields = [
-        { key: 'state', el: stateEl, msg: document.getElementById('state-error'), check: checkState },
-        { key: 'lga', el: lgaEl, msg: document.getElementById('lga-error'), check: checkLga },
-        { key: 'addr', el: addrEl, msg: document.getElementById('address-error'), check: checkAddress },
-        { key: 'phone', el: phoneEl, msg: document.getElementById('phone-error'), check: checkPhone }
+        {key:'state', el:stateEl, msg:document.getElementById('state-error'), check:checkState},
+        {key:'lga', el:lgaEl, msg:document.getElementById('lga-error'), check:checkLga},
+        {key:'address', el:addrEl, msg:document.getElementById('address-error'), check:checkAddress},
+        {key:'phone', el:phoneEl, msg:document.getElementById('phone-error'), check:checkPhone}
     ];
     var touched = {};
 
@@ -214,48 +178,37 @@
         var delivery = isDelivery();
         deliveryBox.hidden = !delivery;
         pickupBox.hidden = delivery;
-        hint.textContent = delivery ? '(required so the rider can reach you)' : '(optional for pickup)';
-
-        var f = delivery ? fee : 0;
-        feeLine.textContent = delivery ? (f ? naira(f) : 'Free') : '₦0';
-        totalLine.textContent = naira(subtotal + f);
-
+        hint.textContent = delivery ? '(required for delivery)' : '(optional for pickup)';
+        var currentFee = delivery ? fee : 0;
+        feeLine.textContent = delivery ? (currentFee ? naira(currentFee) : 'Free') : '₦0';
+        totalLine.textContent = naira(subtotal + currentFee);
         var allOk = method() !== '';
         fields.forEach(function (fld) {
             var err = fld.check();
-            if (err !== '') allOk = false;
-            var visible = !!touched[fld.key];
-            fld.msg.textContent = visible ? err : '';
-            fld.el.classList.toggle('invalid', visible && err !== '');
+            if (err) allOk = false;
+            var show = !!touched[fld.key];
+            fld.msg.textContent = show ? err : '';
+            fld.el.classList.toggle('invalid', show && !!err);
         });
         payBtn.disabled = !allOk;
     }
 
     radios.forEach(function (r) { r.addEventListener('change', refresh); });
-
     fields.forEach(function (fld) {
-        ['input', 'change', 'blur'].forEach(function (ev) {
-            fld.el.addEventListener(ev, function () { touched[fld.key] = true; refresh(); });
-        });
+        ['input','change','blur'].forEach(function (ev) { fld.el.addEventListener(ev, function () { touched[fld.key] = true; refresh(); }); });
     });
-
     form.addEventListener('submit', function (e) {
         fields.forEach(function (fld) { touched[fld.key] = true; });
         refresh();
         if (payBtn.disabled) { e.preventDefault(); return; }
         payBtn.disabled = true;
-        payBtn.textContent = 'Taking you to payment...';
+        payBtn.innerHTML = 'Connecting to secure payment…';
     });
-
-    // Coming back with the browser's Back button should not leave the button stuck
-    window.addEventListener('pageshow', function () {
-        payBtn.textContent = payLabel;
-        refresh();
-    });
-
+    window.addEventListener('pageshow', function () { payBtn.innerHTML = payLabel; refresh(); });
     refresh();
 })();
 </script>
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

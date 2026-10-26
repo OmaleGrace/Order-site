@@ -48,12 +48,39 @@
 </section>
 
 <section class="menu-filters">
-    <form action="/menu" method="get" class="search-form">
+    <form action="/menu" method="get" class="search-form search-form-main">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="text" name="search" placeholder="Search meals or shops..." value="{{.Search}}" aria-label="Search meals">
+        <input type="search" name="search" placeholder="Search meals, shops or ingredients..." value="{{.Search}}" aria-label="Search meals or shops" autocomplete="off">
         {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
+        {{if .Sort}}<input type="hidden" name="sort" value="{{.Sort}}">{{end}}
+        {{if .MinPrice}}<input type="hidden" name="min_price" value="{{.MinPrice}}">{{end}}
+        {{if .MaxPrice}}<input type="hidden" name="max_price" value="{{.MaxPrice}}">{{end}}
         <button type="submit">Search</button>
     </form>
+
+    <div class="filter-panel">
+        <div class="filter-heading"><strong>Refine your search</strong><span>Filter and sort results</span></div>
+        <form action="/menu" method="get" class="advanced-filters">
+            {{if .Search}}<input type="hidden" name="search" value="{{.Search}}">{{end}}
+            {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
+            <label>Sort
+                <select name="sort">
+                    <option value="relevance" {{if eq .Sort "relevance"}}selected{{end}}>Recommended</option>
+                    <option value="name" {{if eq .Sort "name"}}selected{{end}}>Name A–Z</option>
+                    <option value="price_asc" {{if eq .Sort "price_asc"}}selected{{end}}>Price: low to high</option>
+                    <option value="price_desc" {{if eq .Sort "price_desc"}}selected{{end}}>Price: high to low</option>
+                </select>
+            </label>
+            <label>Min price (₦)
+                <input type="number" name="min_price" min="0" step="100" inputmode="numeric" value="{{.MinPrice}}" placeholder="Any">
+            </label>
+            <label>Max price (₦)
+                <input type="number" name="max_price" min="0" step="100" inputmode="numeric" value="{{.MaxPrice}}" placeholder="Any">
+            </label>
+            <button type="submit" class="filter-apply">Apply filters</button>
+            {{if or .Search .Category .MinPrice .MaxPrice}}<a class="filter-clear" href="/menu">Clear all</a>{{end}}
+        </form>
+    </div>
 
     <div class="category-filters">
         <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}">All</a>
@@ -70,7 +97,7 @@
     {{end}}
 
     <div class="results-bar">
-        <p class="results-count"><strong>{{len .Items}}</strong> {{if eq (len .Items) 1}}dish{{else}}dishes{{end}}{{if .Search}} for “{{.Search}}”{{end}}{{if .Category}} in {{.Category}}{{end}}</p>
+        <p class="results-count"><strong>{{len .Items}}</strong> {{if eq (len .Items) 1}}dish{{else}}dishes{{end}}{{if .Search}} matching “{{.Search}}”{{end}}{{if .Category}} · {{.Category}}{{end}}{{if or .MinPrice .MaxPrice}} · price filter applied{{end}}</p>
         {{if or .Search .Category}}<a href="/menu" class="clear-link">Clear filters ✕</a>{{end}}
     </div>
 
@@ -130,6 +157,7 @@
 
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/favorites.js"></script>
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

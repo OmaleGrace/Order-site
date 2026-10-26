@@ -40,12 +40,48 @@
         .save-btn:hover:not(:disabled) { background: var(--red-dark); }
         .save-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+        .payout-card { position: relative; overflow: hidden; }
+        .payout-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
+        .payout-kicker { display:inline-block; margin-bottom:5px; color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.11em; }
+        .payout-shield { width:42px; height:42px; display:grid; place-items:center; flex:0 0 auto; border-radius:14px; background:#eaf5ed; color:var(--green); font-size:1.15rem; font-weight:900; }
+        .payout-saved,.payout-unverified { display:flex; gap:12px; align-items:flex-start; margin:0 0 18px; padding:13px 14px; border-radius:13px; }
+        .payout-saved { background:#eaf7ee; border:1px solid #bfe1c8; color:var(--green); }
+        .payout-unverified { background:#f7f8f6; border:1px solid var(--line); color:#46534b; }
+        .payout-saved small,.payout-unverified small { display:block; margin-top:3px; color:var(--muted); }
+        .status-dot { width:9px; height:9px; margin-top:5px; border-radius:50%; background:#2e8b57; box-shadow:0 0 0 5px rgba(46,139,87,.12); }
+        .payout-unverified > span { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#e9ece8; font-size:.75rem; font-weight:800; }
+        .bank-search-wrap { position:relative; margin-bottom:9px; }
+        .bank-search-wrap input { width:100%; padding:11px 13px 11px 38px; border:2px solid var(--line); border-radius:12px; font:inherit; background:#fff; box-sizing:border-box; }
+        .bank-search-wrap input:focus { outline:none; border-color:var(--green); box-shadow:0 0 0 4px rgba(20,83,45,.12); }
+        .bank-search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+        .bank-result-count { display:block; min-height:1.1em; margin-top:6px; color:var(--muted); font-size:.78rem; }
+        select#payout_bank_code { width:100%; padding:11px 13px; border:2px solid var(--line); border-radius:12px; font:inherit; background:#fff; }
+        select#payout_bank_code:focus { outline:none; border-color:var(--green); box-shadow:0 0 0 4px rgba(20,83,45,.12); }
+        .account-input-wrap { position:relative; }
+        .account-input-wrap input { padding-right:100px; }
+        #account-check { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.75rem; font-weight:700; pointer-events:none; }
+        .payout-action { min-width:160px; }
+        .payout-message { min-height:1.25em; margin-top:12px; font-size:.86rem; font-weight:600; }
+        .payout-message.error { color:#b42318; }
+        .payout-message.success { color:var(--green); }
+        .payout-message.loading { color:var(--muted); }
+        .verified-account { display:flex; gap:13px; align-items:center; margin-top:16px; padding:16px; border:1px solid #bfe1c8; border-radius:14px; background:linear-gradient(135deg,#f0faf2,#f8fcf9); }
+        .verified-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:var(--green); color:#fff; font-weight:900; }
+        .verified-copy { min-width:0; }
+        .verified-label { display:block; color:#67806f; font-size:.67rem; font-weight:800; letter-spacing:.08em; }
+        .verified-copy strong { display:block; margin-top:3px; color:var(--green); font-size:1.05rem; }
+        .verified-copy small { margin-top:3px; }
+        .payout-save { width:100%; margin-top:14px; background:var(--green); }
+        .payout-save:hover:not(:disabled) { background:#0e5c36; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .payout-heading { gap:10px; } .payout-shield { width:36px; height:36px; } }
     </style>
 </head>
 <body>
     <header class="admin-header">
         <h1>🍴 {{.Name}}</h1>
+        <a href="/vendor/dashboard">Dashboard</a>
         <a href="/vendor/orders">Orders</a>
         <a href="/vendor/menu">My menu</a>
         <a href="/vendor/profile" class="active">Shop profile</a>
@@ -111,17 +147,54 @@
             <button type="submit" class="save-btn" id="save-btn">Save shop details</button>
         </form>
 
-        <section class="card">
-            <h2>Vendor payout account</h2>
-            <p class="sub">Add the bank account where you want to receive your sales balance. ENIE verifies the account name through Paystack. Your account details are private and are not shown on your public shop page.</p>
-            {{if .PayoutVerified}}<div class="notice">Verified account: <strong>{{.PayoutAccountName}}</strong> · {{.PayoutBankName}} · account ending {{.PayoutAccountNumber}}</div>{{else}}<p class="sub">Status: not verified. Verify an account before ENIE can record a payout to it.</p>{{end}}
-            <form action="/vendor/payout-account/verify" method="post">
-                <div class="grid">
-                    <div><label class="field" for="payout_bank_name">Bank name</label><input type="text" name="payout_bank_name" id="payout_bank_name" maxlength="100" value="{{.PayoutBankName}}" placeholder="e.g. Access Bank" required></div>
-                    <div><label class="field" for="payout_bank_code">Paystack bank code</label><input type="text" name="payout_bank_code" id="payout_bank_code" maxlength="12" value="{{.PayoutBankCode}}" placeholder="Bank code from Paystack" required><small>Use the bank code listed by Paystack for your bank.</small></div>
-                    <div class="full"><label class="field" for="payout_account_number">10-digit account number</label><input type="text" inputmode="numeric" pattern="[0-9]{10}" name="payout_account_number" id="payout_account_number" maxlength="10" placeholder="Enter your 10-digit account number" required><small>For privacy, the saved account number is masked on this page.</small></div>
-                    <div class="full"><button class="save-btn" type="submit">Verify and save bank account</button></div>
+        <section class="card payout-card">
+            <div class="payout-heading">
+                <div>
+                    <span class="payout-kicker">SECURE PAYOUTS</span>
+                    <h2>Vendor payout account</h2>
+                    <p class="sub">Choose your bank and enter your account number. Paystack will verify the real account name. You review that name first, then explicitly save the verified account.</p>
                 </div>
+                <div class="payout-shield" aria-hidden="true">✓</div>
+            </div>
+            {{if .PayoutVerified}}<div class="payout-saved"><span class="status-dot"></span><div><strong>Verified payout account</strong><small>{{.PayoutAccountName}} · {{.PayoutBankName}} · account ending {{.PayoutAccountNumber}}</small></div></div>{{else}}<div class="payout-unverified"><span>1</span><div><strong>Not verified yet</strong><small>Verify an account before ENIE can record payouts to it.</small></div></div>{{end}}
+
+            <form id="payout-form" novalidate>
+                <div class="grid">
+                    <div class="full">
+                        <label class="field" for="payout_bank_search">Bank name</label>
+                        <div class="bank-search-wrap">
+                            <span class="bank-search-icon" aria-hidden="true">⌕</span>
+                            <input type="search" id="payout_bank_search" placeholder="Search Paystack banks…" autocomplete="off" spellcheck="false" aria-label="Search banks">
+                        </div>
+                        <select name="payout_bank_code" id="payout_bank_code" required>
+                            <option value="">Loading banks…</option>
+                        </select>
+                        <input type="hidden" name="payout_bank_name" id="payout_bank_name" value="">
+                        <small>Search by bank name, then select it. Bank names and codes are loaded directly from Paystack.</small>
+                        <span class="bank-result-count" id="bank-result-count" aria-live="polite"></span>
+                    </div>
+                    <div class="full">
+                        <label class="field" for="payout_account_number">Account number</label>
+                        <div class="account-input-wrap"><input type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]{10}" name="payout_account_number" id="payout_account_number" maxlength="10" placeholder="Enter your 10-digit account number" required><span id="account-check" aria-hidden="true">10 digits</span></div>
+                    </div>
+                    <div class="full">
+                        <button class="save-btn payout-action" id="verify-payout-btn" type="submit"><span>Verify account</span></button>
+                    </div>
+                </div>
+
+                <div id="payout-message" class="payout-message" role="status" aria-live="polite"></div>
+
+                <div id="verified-account" class="verified-account" hidden>
+                    <div class="verified-icon">✓</div>
+                    <div class="verified-copy">
+                        <span class="verified-label">PAYSTACK VERIFIED ACCOUNT NAME</span>
+                        <strong id="verified-account-name"></strong>
+                        <small>Compare this name with the bank account you entered. You cannot type or edit this verified name.</small>
+                    </div>
+                </div>
+
+                <input type="hidden" name="verification_token" id="verification_token">
+                <button class="save-btn payout-save" id="save-payout-btn" type="button" disabled hidden>Save verified bank details</button>
             </form>
         </section>
     </main>
@@ -182,6 +255,147 @@
         // An old saved number that does not meet the rule is shown straight away
         touched = phoneEl.value.trim() !== '';
         refresh();
+    })();
+
+    (function () {
+        var form = document.getElementById('payout-form');
+        if (!form) return;
+        var bank = document.getElementById('payout_bank_code');
+        var bankSearch = document.getElementById('payout_bank_search');
+        var bankResultCount = document.getElementById('bank-result-count');
+        var bankName = document.getElementById('payout_bank_name');
+        var account = document.getElementById('payout_account_number');
+        var verify = document.getElementById('verify-payout-btn');
+        var save = document.getElementById('save-payout-btn');
+        var message = document.getElementById('payout-message');
+        var verified = document.getElementById('verified-account');
+        var verifiedName = document.getElementById('verified-account-name');
+        var token = document.getElementById('verification_token');
+        var accountCheck = document.getElementById('account-check');
+        var banks = [];
+
+        function setMessage(text, type) {
+            message.textContent = text || '';
+            message.className = 'payout-message ' + (type || '');
+        }
+        function setBusy(busy) {
+            verify.disabled = busy;
+            verify.querySelector('span').textContent = busy ? 'Working…' : 'Verify account';
+        }
+        function clearVerification() {
+            token.value = '';
+            verified.hidden = true;
+            save.hidden = true;
+            save.disabled = true;
+            verifiedName.textContent = '';
+        }
+        function renderBanks(filter) {
+            var query = (filter || '').trim().toLowerCase();
+            var selectedCode = bank.value;
+            var matches = banks.filter(function (item) {
+                return !query || String(item.name || '').toLowerCase().indexOf(query) !== -1 || String(item.code || '').toLowerCase().indexOf(query) !== -1;
+            });
+            bank.innerHTML = '';
+            var placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = matches.length ? 'Select your bank' : 'No matching banks found';
+            bank.appendChild(placeholder);
+            matches.forEach(function (item) {
+                var option = document.createElement('option');
+                option.value = item.code;
+                option.textContent = item.name;
+                option.dataset.name = item.name;
+                bank.appendChild(option);
+            });
+            if (selectedCode && matches.some(function (item) { return item.code === selectedCode; })) {
+                bank.value = selectedCode;
+            } else if (!query && {{if .PayoutBankCode}}true{{else}}false{{end}}) {
+                bank.value = {{if .PayoutBankCode}}{{printf "%q" .PayoutBankCode}}{{else}}''{{end}};
+                var selected = bank.options[bank.selectedIndex];
+                bankName.value = selected && selected.dataset ? (selected.dataset.name || '') : '';
+            }
+            bankResultCount.textContent = banks.length ? matches.length + ' bank' + (matches.length === 1 ? '' : 's') + ' found' : '';
+        }
+        function loadBanks() {
+            fetch('/vendor/payout-banks', { headers: { 'Accept': 'application/json' } })
+                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Could not load banks.'); return d; }); })
+                .then(function (data) {
+                    banks = data.banks || [];
+                    renderBanks('');
+                    {{if .PayoutBankName}}bankName.value = {{printf "%q" .PayoutBankName}};{{end}}
+                })
+                .catch(function (err) {
+                    bank.innerHTML = '<option value="">Bank list unavailable</option>';
+                    bankResultCount.textContent = '';
+                    setMessage(err.message, 'error');
+                });
+        }
+        bankSearch.addEventListener('input', function () {
+            renderBanks(bankSearch.value);
+        });
+        bankSearch.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                bankSearch.value = '';
+                renderBanks('');
+                bank.focus();
+            }
+        });
+        bank.addEventListener('change', function () {
+            var option = bank.options[bank.selectedIndex];
+            bankName.value = option && option.dataset ? (option.dataset.name || '') : '';
+            clearVerification();
+            setMessage('', '');
+        });
+        account.addEventListener('input', function () {
+            account.value = account.value.replace(/\D/g, '').slice(0, 10);
+            accountCheck.textContent = account.value.length + '/10';
+            clearVerification();
+            setMessage('', '');
+        });
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var code = bank.value;
+            var number = account.value.trim();
+            if (!code || !bankName.value || !/^\d{10}$/.test(number)) {
+                setMessage('Select your bank and enter exactly 10 digits for the account number.', 'error');
+                return;
+            }
+            clearVerification();
+            setBusy(true);
+            setMessage('Checking the account with Paystack…', 'loading');
+            var body = new URLSearchParams();
+            body.set('payout_bank_code', code);
+            body.set('payout_bank_name', bankName.value);
+            body.set('payout_account_number', number);
+            fetch('/vendor/payout-account/verify', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: body.toString() })
+                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Account verification failed.'); return d; }); })
+                .then(function (data) {
+                    token.value = data.verification_token || '';
+                    verifiedName.textContent = data.account_name || '';
+                    verified.hidden = false;
+                    save.hidden = false;
+                    save.disabled = !token.value;
+                    setMessage(data.message || 'Account verified. You can now save it.', 'success');
+                })
+                .catch(function (err) { setMessage(err.message, 'error'); })
+                .finally(function () { setBusy(false); });
+        });
+        save.addEventListener('click', function () {
+            if (!token.value) return;
+            save.disabled = true;
+            save.textContent = 'Saving…';
+            var body = new URLSearchParams();
+            body.set('verification_token', token.value);
+            fetch('/vendor/payout-account/save', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: body.toString() })
+                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Could not save bank details.'); return d; }); })
+                .then(function (data) {
+                    setMessage(data.message || 'Bank details saved.', 'success');
+                    save.textContent = 'Saved ✓';
+                    setTimeout(function () { window.location.reload(); }, 650);
+                })
+                .catch(function (err) { setMessage(err.message, 'error'); save.disabled = false; save.textContent = 'Save verified bank details'; });
+        });
+        loadBanks();
     })();
     </script>
 <script src="/static/js/vendor-banner.js"></script>

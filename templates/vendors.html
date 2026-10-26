@@ -38,11 +38,39 @@
     <p>Pick a shop, see what they cook, and order from them.</p>
 </section>
 
-<section class="menu-filters">
-    <form action="/vendors" method="get" class="search-form">
-        <input type="text" name="q" placeholder="Search shops or areas..." value="{{.Query}}" aria-label="Search shops">
+<section class="menu-filters vendor-discovery-filters">
+    <form action="/vendors" method="get" class="search-form search-form-main">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="search" name="q" placeholder="Search shops, areas or cuisines..." value="{{.Query}}" aria-label="Search shops" autocomplete="off">
+        {{if .Service}}<input type="hidden" name="service" value="{{.Service}}">{{end}}
+        {{if .Sort}}<input type="hidden" name="sort" value="{{.Sort}}">{{end}}
+        {{if .Verified}}<input type="hidden" name="verified" value="1">{{end}}
         <button type="submit">Search</button>
     </form>
+    <div class="filter-panel">
+        <div class="filter-heading"><strong>Find the right shop</strong><span>Choose service and sorting</span></div>
+        <form action="/vendors" method="get" class="advanced-filters">
+            {{if .Query}}<input type="hidden" name="q" value="{{.Query}}">{{end}}
+            <label>Service
+                <select name="service">
+                    <option value="" {{if not .Service}}selected{{end}}>All shops</option>
+                    <option value="delivery" {{if eq .Service "delivery"}}selected{{end}}>Delivery</option>
+                    <option value="pickup" {{if eq .Service "pickup"}}selected{{end}}>Pickup</option>
+                </select>
+            </label>
+            <label>Sort
+                <select name="sort">
+                    <option value="recommended" {{if eq .Sort "recommended"}}selected{{end}}>Recommended</option>
+                    <option value="completed" {{if eq .Sort "completed"}}selected{{end}}>Most ordered</option>
+                    <option value="dishes" {{if eq .Sort "dishes"}}selected{{end}}>Most menu items</option>
+                    <option value="name" {{if eq .Sort "name"}}selected{{end}}>Name A–Z</option>
+                </select>
+            </label>
+            <label class="check-filter"><input type="checkbox" name="verified" value="1" {{if .Verified}}checked{{end}}> Verified shops only</label>
+            <button type="submit" class="filter-apply">Apply filters</button>
+            {{if or .Query .Service .Verified}}<a class="filter-clear" href="/vendors">Clear all</a>{{end}}
+        </form>
+    </div>
 </section>
 
 <main class="menu-container">
@@ -86,6 +114,7 @@
 
 </main>
 
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

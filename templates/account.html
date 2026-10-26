@@ -4,128 +4,137 @@
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>My Account - {{brandName}}</title>
-
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
 </head>
-
 <body>
-
 <header class="account-header">
     <div class="header-inner">
-
         <a href="/menu" class="logo"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
-
-        <nav>
+        <nav aria-label="Account navigation">
             <a href="/menu">Menu</a>
             <a href="/cart">Cart</a>
             <a href="/orders">Orders</a>
             <a href="/account" class="active">Account</a>
             <a href="/logout">Logout</a>
         </nav>
-
     </div>
 </header>
 
-
-<main class="account-container">
-
+<main class="account-container account-dashboard">
     {{if .Updated}}
-    <div class="update-banner">✅ Profile updated successfully!</div>
+    <div class="update-banner" role="status">✓ Profile updated successfully.</div>
     {{end}}
 
-    <section class="account-card">
-
+    <section class="account-welcome">
         <div class="account-heading">
             {{if .ProfilePicture}}
             <img src="{{.ProfilePicture}}" alt="Profile picture" class="profile-image zoomable">
             {{else}}
-            <div class="profile-icon">👤</div>
+            <div class="profile-icon" aria-hidden="true">👤</div>
             {{end}}
-
             <div>
-                <h1>My Account</h1>
-                <p>Manage your account and view your information.</p>
+                <p class="eyebrow">Your ENIE account</p>
+                <h1>Welcome back{{if .Name}}, {{.Name}}{{end}}.</h1>
+                <p>Everything you need to manage your orders, favourites and profile in one place.</p>
             </div>
         </div>
-
-        <div class="stat-row">
-            <div class="stat">
-                <span class="stat-value">{{.OrderCount}}</span>
-                <span class="stat-label">Orders</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">₦{{naira .TotalSpentKobo}}</span>
-                <span class="stat-label">Spent</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">{{.MemberSince}}</span>
-                <span class="stat-label">Member Since</span>
-            </div>
-        </div>
-
-        <div class="account-info">
-
-            <div class="info-row">
-                <span class="label">Name</span>
-                <span class="value">{{.Name}}</span>
-            </div>
-
-            <div class="info-row">
-                <span class="label">Email</span>
-                <span class="value">{{.Email}}</span>
-            </div>
-
-            {{if .Phone}}
-            <div class="info-row">
-                <span class="label">Phone</span>
-                <span class="value">{{.Phone}}</span>
-            </div>
-            {{end}}
-
-            <div class="info-row">
-                <span class="label">Login method</span>
-
-                <span class="value provider">
-                    {{if eq .AuthProvider "google"}}
-                        Google
-                    {{else if eq .AuthProvider "facebook"}}
-                        Facebook
-                    {{else}}
-                        Email & Password
-                    {{end}}
-                </span>
-            </div>
-
-        </div>
-
-        <a href="/account/edit" class="account-button primary">✏️ Edit Profile</a>
-
-        {{if .IsVendor}}
-        <div class="account-actions">
-            <a href="/vendor/orders" class="account-button">🏪 Shop orders</a>
-            <a href="/vendor/menu" class="account-button">🍽️ Shop menu</a>
-            <a href="/vendor/ai" class="account-button vendor-ai-link">✨ AI Writing Studio</a>
-            <a href="/vendor/profile" class="account-button">🏪 Shop profile</a>
-            <a href="/vendor/billing" class="account-button">💳 Billing</a>
-        </div>
-        {{end}}
-        <div class="account-actions">
-            <a href="/orders" class="account-button">📦 My Orders</a>
-            <a href="/messages" class="account-button">💬 Messages</a>
-            <a href="/cart" class="account-button">🛒 My Cart</a>
-            <a href="/favorites" class="account-button">❤️ Favourites</a>
-        </div>
-
-        <a href="/logout" class="logout-button">Logout</a>
-
+        <a href="/account/edit" class="account-button primary account-edit-btn">✏️ Edit profile</a>
     </section>
 
+    {{if gt .ActiveOrders 0}}
+    <a href="/orders" class="active-order-banner">
+        <span class="active-order-icon">●</span>
+        <span><strong>{{.ActiveOrders}} active order{{if ne .ActiveOrders 1}}s{{end}}</strong><small>View the latest status and tracking updates.</small></span>
+        <b aria-hidden="true">→</b>
+    </a>
+    {{end}}
+
+    <section class="account-stats" aria-label="Account summary">
+        <div class="account-stat-card"><span class="account-stat-icon">📦</span><div><strong>{{.OrderCount}}</strong><small>Orders</small></div></div>
+        <div class="account-stat-card"><span class="account-stat-icon">❤️</span><div><strong>{{.FavoriteCount}}</strong><small>Favourites</small></div></div>
+        <div class="account-stat-card"><span class="account-stat-icon">₦</span><div><strong>₦{{naira .TotalSpentKobo}}</strong><small>Total spent</small></div></div>
+        <div class="account-stat-card"><span class="account-stat-icon">🌱</span><div><strong>{{.MemberSince}}</strong><small>Member since</small></div></div>
+    </section>
+
+    <section class="account-section">
+        <div class="section-title-row">
+            <div><p class="eyebrow">Quick access</p><h2>Manage your account</h2></div>
+        </div>
+        <div class="account-feature-grid">
+            <a href="/orders" class="account-feature-card feature-primary"><span class="feature-icon">📦</span><span><strong>My orders</strong><small>Track current orders and review past purchases.</small></span><b>→</b></a>
+            <a href="/favorites" class="account-feature-card"><span class="feature-icon">❤️</span><span><strong>Favourites</strong><small>Quickly find meals you've saved.</small></span><b>→</b></a>
+            <a href="/cart" class="account-feature-card"><span class="feature-icon">🛒</span><span><strong>My cart</strong><small>Review items and continue checkout.</small></span><b>→</b></a>
+            <a href="/messages" class="account-feature-card"><span class="feature-icon">💬</span><span><strong>Messages</strong><small>Keep up with shop and support conversations.</small></span><b>→</b></a>
+            <a href="/account/edit" class="account-feature-card"><span class="feature-icon">⚙️</span><span><strong>Profile & phone</strong><small>Update your profile details and phone verification.</small></span><b>→</b></a>
+            <a href="/menu" class="account-feature-card"><span class="feature-icon">🍽️</span><span><strong>Order food</strong><small>Discover something new or order a favourite.</small></span><b>→</b></a>
+        </div>
+    </section>
+
+    <section class="account-section recent-section">
+        <div class="section-title-row">
+            <div><p class="eyebrow">Your activity</p><h2>Recent orders</h2></div>
+            {{if .RecentOrders}}<a href="/orders" class="section-link">View all →</a>{{end}}
+        </div>
+
+        {{if .RecentOrders}}
+        <div class="recent-orders-list">
+            {{range .RecentOrders}}
+            <div class="recent-order-card">
+                <a href="/orders" class="recent-order-main">
+                    <div class="recent-order-icon">{{if eq .DeliveryMethod "delivery"}}🚚{{else}}🏪{{end}}</div>
+                    <div><strong>{{.Reference}}</strong><small>{{.CreatedAt}} · {{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}</small></div>
+                </a>
+                <div class="recent-order-side"><span class="order-status-pill status-{{.Status}}">{{.Status}}</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
+                <form action="/orders/reorder" method="post" class="account-reorder-form">
+                    <input type="hidden" name="order_id" value="{{.ID}}">
+                    <button type="submit" class="account-reorder-btn">↻ Order again</button>
+                </form>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="account-empty">
+            <span>🍽️</span><div><h3>Your order history starts here.</h3><p>Place your first order and you'll be able to find it here whenever you need it again.</p></div>
+            <a href="/menu" class="account-button">Browse food</a>
+        </div>
+        {{end}}
+    </section>
+
+    <section class="account-section profile-summary">
+        <div class="section-title-row"><div><p class="eyebrow">Account details</p><h2>Your information</h2></div><a href="/account/edit" class="section-link">Edit →</a></div>
+        <div class="account-info">
+            <div class="info-row"><span class="label">Name</span><span class="value">{{.Name}}</span></div>
+            <div class="info-row"><span class="label">Email</span><span class="value">{{.Email}}</span></div>
+            {{if .Phone}}<div class="info-row"><span class="label">Phone</span><span class="value">{{.Phone}}</span></div>{{end}}
+            <div class="info-row"><span class="label">Sign-in method</span><span class="value provider">{{if eq .AuthProvider "google"}}Google{{else if eq .AuthProvider "facebook"}}Facebook{{else}}Email & Password{{end}}</span></div>
+        </div>
+    </section>
+
+    {{if .IsVendor}}
+    <section class="account-section vendor-account-section">
+        <div class="section-title-row"><div><p class="eyebrow">You sell on ENIE</p><h2>Shop management</h2></div><a href="/vendor/dashboard" class="section-link">Dashboard →</a></div>
+        <div class="account-feature-grid vendor-feature-grid">
+            <a href="/vendor/dashboard" class="account-feature-card feature-primary"><span class="feature-icon">📊</span><span><strong>Vendor dashboard</strong><small>See sales, active orders and shop health.</small></span><b>→</b></a>
+            <a href="/vendor/orders" class="account-feature-card"><span class="feature-icon">🧾</span><span><strong>Shop orders</strong><small>Manage incoming and active orders.</small></span><b>→</b></a>
+            <a href="/vendor/menu" class="account-feature-card"><span class="feature-icon">🍽️</span><span><strong>Shop menu</strong><small>Manage dishes and prices.</small></span><b>→</b></a>
+            <a href="/vendor/profile" class="account-feature-card"><span class="feature-icon">🏪</span><span><strong>Shop profile</strong><small>Update shop details and payout account.</small></span><b>→</b></a>
+            <a href="/vendor/ai" class="account-feature-card"><span class="feature-icon">✨</span><span><strong>AI Writing Studio</strong><small>Create stronger menu and marketing copy.</small></span><b>→</b></a>
+            <a href="/vendor/billing" class="account-feature-card"><span class="feature-icon">💳</span><span><strong>Billing</strong><small>Review vendor billing and payment information.</small></span><b>→</b></a>
+        </div>
+    </section>
+    {{end}}
+
+    <div class="account-bottom-actions">
+        <a href="/logout" class="logout-button">Log out</a>
+    </div>
 </main>
 
 <script src="/static/js/lightbox.js"></script>
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

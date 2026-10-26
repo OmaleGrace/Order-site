@@ -25,8 +25,11 @@ type ShopCard struct {
 }
 
 type VendorsPage struct {
-	Shops []ShopCard
-	Query string
+	Shops    []ShopCard
+	Query    string
+	Service  string
+	Sort     string
+	Verified bool
 }
 
 func shorten(s string, max int) string {
@@ -39,6 +42,15 @@ func shorten(s string, max int) string {
 
 func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	service := r.URL.Query().Get("service")
+	if service != "pickup" && service != "delivery" {
+		service = ""
+	}
+	sortBy := r.URL.Query().Get("sort")
+	if sortBy != "name" && sortBy != "dishes" && sortBy != "completed" {
+		sortBy = "recommended"
+	}
+	verifiedOnly := r.URL.Query().Get("verified") == "1"
 	if len([]rune(q)) > 60 {
 		q = string([]rune(q)[:60])
 	}
@@ -54,10 +66,28 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	`
 	var args []interface{}
 	if q != "" {
-		query += " AND (v.name ILIKE $1 OR v.area ILIKE $1)"
+		query += " AND (v.name ILIKE $1 OR v.area ILIKE $1 OR v.description ILIKE $1)"
 		args = append(args, "%"+q+"%")
 	}
-	query += " ORDER BY v.verified DESC, completed DESC, v.name"
+	if service == "pickup" {
+		query += " AND v.offers_pickup = TRUE"
+	}
+	if service == "delivery" {
+		query += " AND v.offers_delivery = TRUE"
+	}
+	if verifiedOnly {
+		query += " AND v.verified = TRUE"
+	}
+	switch sortBy {
+	case "name":
+		query += " ORDER BY v.name ASC"
+	case "dishes":
+		query += " ORDER BY dishes DESC, v.name ASC"
+	case "completed":
+		query += " ORDER BY completed DESC, v.name ASC"
+	default:
+		query += " ORDER BY v.verified DESC, completed DESC, v.name"
+	}
 
 	rows, err := h.DB.Query(query, args...)
 	if err != nil {
@@ -67,7 +97,7 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	page := VendorsPage{Query: q}
+	page := VendorsPage{Query: q, Service: service, Sort: sortBy, Verified: verifiedOnly}
 	for rows.Next() {
 		var s ShopCard
 		if err := rows.Scan(&s.Name, &s.Slug, &s.Description, &s.Area, &s.LogoURL, &s.Verified,

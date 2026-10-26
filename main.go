@@ -49,6 +49,7 @@ func main() {
 				errors.Render(w, "We couldn't find the page you were looking for.", http.StatusNotFound)
 				return
 			}
+			w.Header().Set("Cache-Control", "public, max-age=3600")
 			fs.ServeHTTP(w, r)
 		})),
 	)
@@ -64,9 +65,16 @@ func main() {
 	mux.HandleFunc("GET /terms", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /login", middleware.Logging(h.Login))
 	mux.HandleFunc("POST /login", middleware.Logging(middleware.RateLimit(middleware.LoginIPLimiter, h.Login)))
+	mux.HandleFunc("GET /vendor/dashboard", middleware.Logging(h.VendorDashboard))
+	mux.HandleFunc("GET /vendor/analytics", middleware.Logging(h.VendorAnalytics))
 	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
 	mux.HandleFunc("GET /vendor/ai", middleware.Logging(middleware.RequireLogin(db, h.VendorAI)))
 	mux.HandleFunc("GET /messages", middleware.Logging(middleware.RequireLogin(db, h.MessagesInbox)))
+	mux.HandleFunc("GET /notifications", middleware.Logging(middleware.RequireLogin(db, h.Notifications)))
+	mux.HandleFunc("GET /notifications/unread-count", middleware.Logging(middleware.RequireLogin(db, h.NotificationUnreadCount)))
+	mux.HandleFunc("GET /header/counts", middleware.Logging(h.HeaderCounts))
+	mux.HandleFunc("POST /notifications/read", middleware.Logging(middleware.RequireLogin(db, h.NotificationRead)))
+	mux.HandleFunc("POST /notifications/read-all", middleware.Logging(middleware.RequireLogin(db, h.NotificationsReadAll)))
 	mux.HandleFunc("POST /messages/start", middleware.Logging(middleware.RequireLogin(db, h.StartMessageThread)))
 	mux.HandleFunc("GET /messages/{threadID}", middleware.Logging(middleware.RequireLogin(db, h.MessageThread)))
 	mux.HandleFunc("GET /messages/{threadID}/updates", middleware.Logging(middleware.RequireLogin(db, h.MessageUpdates)))
@@ -74,7 +82,9 @@ func main() {
 	mux.HandleFunc("POST /messages/{threadID}/send", middleware.Logging(middleware.RequireLogin(db, h.SendMessage)))
 	mux.HandleFunc("POST /vendor/ai/generate", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.VendorAILimiter, h.VendorAIGenerate))))
 	mux.HandleFunc("POST /vendor/profile/save", middleware.Logging(h.VendorProfileSave))
+	mux.HandleFunc("GET /vendor/payout-banks", middleware.Logging(middleware.RequireLogin(db, h.VendorPayoutBanks)))
 	mux.HandleFunc("POST /vendor/payout-account/verify", middleware.Logging(middleware.RequireLogin(db, h.VendorPayoutAccountVerify)))
+	mux.HandleFunc("POST /vendor/payout-account/save", middleware.Logging(middleware.RequireLogin(db, h.VendorPayoutAccountSave)))
 	mux.HandleFunc("GET /signup", middleware.Logging(h.Signup))
 	mux.HandleFunc("POST /signup", middleware.Logging(middleware.RateLimit(middleware.SignupIPLimiter, h.Signup)))
 	mux.HandleFunc("GET /vendor/orders", middleware.Logging(h.VendorOrders))
@@ -154,6 +164,7 @@ func main() {
 			middleware.RequireLogin(db, h.MyOrders),
 		),
 	)
+	mux.HandleFunc("POST /orders/reorder", middleware.Logging(middleware.RequireLogin(db, h.Reorder)))
 	mux.HandleFunc(
 		"GET /admin/orders",
 		middleware.Logging(

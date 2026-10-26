@@ -86,3 +86,73 @@
 .shop-card-compact { flex: 0 0 270px; scroll-snap-align: start; }
 .shop-card-compact .shop-card-body h3 { margin: 0 0 6px; font-size: 1.05rem; color: var(--green); }
 .shop-card-compact .verified-badge { display: inline-block; margin-bottom: 4px; }
+/* Stage 2 — restaurant/menu experience */
+.shop-page { max-width: 1180px; margin: 0 auto; padding: 18px var(--page-gutter) 96px; }
+.shop-breadcrumb { display:flex; gap:9px; align-items:center; color:#7a877d; font-size:.84rem; margin:2px 0 14px; }
+.shop-breadcrumb a { color:var(--green); text-decoration:none; font-weight:750; }
+.shop-breadcrumb strong { color:#425247; font-weight:700; }
+.shop-hero-modern { position:relative; overflow:hidden; min-height:235px; padding:34px; margin-bottom:26px; border:1px solid rgba(23,74,50,.09); border-top:0; background:linear-gradient(135deg,#fff 0%,#f6f4ea 100%); }
+.shop-hero-cover { position:absolute; inset:0 0 auto 0; height:78px; background:linear-gradient(90deg,rgba(23,74,50,.96),rgba(48,101,72,.82)); }
+.shop-hero-modern::after { content:""; position:absolute; right:-80px; top:-100px; width:300px; height:300px; border-radius:50%; background:rgba(242,106,27,.10); }
+.shop-logo-large { position:relative; z-index:2; width:118px; height:118px; margin-top:30px; border:5px solid #fff; box-shadow:0 12px 30px rgba(23,74,50,.16); background:#efe6d6; }
+.shop-info-modern { position:relative; z-index:2; flex:1; padding-top:22px; }
+.shop-title-row { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
+.shop-kicker { color:var(--terracotta); font-size:.68rem; letter-spacing:.14em; font-weight:850; margin-bottom:5px; }
+.shop-title-row h1 { margin:0; font-size:clamp(1.8rem,4vw,2.6rem); letter-spacing:-.05em; }
+.shop-title-row .verified-badge { margin-top:3px; }
+.shop-meta-row { display:flex; flex-wrap:wrap; gap:8px 18px; margin:15px 0; color:#53635a; font-size:.86rem; font-weight:650; }
+.shop-actions { display:flex; flex-wrap:wrap; align-items:center; gap:9px; }
+.shop-location { color:#59685e; font-size:.82rem; }
+.shop-action-link,.shop-message-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 13px; border-radius:10px; font-size:.82rem; font-weight:750; text-decoration:none; }
+.shop-action-link { color:var(--green); background:#eaf2eb; }
+.shop-message-btn { border:1px solid #d8e1d9; background:#fff; color:var(--green); }
+.shop-actions form { margin:0; }
+.menu-toolbar { display:flex; align-items:end; justify-content:space-between; gap:24px; margin:10px 0 16px; }
+.menu-toolbar h2 { margin:0 0 4px; color:var(--green-dark); font-size:clamp(1.35rem,3vw,1.8rem); letter-spacing:-.035em; }
+.menu-toolbar p { margin:0; color:var(--muted); font-size:.88rem; }
+.shop-menu-search { display:flex; align-items:center; gap:9px; width:min(340px,100%); padding:4px 12px; border:1px solid #dce4db; border-radius:13px; background:#fff; box-shadow:0 5px 16px rgba(23,74,50,.05); }
+.shop-menu-search:focus-within { border-color:var(--green); box-shadow:0 0 0 3px rgba(23,74,50,.08); }
+.shop-menu-search span { font-size:1.35rem; color:#718078; }
+.shop-menu-search input { width:100%; padding:9px 0; border:0 !important; outline:0 !important; box-shadow:none !important; background:transparent; }
+.shop-category-nav { display:flex; gap:8px; overflow-x:auto; padding:4px 2px 13px; margin-bottom:8px; scrollbar-width:none; }
+.shop-category-nav::-webkit-scrollbar { display:none; }
+.shop-category-btn { flex:0 0 auto; border:1px solid #dce4db; border-radius:999px; padding:9px 15px; background:#fff; color:#4d5e54; font-size:.83rem; font-weight:750; cursor:pointer; }
+.shop-category-btn:hover { border-color:var(--green); color:var(--green); }
+.shop-category-btn.active { border-color:var(--green); background:var(--green); color:#fff; }
+.shop-menu-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.shop-food-card { min-width:0; }
+.shop-food-image { aspect-ratio: 1.35 / 1; }
+.shop-food-content { padding:17px 18px 18px; }
+.shop-food-topline { min-height:18px; margin-bottom:3px; }
+.shop-food-category { color:var(--terracotta); font-size:.68rem; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+.shop-food-content h2 { font-size:1.14rem; }
+.shop-food-content .food-description { min-height:48px; }
+.food-description-muted { color:#8a948d; font-style:italic; }
+.shop-food-bottom { margin-top:auto; }
+.shop-food-bottom .add-cart-btn { min-width:86px; }
+.shop-no-results { margin-top:20px; }
+.mobile-cart-bar { display:none; }
+.shop-food-card[hidden] { display:none; }
+@media (max-width:900px) { .shop-menu-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:700px) {
+    .shop-page { padding-top:12px; }
+    .shop-hero-modern { padding:24px 18px 20px; }
+    .shop-logo-large { width:94px; height:94px; margin-top:30px; }
+    .shop-info-modern { padding-top:15px; }
+    .shop-title-row { gap:10px; }
+    .shop-title-row h1 { font-size:1.7rem; }
+    .menu-toolbar { display:block; }
+    .shop-menu-search { margin-top:14px; width:100%; }
+    .shop-menu-grid { gap:14px; }
+    .shop-food-content { padding:14px; }
+    .shop-food-content .food-description { min-height:0; }
+    .mobile-cart-bar { position:fixed; left:12px; right:12px; bottom:84px; z-index:850; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px 11px 15px; border:1px solid rgba(23,74,50,.1); border-radius:15px; background:rgba(255,255,255,.96); backdrop-filter:blur(14px); box-shadow:0 12px 30px rgba(23,74,50,.16); color:#536158; font-size:.78rem; font-weight:700; }
+    .mobile-cart-bar a { padding:9px 13px; border-radius:10px; background:var(--green); color:#fff; text-decoration:none; }
+}
+@media (max-width:480px) {
+    .shop-menu-grid { grid-template-columns:1fr; }
+    .shop-hero-modern { align-items:flex-start; }
+    .shop-logo-large { width:82px; height:82px; }
+    .shop-actions { align-items:stretch; }
+    .shop-action-link,.shop-message-btn { justify-content:center; }
+}

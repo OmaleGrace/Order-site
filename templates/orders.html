@@ -1,119 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <meta name="theme-color" content="#174a32">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Orders - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/orders.css">
 </head>
-
 <body>
-
 <header class="orders-header">
-    <div class="brand">
-        <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
-    </div>
-
-    <nav>
+    <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+    <nav aria-label="Order navigation">
         <a href="/menu">Menu</a>
         <a href="/cart">Cart</a>
-        <a href="/logout">Logout</a>
+        <a href="/account">Account</a>
     </nav>
 </header>
 
 <main class="orders-container">
+    <section class="orders-hero">
+        <div>
+            <p class="eyebrow">Your ENIE activity</p>
+            <h1>My Orders</h1>
+            <p>Follow your order from payment to preparation and completion.</p>
+        </div>
+        <a href="/menu" class="hero-action">Order food</a>
+    </section>
 
-    <div class="orders-title">
-        <h1>My Orders</h1>
-        <p>Track the status of your past orders.</p>
+    {{if .Orders}}
+    {{if .Message}}<div class="orders-message" role="status">{{$.Message}}</div>{{end}}
+    {{else}}
+        <section class="empty-orders">
+            <div class="empty-icon" aria-hidden="true">🍽️</div>
+            <p class="eyebrow">Ready when you are</p>
+            <h2>No orders yet</h2>
+            <p>Your orders will appear here with their status and details after checkout.</p>
+            <a href="/menu" class="menu-btn">Browse Menu</a>
+        </section>
+    {{end}}
+
+    <div class="orders-list">
+    {{range .Orders}}
+        <article class="order-card {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}order-live{{end}}" data-status="{{.Status}}">
+            <div class="order-card-header">
+                <div>
+                    <div class="order-heading-line">
+                        <h2>Order {{.Reference}}</h2>
+                        {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}
+                            <span class="live-dot"><span></span> Live</span>
+                        {{end}}
+                    </div>
+                    <p class="order-meta">Placed {{date .CreatedAt}}</p>
+                </div>
+                <span class="status-label status-{{.Status}}">{{.Status}}</span>
+            </div>
+
+            <div class="tracking-panel">
+                <div class="tracking-topline">
+                    <div>
+                        <p class="tracking-kicker">Order progress</p>
+                        {{if eq .Status "paid"}}
+                            <h3>Order confirmed</h3>
+                            <p>Your order has been received and is waiting for the vendor to start preparing it.</p>
+                        {{else if eq .Status "preparing"}}
+                            <h3>Being prepared</h3>
+                            <p>The vendor is currently preparing your food.</p>
+                        {{else if eq .Status "ready"}}
+                            <h3>Ready for {{if eq .DeliveryMethod "delivery"}}delivery{{else}}pickup{{end}}</h3>
+                            <p>Your food is ready for the next fulfilment step.</p>
+                        {{else if eq .Status "completed"}}
+                            <h3>Order completed</h3>
+                            <p>Your order has been completed. Thanks for ordering with {{brandName}}.</p>
+                        {{else if eq .Status "cancelled"}}
+                            <h3>Order cancelled</h3>
+                            <p>This order is no longer active.</p>
+                        {{else}}
+                            <h3>Payment pending</h3>
+                            <p>We're waiting for payment confirmation before the vendor can begin.</p>
+                        {{end}}
+                    </div>
+                    <div class="fulfilment-pill">
+                        <span aria-hidden="true">{{if eq .DeliveryMethod "delivery"}}🚚{{else}}🏪{{end}}</span>
+                        {{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}
+                    </div>
+                </div>
+
+                <div class="timeline" aria-label="Order progress">
+                    <div class="timeline-line" aria-hidden="true"><span class="timeline-fill status-fill-{{.Status}}"></span></div>
+                    <div class="timeline-step {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "paid"}}current{{end}}">
+                        <span class="timeline-dot">✓</span><strong>Confirmed</strong><small>Payment received</small>
+                    </div>
+                    <div class="timeline-step {{if or (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "preparing"}}current{{end}}">
+                        <span class="timeline-dot">2</span><strong>Preparing</strong><small>Food is being made</small>
+                    </div>
+                    <div class="timeline-step {{if or (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "ready"}}current{{end}}">
+                        <span class="timeline-dot">3</span><strong>Ready</strong><small>Fulfilment next</small>
+                    </div>
+                    <div class="timeline-step {{if eq .Status "completed"}}done current{{end}}">
+                        <span class="timeline-dot">4</span><strong>Completed</strong><small>Enjoy your meal</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-details-grid">
+                <div class="detail-box">
+                    <span class="detail-label">{{if eq .DeliveryMethod "delivery"}}Delivery address{{else}}Fulfilment{{end}}</span>
+                    <strong>{{if eq .DeliveryMethod "delivery"}}{{if .DeliveryAddress}}{{.DeliveryAddress}}{{else}}Address provided at checkout{{end}}{{else}}Pickup from the vendor{{end}}</strong>
+                </div>
+                <div class="detail-box">
+                    <span class="detail-label">Order total</span>
+                    <strong class="total-value">₦{{naira .TotalKobo}}</strong>
+                </div>
+            </div>
+
+            <details class="order-items-details">
+                <summary><span>Order items</span><strong>{{len .Items}} item{{if ne (len .Items) 1}}s{{end}}</strong></summary>
+                <ul class="order-items">
+                    {{range .Items}}
+                        <li>
+                            <div class="order-item-info">
+                                {{if .ImageURL}}<img class="order-item-image" src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}<span class="order-item-placeholder" aria-hidden="true">🍽️</span>{{end}}
+                                <span><strong>{{.Name}}</strong><small>Qty {{.Quantity}}</small></span>
+                            </div>
+                            <span>₦{{naira .PriceKobo}}</span>
+                        </li>
+                    {{end}}
+                </ul>
+            </details>
+
+            <div class="order-card-footer">
+                <span class="order-support">Reference: <strong>{{.Reference}}</strong></span>
+                <div class="order-footer-actions">
+                    {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
+                    <form action="/orders/reorder" method="post">
+                        <input type="hidden" name="order_id" value="{{.ID}}">
+                        <button type="submit" class="reorder-btn">↻ Order again</button>
+                    </form>
+                    {{end}}
+                    {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}
+                        <span class="refresh-note">Status refreshes automatically</span>
+                    {{else}}
+                        <span class="refresh-note">Keep this reference for support</span>
+                    {{end}}
+                </div>
+            </div>
+        </article>
+    {{end}}
     </div>
 
-    {{if not .}}
-        <div class="empty-orders">
-            <div class="empty-icon">📦</div>
-            <h2>No orders yet</h2>
-            <p>Once you place an order, you'll be able to track it here.</p>
-            <a href="/menu" class="menu-btn">Browse Menu</a>
-        </div>
+    {{if .Orders}}
+    <div class="orders-footer-actions">
+        <a class="back-link" href="/menu">← Continue browsing</a>
+    </div>
     {{end}}
-
-    {{range .}}
-
-        <section class="order-card">
-
-            <div class="order-card-header">
-                <div><h2>Order {{.Reference}}</h2><small class="order-id-label">Use this reference for support</small></div>
-                <span class="order-date">{{date .CreatedAt}}</span>
-            </div>
-
-            <ul class="order-items">
-                {{range .Items}}
-                    <li>
-                        <div class="order-item-info">
-                            {{if .ImageURL}}<img class="order-item-image" src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}<span class="order-item-placeholder" aria-hidden="true">🍽️</span>{{end}}
-                            <span>{{.Name}} × {{.Quantity}}</span>
-                        </div>
-                        <span>₦{{naira .PriceKobo}}</span>
-                    </li>
-                {{end}}
-            </ul>
-
-            <div class="order-total">
-                <span>Total</span>
-                <strong>₦{{naira .TotalKobo}}</strong>
-            </div>
-
-            <div class="status">
-
-                <div class="status-title">
-                    Status: <span class="status-label status-{{.Status}}">{{.Status}}</span>
-                </div>
-
-                <div class="steps">
-
-                    <div class="step
-                        {{if eq .Status "paid"}}active{{end}}
-                        {{if or (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}completed{{end}}">
-                        Paid
-                    </div>
-
-                    <div class="step
-                        {{if eq .Status "preparing"}}active{{end}}
-                        {{if or (eq .Status "ready") (eq .Status "completed")}}completed{{end}}">
-                        Preparing
-                    </div>
-
-                    <div class="step
-                        {{if eq .Status "ready"}}active{{end}}
-                        {{if eq .Status "completed"}}completed{{end}}">
-                        Ready
-                    </div>
-
-                    <div class="step
-                        {{if eq .Status "completed"}}active{{end}}">
-                        Completed
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    {{end}}
-
-    <a class="back-link" href="/menu">← Back to Menu</a>
-
 </main>
 
 <script>
-    setTimeout(function () {
-        window.location.reload();
-    }, 10000);
+(() => {
+    const liveOrders = document.querySelectorAll('.order-live');
+    if (liveOrders.length) {
+        setTimeout(() => window.location.reload(), 15000);
+    }
+})();
 </script>
-
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

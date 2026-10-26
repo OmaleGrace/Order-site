@@ -25,6 +25,7 @@ var vendorAIHTTPClient = &http.Client{
 
 type VendorAIPage struct {
 	VendorName      string
+	InsightSummary  string
 	Tool            string
 	DishName        string
 	Details         string
@@ -322,7 +323,7 @@ func (h *Handlers) VendorAI(w http.ResponseWriter, r *http.Request) {
 // VendorAIGenerate creates draft marketing copy.
 // It never changes a live menu or post automatically.
 func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
-	_, vendorName, ok := h.ownedVendor(w, r)
+	vendorID, vendorName, ok := h.ownedVendor(w, r)
 	if !ok {
 		return
 	}
@@ -350,6 +351,17 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 		p.Notice = validationMessage
 		h.renderVendorAI(w, p, http.StatusBadRequest)
 		return
+	}
+
+	if p.Tool == "business_brief" {
+		insight, err := h.vendorAIDataSummary(r.Context(), vendorID)
+		if err != nil {
+			log.Printf("vendor AI: analytics summary failed: %v", err)
+			p.Notice = "I could not load your shop data right now. Please try again or open Analytics directly."
+			h.renderVendorAI(w, p, http.StatusInternalServerError)
+			return
+		}
+		p.InsightSummary = insight
 	}
 
 	if !aiConfigured() {
@@ -382,6 +394,10 @@ Return only the requested draft, with no preamble.`
 		"\nTone: " + p.Tone +
 		"\n"
 
+	if p.Tool == "business_brief" {
+		requestPrompt += "\nVerified shop data (last 7 days):\n" + p.InsightSummary + "\n"
+	}
+
 	switch p.Tool {
 	case "description":
 		requestPrompt += "Write one appealing menu description of 2-4 sentences, suitable for a Nigerian food marketplace. Keep it concise and do not add unprovided ingredients."
@@ -400,6 +416,9 @@ Return only the requested draft, with no preamble.`
 
 	case "review_reply":
 		requestPrompt += "Draft a polite, professional response to a customer review or feedback. Acknowledge the feedback, avoid arguing or revealing personal data, and do not promise compensation unless stated in the supplied details."
+
+	case "business_brief":
+		requestPrompt += "Create a short daily business briefing using only the verified shop data above. Include: what is going well, one meaningful trend, one practical action for today, and one thing to monitor. If the data is insufficient, say so. Do not invent causes, customer demographics, forecasts, prices, or targets. Keep it under 300 words."
 
 	case "pricing":
 		requestPrompt += "Create a pricing worksheet for the vendor to fill in: ingredients cost, packaging, labour, overhead, desired margin, suggested price formula, and questions to consider. Do not invent costs or claim a definitive price without cost data."
@@ -453,6 +472,61 @@ Return only the message the vendor can review and send.`
 	h.renderVendorAI(w, p, http.StatusOK)
 }
 
+func (h *Handlers) vendorAIDataSummary(ctx context.Context, vendorID int) (string, error) {
+	var salesKobo, commissionKobo int
+	var orders, activeOrders int
+	if err := h.DB.QueryRowContext(ctx, `
+        SELECT COUNT(*), COALESCE(SUM(total_kobo),0), COALESCE(SUM(commission_kobo),0)
+        FROM orders
+        WHERE vendor_id=$1 AND status NOT IN ('pending','cancelled')
+          AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+    `, vendorID).Scan(&orders, &salesKobo, &commissionKobo); err != nil {
+		return "", err
+	}
+	if err := h.DB.QueryRowContext(ctx, `
+        SELECT COUNT(*) FROM orders
+        WHERE vendor_id=$1 AND status IN ('preparing','ready')
+    `, vendorID).Scan(&activeOrders); err != nil {
+		return "", err
+	}
+
+	rows, err := h.DB.QueryContext(ctx, `
+        SELECT m.name, SUM(oi.quantity), SUM(oi.quantity * oi.price_kobo)
+        FROM order_items oi
+        JOIN orders o ON o.id=oi.order_id
+        JOIN menu_items m ON m.id=oi.menu_item_id
+        WHERE o.vendor_id=$1 AND o.status NOT IN ('pending','cancelled')
+          AND o.created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+        GROUP BY m.id, m.name
+        ORDER BY SUM(oi.quantity) DESC, SUM(oi.quantity * oi.price_kobo) DESC
+        LIMIT 5
+    `, vendorID)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "Orders: %d\\nSales: ₦%.2f\\nCommission: ₦%.2f\\nActive orders now: %d\\nTop items:\\n", orders, float64(salesKobo)/100, float64(commissionKobo)/100, activeOrders)
+	found := false
+	for rows.Next() {
+		var name string
+		var quantity, itemSales int
+		if err := rows.Scan(&name, &quantity, &itemSales); err != nil {
+			return "", err
+		}
+		found = true
+		fmt.Fprintf(&b, "- %s: %d sold, ₦%.2f revenue\\n", name, quantity, float64(itemSales)/100)
+	}
+	if err := rows.Err(); err != nil {
+		return "", err
+	}
+	if !found {
+		b.WriteString("- No item-level sales recorded in this period.\\n")
+	}
+	return b.String(), nil
+}
+
 func (h *Handlers) renderVendorAI(
 	w http.ResponseWriter,
 	p VendorAIPage,
@@ -485,6 +559,7 @@ func validateVendorAIInput(p VendorAIPage) string {
 		"whatsapp",
 		"campaign",
 		"review_reply",
+		"business_brief",
 		"pricing",
 		"customer_chat":
 	default:
@@ -496,7 +571,7 @@ func validateVendorAIInput(p VendorAIPage) string {
 			len([]rune(p.CustomerMessage)) > 1200 {
 			return "Paste the customer message (up to 1,200 characters) so the assistant can draft a reply."
 		}
-	} else if strings.TrimSpace(p.DishName) == "" {
+	} else if p.Tool != "business_brief" && strings.TrimSpace(p.DishName) == "" {
 		return "Enter a dish or product name."
 	}
 

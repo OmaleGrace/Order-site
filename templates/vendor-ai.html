@@ -20,6 +20,7 @@
         <a href="/vendor/orders">Orders</a>
         <a href="/messages">Messages</a>
         <a href="/vendor/menu">My menu</a>
+        <a href="/vendor/analytics">Analytics</a>
         <a href="/vendor/profile">Shop profile</a>
         <a href="/vendor/billing">Billing</a>
         <a class="active" href="/vendor/ai" aria-current="page">AI assistant</a>
@@ -59,6 +60,7 @@
                         <option value="description" {{if eq .Tool "description"}}selected{{end}}>Menu description</option>
                         <option value="social" {{if eq .Tool "social"}}selected{{end}}>Social media promotion</option>
                         <option value="menu_ideas" {{if eq .Tool "menu_ideas"}}selected{{end}}>Menu item ideas</option>
+                        <option value="business_brief" {{if eq .Tool "business_brief"}}selected{{end}}>Business daily briefing</option>
                         <option value="whatsapp" {{if eq .Tool "whatsapp"}}selected{{end}}>WhatsApp broadcast</option>
                         <option value="campaign" {{if eq .Tool "campaign"}}selected{{end}}>3-post campaign plan</option>
                         <option value="review_reply" {{if eq .Tool "review_reply"}}selected{{end}}>Customer review reply</option>
@@ -112,9 +114,27 @@
                 <button class="ai-tool" type="button" data-tool="review_reply"><strong>⭐ Review replies</strong><span>Professional responses to feedback.</span></button>
                 <button class="ai-tool" type="button" data-tool="customer_chat"><strong>💬 Customer chat reply</strong><span>A helpful draft for a customer question.</span></button>
                 <button class="ai-tool" type="button" data-tool="menu_ideas"><strong>💡 Menu ideas</strong><span>Brainstorm new menu options.</span></button>
+                <button class="ai-tool ai-tool-insight" type="button" data-tool="business_brief"><strong>📊 Daily business briefing</strong><span>Turn your recent sales data into practical next steps.</span></button>
                 <button class="ai-tool" type="button" data-tool="pricing"><strong>₦ Pricing worksheet</strong><span>Organize a practical pricing draft.</span></button>
             </div>
         </aside>
+    </section>
+
+    <section class="ai-insight-card">
+        <div class="ai-insight-icon">📊</div>
+        <div class="ai-insight-copy">
+            <span class="ai-insight-kicker">NEW · DATA-POWERED</span>
+            <h2>Get a business briefing from your real shop data</h2>
+            <p>Use your recent ENIE sales, order volume, active orders and best-selling items to get a concise briefing. The assistant only receives the verified figures shown by your account.</p>
+        </div>
+        <div class="ai-insight-actions">
+            <a href="/vendor/analytics" class="ai-secondary-button">View analytics</a>
+            <form action="/vendor/ai/generate" method="post">
+                <input type="hidden" name="tool" value="business_brief">
+                <input type="hidden" name="tone" value="clear and practical">
+                <button class="ai-button ai-button-compact" type="submit"><span aria-hidden="true">✦</span> Generate briefing</button>
+            </form>
+        </div>
     </section>
 
     {{if .Result}}
@@ -122,7 +142,7 @@
         <div class="ai-result-head">
             <div>
                 <h2>Your draft is ready</h2>
-                <p>Review the wording and facts before using it.</p>
+                <p>Review the wording and figures before acting on it. AI recommendations are suggestions, not guarantees.</p>
             </div>
             <div>
                 <button class="ai-copy" type="button" id="copy-result">Copy draft</button>
@@ -147,7 +167,10 @@
   function syncAIFields(){
     if(!tool) return;
     var chat=tool.value==='customer_chat';
-    if(dish) dish.required=!chat;
+    var brief=tool.value==='business_brief';
+    if(dish) dish.required=!chat && !brief;
+    if(dish) dish.disabled=brief;
+    if(message) message.disabled=brief;
     if(message) message.required=chat;
     if(dishField) dishField.classList.toggle('chat-mode',chat);
     if(messageField) messageField.classList.toggle('chat-mode',!chat);

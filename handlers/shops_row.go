@@ -7,12 +7,22 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 	rows, err := h.DB.Query(`
 		SELECT v.name, v.slug, v.description, v.area, v.logo_url, v.verified,
 		       v.offers_pickup, v.offers_delivery, v.delivery_fee_kobo,
-		       (SELECT count(*) FROM menu_items m WHERE m.vendor_id = v.id) AS dishes,
-		       (SELECT count(*) FROM orders o WHERE o.vendor_id = v.id AND o.status = 'completed') AS completed
+		       COALESCE(mi.dishes, 0) AS dishes,
+		       COALESCE(oc.completed, 0) AS completed
 		FROM vendors v
+		JOIN (
+			SELECT vendor_id, COUNT(*) AS dishes
+			FROM menu_items
+			GROUP BY vendor_id
+		) mi ON mi.vendor_id = v.id
+		LEFT JOIN (
+			SELECT vendor_id, COUNT(*) AS completed
+			FROM orders
+			WHERE status = 'completed'
+			GROUP BY vendor_id
+		) oc ON oc.vendor_id = v.id
 		WHERE v.status = 'active' AND v.paid_until > NOW()
-		  AND EXISTS (SELECT 1 FROM menu_items m WHERE m.vendor_id = v.id)
-		ORDER BY v.verified DESC, completed DESC, v.name
+		ORDER BY v.verified DESC, COALESCE(oc.completed, 0) DESC, v.name
 		LIMIT $1
 	`, limit)
 	if err != nil {

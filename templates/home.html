@@ -40,31 +40,56 @@
 </header>
 
 <section class="hero hero-home">
+    <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
+    <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
     <div class="hero-content">
-        <p class="hero-eyebrow">Food ordering you can trust</p>
-        <h1>Order great food from shops we have checked.</h1>
-        <p>Browse local kitchens, pay securely online, and follow your order from payment to pickup or delivery.</p>
+        <div class="hero-pill"><span class="hero-pill-dot"></span> Trusted local food ordering</div>
+        <h1>Good food is closer than you think.</h1>
+        <p>Discover verified local shops, find what you're craving, and order for pickup or delivery with a checkout you can trust.</p>
 
         <form action="/menu" method="get" class="home-search hero-search">
-            <span class="home-search-icon">🔍</span>
-            <input type="text" name="search" placeholder="Search meals or shops..." aria-label="Search meals">
+            <span class="home-search-icon" aria-hidden="true">⌕</span>
+            <input type="search" name="search" placeholder="Search for jollof, shawarma, drinks..." aria-label="Search meals or shops" autocomplete="off">
             <button type="submit">Search</button>
         </form>
+        <div class="search-hint"><span>Try</span> jollof rice <b>•</b> chicken <b>•</b> snacks <b>•</b> drinks</div>
 
         <div class="hero-actions">
-            <a href="/menu" class="btn-primary">Order food</a>
-            <a href="/become-a-vendor" class="btn-secondary">Sell with us</a>
+            <a href="/menu" class="btn-primary">Start ordering <span aria-hidden="true">→</span></a>
+            <a href="/vendors" class="btn-secondary">Explore shops</a>
         </div>
 
-        <div class="trust-row">
-            <span>✔ Checked vendors</span>
-            <span>✔ Secure online payment</span>
-            <span>✔ Pickup or delivery</span>
-            <span>✔ Track every order</span>
+        <div class="trust-row" aria-label="ENIE benefits">
+            <span><i aria-hidden="true">✓</i> Verified shops</span>
+            <span><i aria-hidden="true">✓</i> Secure Paystack payment</span>
+            <span><i aria-hidden="true">✓</i> Pickup or delivery</span>
+            <span><i aria-hidden="true">✓</i> Order tracking</span>
         </div>
     </div>
 </section>
 
+<section class="home-quick-links" aria-label="Quick links">
+    <a href="/menu" class="quick-link">
+        <span class="quick-icon">🍽️</span>
+        <span><strong>Browse food</strong><small>Find something delicious</small></span>
+        <b aria-hidden="true">→</b>
+    </a>
+    <a href="/vendors" class="quick-link">
+        <span class="quick-icon">🏪</span>
+        <span><strong>Explore shops</strong><small>Discover local favourites</small></span>
+        <b aria-hidden="true">→</b>
+    </a>
+    <a href="/orders" class="quick-link">
+        <span class="quick-icon">↻</span>
+        <span><strong>Your orders</strong><small>Track or order again</small></span>
+        <b aria-hidden="true">→</b>
+    </a>
+    <a href="/favorites" class="quick-link">
+        <span class="quick-icon">♡</span>
+        <span><strong>Favourites</strong><small>Saved shops and meals</small></span>
+        <b aria-hidden="true">→</b>
+    </a>
+</section>
 {{if .Shops}}
 <section class="home-section">
     <div class="row-head">
@@ -329,6 +354,7 @@
 })();
 </script>
 <script src="/static/js/lightbox.js"></script>
+<script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 </body>
 </html>

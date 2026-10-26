@@ -1,31 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+    <meta name="theme-color" content="#174a32">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Successful - {{brandName}}</title>
+    <title>Order Confirmed - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/order-success.css">
 </head>
-
 <body>
-    <main>
-        <div class="success-wrapper">
-            <div class="success-icon">🎉</div>
-
-            <h1>Order Placed Successfully!</h1>
-
-            <p>Your payment was successful and your order has been received.</p>
-            <p class="thanks">Thank you for ordering from {{brandName}}.</p>
-
-            <div class="success-actions">
-                <a href="/orders" class="btn-primary">Track My Order</a>
-                <a href="/menu" class="btn-outline">Continue Shopping</a>
-            </div>
-
-            <a href="/" class="back-link">← Back to Home</a>
+<main class="success-page">
+    <div class="success-wrapper">
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <p class="success-eyebrow">Payment confirmed</p>
+        <h1>Your order is on its way to being prepared.</h1>
+        <p>Your payment was successful and your order has been received by the vendor.</p>
+        <div class="success-note"><span>↻</span><strong>Next step:</strong> track your order for live status updates.</div>
+        <div class="success-actions">
+            <a href="/orders" class="btn-primary">Track My Order</a>
+            <a href="/menu" class="btn-outline">Order more food</a>
         </div>
-    </main>
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+</main>
 </body>
 </html>

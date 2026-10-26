@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
+	"time"
 
 	"Order-site/brand"
 	"Order-site/errors"
@@ -25,6 +27,25 @@ type HomeCategory struct {
 	Icon string
 	Link string
 }
+
+type homePublicData struct {
+	Popular    []HomeDish
+	Categories []HomeCategory
+	Shops      []ShopCard
+	ExpiresAt  time.Time
+}
+
+var homeCache struct {
+	sync.RWMutex
+	data homePublicData
+}
+
+var homeTemplate = template.Must(
+	template.New("home.html").
+		Funcs(template.FuncMap{"naira": naira}).
+		Funcs(brand.Funcs()).
+		ParseFiles("templates/home.html"),
+)
 
 func categoryIcon(name string) string {
 	n := strings.ToLower(name)
@@ -66,60 +87,57 @@ func queryDishes(db *sql.DB, query string, args ...interface{}) []HomeDish {
 	return out
 }
 
-func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(
-		template.New("home.html").
-			Funcs(template.FuncMap{
-				"naira": naira,
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/home.html"),
-	)
-
-	// Popular now: most ordered items (paid orders only), all items if nothing ordered yet
-	popular := queryDishes(h.DB, `
-		SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
-		FROM menu_items m
-		JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
-		LEFT JOIN order_items oi ON oi.menu_item_id = m.id
-		LEFT JOIN orders o ON o.id = oi.order_id AND o.status NOT IN ('pending', 'cancelled')
-		GROUP BY m.id
-		ORDER BY COALESCE(SUM(CASE WHEN o.id IS NOT NULL THEN oi.quantity ELSE 0 END), 0) DESC, m.name
-		LIMIT 8
-	`)
-
-	// Order again: only for a logged-in customer who has ordered before
-	var again []HomeDish
-	if cookie, err := r.Cookie("session_token"); err == nil {
-		if userID, err := middleware.GetUserID(h.DB, cookie.Value); err == nil {
-			again = queryDishes(h.DB, `
-				SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
-				FROM menu_items m
-				JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
-				JOIN (
-					SELECT oi.menu_item_id, MAX(o.created_at) AS last_ordered
-					FROM order_items oi
-					JOIN orders o ON o.id = oi.order_id
-					WHERE o.user_id = $1 AND o.status NOT IN ('pending', 'cancelled')
-					GROUP BY oi.menu_item_id
-				) r ON r.menu_item_id = m.id
-				ORDER BY r.last_ordered DESC
-				LIMIT 8
-			`, userID)
-		}
+func (h *Handlers) loadHomePublicData() homePublicData {
+	homeCache.RLock()
+	cached := homeCache.data
+	homeCache.RUnlock()
+	if time.Now().Before(cached.ExpiresAt) {
+		return cached
 	}
 
-	var categories []HomeCategory
-	catRows, err := h.DB.Query(`
-		SELECT DISTINCT m.category FROM menu_items m JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW() WHERE m.category <> '' ORDER BY m.category
-	`)
-	if err != nil {
-		log.Printf("home: categories query failed: %v", err)
-	} else {
-		defer catRows.Close()
-		for catRows.Next() {
+	var (
+		popular    []HomeDish
+		categories []HomeCategory
+		shops      []ShopCard
+	)
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go func() {
+		defer wg.Done()
+		popular = queryDishes(h.DB, `
+            SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
+            FROM menu_items m
+            JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
+            LEFT JOIN (
+                SELECT oi.menu_item_id, SUM(oi.quantity) AS ordered_qty
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                WHERE o.status NOT IN ('pending', 'cancelled')
+                GROUP BY oi.menu_item_id
+            ) p ON p.menu_item_id = m.id
+            ORDER BY COALESCE(p.ordered_qty, 0) DESC, m.name
+            LIMIT 8
+        `)
+	}()
+
+	go func() {
+		defer wg.Done()
+		rows, err := h.DB.Query(`
+            SELECT DISTINCT m.category
+            FROM menu_items m
+            JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
+            WHERE m.category <> ''
+            ORDER BY m.category
+        `)
+		if err != nil {
+			log.Printf("home: categories query failed: %v", err)
+			return
+		}
+		defer rows.Close()
+		for rows.Next() {
 			var name string
-			if err := catRows.Scan(&name); err == nil {
+			if err := rows.Scan(&name); err == nil {
 				categories = append(categories, HomeCategory{
 					Name: name,
 					Icon: categoryIcon(name),
@@ -127,6 +145,50 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 				})
 			}
 		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		shops = h.topShops(8)
+	}()
+
+	wg.Wait()
+
+	fresh := homePublicData{
+		Popular:    popular,
+		Categories: categories,
+		Shops:      shops,
+		ExpiresAt:  time.Now().Add(30 * time.Second),
+	}
+	homeCache.Lock()
+	homeCache.data = fresh
+	homeCache.Unlock()
+	return fresh
+}
+
+func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
+	public := h.loadHomePublicData()
+
+	// Personalized order-again is intentionally kept out of the public cache.
+	// It is only one small query and only runs for logged-in customers.
+	var again []HomeDish
+	if cookie, err := r.Cookie("session_token"); err == nil && cookie.Value != "" {
+		again = queryDishes(h.DB, `
+            SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
+            FROM menu_items m
+            JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
+            JOIN (
+                SELECT oi.menu_item_id, MAX(o.created_at) AS last_ordered
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                JOIN sessions s ON s.user_id = o.user_id
+                WHERE s.token = $1 AND s.expires_at > NOW()
+                  AND o.status NOT IN ('pending', 'cancelled')
+                GROUP BY oi.menu_item_id
+            ) r ON r.menu_item_id = m.id
+            ORDER BY r.last_ordered DESC
+            LIMIT 8
+        `, middleware.HashToken(cookie.Value))
 	}
 
 	data := struct {
@@ -137,15 +199,15 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
 		SetupFeeKobo      int
 		CommissionPercent int
 	}{
-		Popular:           popular,
+		Popular:           public.Popular,
 		Again:             again,
-		Categories:        categories,
-		Shops:             h.topShops(8),
+		Categories:        public.Categories,
+		Shops:             public.Shops,
 		SetupFeeKobo:      vendorSetupFeeKobo(),
 		CommissionPercent: commissionPercent(),
 	}
 
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := homeTemplate.Execute(w, data); err != nil {
 		log.Printf("home: template failed: %v", err)
 		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 	}

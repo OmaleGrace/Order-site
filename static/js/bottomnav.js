@@ -21,14 +21,19 @@
     document.body.appendChild(nav);
     document.body.classList.add('has-bottom-nav');
 
-    fetch('/cart/count', { credentials: 'same-origin' })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-            var b = nav.querySelector('.bn-badge');
-            if (b && d.count > 0) {
-                b.textContent = d.count > 99 ? '99+' : d.count;
-                b.hidden = false;
-            }
-        })
-        .catch(function () {});
+    function loadCounts() {
+        if (!window.__enieHeaderCountsPromise) {
+            window.__enieHeaderCountsPromise = fetch('/header/counts', { credentials: 'same-origin' })
+                .then(function (r) { if (!r.ok) throw new Error('header counts unavailable'); return r.json(); });
+        }
+        return window.__enieHeaderCountsPromise;
+    }
+
+    loadCounts().then(function (d) {
+        var b = nav.querySelector('.bn-badge');
+        if (b && Number(d.cart_count) > 0) {
+            b.textContent = d.cart_count > 99 ? '99+' : d.cart_count;
+            b.hidden = false;
+        }
+    }).catch(function () {});
 })();

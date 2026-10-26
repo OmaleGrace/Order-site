@@ -178,6 +178,9 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Order confirmation email error:", err)
 		}
 	}(orderID)
+	if err := createNotification(h.DB, userID, "order", "Order confirmed", "Your payment was confirmed and your order is now being processed.", "/orders"); err != nil {
+		fmt.Println("Order notification error:", err)
+	}
 
 	http.Redirect(w, r, "/order-success", http.StatusSeeOther)
 }
@@ -320,6 +323,9 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Order confirmation email error:", err)
 		}
 	}(orderID)
+	if err := createNotification(h.DB, userID, "order", "Order confirmed", "Your payment was confirmed and your order is now being processed.", "/orders"); err != nil {
+		fmt.Println("Order notification error:", err)
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

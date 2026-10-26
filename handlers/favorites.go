@@ -18,6 +18,8 @@ type FavItem struct {
 	Description string
 	PriceKobo   int
 	ImageURL    string
+	VendorName  string
+	VendorSlug  string
 }
 
 func jsonError(w http.ResponseWriter, code int, msg string) {
@@ -94,7 +96,7 @@ func (h *Handlers) Favorites(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.DB.Query(`
-		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo, COALESCE(m.image_url, '')
+		SELECT m.id, m.name, COALESCE(m.description, ''), m.price_kobo, COALESCE(m.image_url, ''), v.name, v.slug
 		FROM favorites f
 		JOIN menu_items m ON m.id = f.menu_item_id
 		JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
@@ -111,7 +113,7 @@ func (h *Handlers) Favorites(w http.ResponseWriter, r *http.Request) {
 	var items []FavItem
 	for rows.Next() {
 		var it FavItem
-		if err := rows.Scan(&it.ID, &it.Name, &it.Description, &it.PriceKobo, &it.ImageURL); err != nil {
+		if err := rows.Scan(&it.ID, &it.Name, &it.Description, &it.PriceKobo, &it.ImageURL, &it.VendorName, &it.VendorSlug); err != nil {
 			log.Printf("favorites: scan failed: %v", err)
 			errors.Render(w, "Could not read your favourites", http.StatusInternalServerError)
 			return

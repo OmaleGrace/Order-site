@@ -34,7 +34,7 @@ func RequireLogin(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		_, err = GetUserID(db, cookie.Value)
+		userID, err := GetUserID(db, cookie.Value)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.SetCookie(w, &http.Cookie{Name: "session_token", Value: "", Path: "/", HttpOnly: true, Secure: SecureCookie(r), SameSite: http.SameSiteLaxMode, MaxAge: -1})
@@ -52,6 +52,7 @@ func RequireLogin(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		r = WithUserID(r, userID)
 		next(w, r)
 	}
 }

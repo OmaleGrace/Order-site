@@ -35,6 +35,7 @@ type ShopPage struct {
 	DeliveryFeeKobo int
 	Completed       int
 	Dishes          []ShopDish
+	Categories      []string
 }
 
 func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +84,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
+	seenCategories := make(map[string]bool)
 	for rows.Next() {
 		var d ShopDish
 		if err := rows.Scan(&d.ID, &d.Name, &d.Description, &d.PriceKobo, &d.ImageURL, &d.Category); err != nil {
@@ -91,6 +93,11 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		p.Dishes = append(p.Dishes, d)
+		category := strings.TrimSpace(d.Category)
+		if category != "" && !seenCategories[category] {
+			seenCategories[category] = true
+			p.Categories = append(p.Categories, category)
+		}
 	}
 
 	tmpl, err := template.New("shop.html").

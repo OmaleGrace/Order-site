@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -24,6 +25,12 @@ func Connect() (*sql.DB, error) {
 		db.Close()
 		return nil, fmt.Errorf("could not reach PostgreSQL using DATABASE_URL: %w", err)
 	}
+
+	// Keep a warm pool so normal page requests reuse established PostgreSQL
+	// connections instead of repeatedly paying connection setup latency.
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxIdleTime(5 * time.Minute)
 
 	// A newly-created hosted PostgreSQL database has no application tables.
 	// Bootstrap the checked-in schema only when the core users table is absent;
@@ -118,6 +125,45 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// In-app notifications for customers.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS notifications (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			type TEXT NOT NULL DEFAULT 'general',
+			title TEXT NOT NULL,
+			message TEXT NOT NULL,
+			link TEXT NOT NULL DEFAULT '',
+			read_at TIMESTAMPTZ,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Hot-path indexes used by the home page, cart/header counters and order history.
+	// IF NOT EXISTS makes this safe for existing installations.
+	for _, indexSQL := range []string{
+		`CREATE INDEX IF NOT EXISTS idx_menu_items_vendor_id ON menu_items(vendor_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_order_items_menu_item_id ON order_items(menu_item_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)`,
+		`CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS idx_orders_vendor_status ON orders(vendor_id, status)`,
+		`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`,
+	} {
+		if _, err = db.Exec(indexSQL); err != nil {
+			db.Close()
+			return nil, err
+		}
+	}
+
 	// Create sessions table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS sessions (
@@ -127,6 +173,10 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	if _, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)`); err != nil {
 		db.Close()
 		return nil, err
 	}
@@ -174,6 +224,26 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_name TEXT NOT NULL DEFAULT '';
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified BOOLEAN NOT NULL DEFAULT FALSE;
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified_at TIMESTAMPTZ;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Short-lived server-side records used between Paystack account verification
+	// and the vendor's explicit Save action. Raw verification tokens are never
+	// exposed as permanent vendor data.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS vendor_payout_verifications (
+			token TEXT PRIMARY KEY,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			bank_name TEXT NOT NULL,
+			bank_code TEXT NOT NULL,
+			account_number TEXT NOT NULL,
+			account_name TEXT NOT NULL,
+			expires_at TIMESTAMPTZ NOT NULL,
+			used_at TIMESTAMPTZ
+		)
 	`)
 	if err != nil {
 		db.Close()

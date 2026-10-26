@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
@@ -29,6 +30,25 @@ func SecureCookie(r *http.Request) bool {
 func HashToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
+}
+
+type userIDContextKey struct{}
+
+// WithUserID stores the authenticated user ID in the request context.
+func WithUserID(r *http.Request, userID int) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), userIDContextKey{}, userID))
+}
+
+// UserIDFromRequest returns the authenticated user ID attached by RequireLogin.
+func UserIDFromRequest(r *http.Request) (int, error) {
+	if r == nil {
+		return 0, sql.ErrNoRows
+	}
+	userID, ok := r.Context().Value(userIDContextKey{}).(int)
+	if !ok || userID <= 0 {
+		return 0, sql.ErrNoRows
+	}
+	return userID, nil
 }
 
 func CreateSession(db *sql.DB, userID int) (string, error) {
