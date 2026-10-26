@@ -183,10 +183,11 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
                 FROM order_items oi
                 JOIN orders o ON o.id = oi.order_id
                 JOIN sessions s ON s.user_id = o.user_id
-                WHERE COALESCE(m.available, TRUE) = TRUE AND s.token = $1 AND s.expires_at > NOW()
+                WHERE s.token = $1 AND s.expires_at > NOW()
                   AND o.status NOT IN ('pending', 'cancelled')
                 GROUP BY oi.menu_item_id
             ) r ON r.menu_item_id = m.id
+            WHERE COALESCE(m.available, TRUE) = TRUE
             ORDER BY r.last_ordered DESC
             LIMIT 8
         `, middleware.HashToken(cookie.Value))

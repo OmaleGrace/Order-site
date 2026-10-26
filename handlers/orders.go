@@ -134,6 +134,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 			var item CustomerOrderItem
 
 			err := itemRows.Scan(
+				&item.MenuItemID,
 				&item.Name,
 				&item.Quantity,
 				&item.PriceKobo,
