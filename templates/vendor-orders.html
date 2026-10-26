@@ -13,6 +13,26 @@
       .settlement-breakdown>div{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid #e7ece8;font-size:.88rem}
       .settlement-breakdown>div:last-child{border-bottom:0}
       .settlement-total{margin-top:4px;padding-top:11px!important;font-weight:800}
+      .scheduled-section{margin-bottom:24px;padding:20px;border:1px solid #f0d89a;border-radius:18px;background:#fffaf0}
+      .scheduled-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+      .scheduled-head h2{margin:0;color:#174a32;font-size:1.15rem}
+      .scheduled-head p{margin:5px 0 0;color:#6b756e;font-size:.86rem}
+      .scheduled-count{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 9px;border-radius:999px;background:#f3c85b;color:#5f4600;font-weight:900;font-size:.8rem}
+      .scheduled-list{display:grid;gap:12px}
+      .scheduled-card{padding:17px;border:1px solid #eadfbe;border-radius:15px;background:#fff}
+      .scheduled-top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+      .scheduled-top h3{margin:0;color:#26352d;font-size:1rem}
+      .scheduled-time{margin-top:5px;color:#174a32;font-weight:850}
+      .scheduled-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+      .scheduled-meta div{padding:10px 12px;border-radius:11px;background:#f7f8f5}
+      .scheduled-meta span{display:block;color:#778078;font-size:.72rem;margin-bottom:3px}
+      .scheduled-meta strong{color:#2c382f;font-size:.82rem}
+      .scheduled-items{margin:13px 0 0;padding:0;list-style:none;border-top:1px solid #edf0eb}
+      .scheduled-items li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0eb;font-size:.83rem}
+      .scheduled-total{display:flex;justify-content:space-between;gap:12px;margin-top:12px;color:#174a32;font-weight:900}
+      .scheduled-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#fff4cf;color:#765600;font-size:.78rem;font-weight:700}
+      @media (max-width:700px){.scheduled-meta{grid-template-columns:1fr 1fr}.scheduled-top{flex-direction:column}}
+      @media (max-width:460px){.scheduled-meta{grid-template-columns:1fr}}
     </style>
 </head>
 
@@ -45,6 +65,43 @@
         </div>
     </div>
 
+    {{if .ScheduledOrders}}
+    <section class="scheduled-section" aria-labelledby="scheduled-orders-title">
+        <div class="scheduled-head">
+            <div>
+                <h2 id="scheduled-orders-title">Scheduled Orders</h2>
+                <p>These orders are paid and reserved for a future time. They will move into your active orders when the scheduled time arrives.</p>
+            </div>
+            <span class="scheduled-count">{{len .ScheduledOrders}}</span>
+        </div>
+        <div class="scheduled-list">
+            {{range .ScheduledOrders}}
+            <article class="scheduled-card">
+                <div class="scheduled-top">
+                    <div>
+                        <h3>Order #{{.ID}} · {{.Name}}</h3>
+                        <div class="scheduled-time">🕒 Scheduled for {{dateTime .ScheduledFor}}</div>
+                    </div>
+                    <span class="status" style="background:#fff0c7;color:#765600">Scheduled</span>
+                </div>
+                <div class="scheduled-meta">
+                    <div><span>Customer</span><strong>{{.Name}}</strong></div>
+                    <div><span>Order type</span><strong>{{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}</strong></div>
+                    <div><span>Phone</span><strong>{{if .Phone}}{{.Phone}}{{else}}Not provided{{end}}</strong></div>
+                </div>
+                {{if .Items}}
+                <ul class="scheduled-items">
+                    {{range .Items}}<li><span>{{.Name}} × {{.Quantity}}</span><strong>₦{{naira .PriceKobo}}</strong></li>{{end}}
+                </ul>
+                {{end}}
+                <div class="scheduled-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                {{if eq .DeliveryMethod "delivery"}}<div class="scheduled-note">🛵 Delivery: {{.DeliveryAddress}} · {{.DeliveryPhone}}</div>{{else}}<div class="scheduled-note">🛍️ Pickup order — have the meal ready at the scheduled time.</div>{{end}}
+            </article>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
     {{if .Orders}}
 
         <section class="orders-list">
@@ -56,6 +113,7 @@
                     <div>
                         <h2>Order #{{.ID}}</h2>
                         <span class="order-date">{{.CreatedAt}}</span>
+                        {{if .ScheduledFor}}<span class="order-date"><strong>Scheduled for {{dateTime .ScheduledFor}}</strong></span>{{end}}
                     </div>
                     <span class="status status-{{.Status}}">{{.Status}}</span>
                 </div>
@@ -142,7 +200,7 @@
         <section class="empty-orders">
             <div class="empty-icon">📦</div>
             <h2>No paid orders yet</h2>
-            <p>When a customer pays for one of your dishes, the order will show up here.</p>
+            <p>Paid orders and scheduled orders will appear here. Scheduled orders are shown above until their fulfilment time arrives.</p>
         </section>
 
     {{end}}

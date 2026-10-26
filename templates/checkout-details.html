@@ -107,6 +107,18 @@
                     </div>
                 </section>
 
+                <section class="checkout-card" aria-labelledby="coupon-heading">
+                    <div class="card-heading">
+                        <span class="number-badge">%</span>
+                        <div><h2 id="coupon-heading">Have a promo code?</h2><p>Enter a coupon from this shop. Discounts apply to food only.</p></div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+                        <div style="flex:1;min-width:220px"><label for="coupon_code">Promo code</label><input type="text" name="coupon_code" id="coupon_code" maxlength="40" placeholder="e.g. WELCOME10" autocomplete="off" style="width:100%;padding:11px 12px;border:1px solid #cfdad2;border-radius:10px;font:inherit;text-transform:uppercase"></div>
+                        <button type="button" id="apply-coupon" class="checkout-btn" style="min-height:42px;padding:0 16px">Apply</button>
+                    </div>
+                    <p id="coupon-message" class="summary-note" aria-live="polite"></p>
+                </section>
+
                 <section class="checkout-card loyalty-checkout-card" aria-labelledby="loyalty-heading">
                     <div class="card-heading">
                         <span class="number-badge">✨</span>
@@ -130,7 +142,13 @@
                     {{end}}
                 </section>
 
-                <section class="checkout-card" aria-labelledby="review-heading">
+                <section class="checkout-card" aria-labelledby="schedule-heading">
+                <div class="card-heading"><span class="number-badge">⏰</span><div><h2 id="schedule-heading">Schedule your order</h2><p>Order now and choose a future preparation time.</p></div></div>
+                <label class="loyalty-toggle"><input type="checkbox" id="schedule-order"> <span>Schedule this order</span></label>
+                <div id="schedule-input-wrap" hidden style="margin-top:12px"><label for="scheduled_for">Scheduled date and time <span>*</span></label><input type="datetime-local" name="scheduled_for" id="scheduled_for" style="width:100%;padding:11px 12px;border:1px solid #cfdad2;border-radius:10px;font:inherit"><small>At least 15 minutes from now, up to 30 days ahead.</small></div>
+            </section>
+
+            <section class="checkout-card" aria-labelledby="review-heading">
                     <div class="card-heading">
                         <span class="number-badge">2</span>
                         <div><h2 id="review-heading">Review your order</h2><p>Make sure everything looks right before payment.</p></div>
@@ -148,6 +166,7 @@
                 <div class="summary-kicker">Final review</div>
                 <h2 id="final-total-heading">Order total</h2>
                 <div class="summary-line"><span>Food subtotal</span><strong>₦{{naira .SubtotalKobo}}</strong></div>
+                <div class="summary-line" id="coupon-discount-row" hidden><span>Promo discount</span><strong id="coupon-discount-line">-₦0</strong></div>
                 <div class="summary-line" id="loyalty-discount-row" hidden><span>Loyalty discount</span><strong id="loyalty-discount-line">-₦0</strong></div>
                 <p class="summary-note" id="commission-transparency-note" hidden>ENIE's commission is calculated from the food amount actually paid after your loyalty discount.</p>
                 <div class="summary-line"><span>Delivery</span><strong id="fee-line">₦0</strong></div>
@@ -188,7 +207,16 @@
     var commissionTransparencyNote = document.getElementById('commission-transparency-note');
     var loyaltyMax = loyaltyInput ? Number(loyaltyInput.max || 0) : 0;
     var useAllLoyalty = document.getElementById('use-all-loyalty');
+    var couponInput = document.getElementById('coupon_code');
+    var couponBtn = document.getElementById('apply-coupon');
+    var couponMessage = document.getElementById('coupon-message');
+    var couponDiscountRow = document.getElementById('coupon-discount-row');
+    var couponDiscountLine = document.getElementById('coupon-discount-line');
+    var couponDiscountKobo = 0;
     var foodNaira = Math.floor(subtotal / 100);
+    var scheduleOrder = document.getElementById('schedule-order');
+    var scheduleWrap = document.getElementById('schedule-input-wrap');
+    var scheduleInput = document.getElementById('scheduled_for');
 
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
     function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
@@ -216,6 +244,7 @@
     var touched = {};
 
     function refresh() {
+        if (scheduleWrap) scheduleWrap.hidden = !(scheduleOrder && scheduleOrder.checked);
         var delivery = isDelivery();
         deliveryBox.hidden = !delivery;
         pickupBox.hidden = delivery;
@@ -238,9 +267,12 @@
         }
 
         var discountKobo = points * 100;
+        var totalDiscountKobo = discountKobo + couponDiscountKobo;
+        couponDiscountRow.hidden = couponDiscountKobo === 0;
+        couponDiscountLine.textContent = '-' + naira(couponDiscountKobo);
         feeLine.textContent = delivery ? (currentFee ? naira(currentFee) : 'Free') : '₦0';
         loyaltyDiscountLine.textContent = '-' + naira(discountKobo);
-        totalLine.textContent = naira(subtotal - discountKobo + currentFee);
+        totalLine.textContent = naira(Math.max(0, subtotal - totalDiscountKobo) + currentFee);
         var allOk = method() !== '';
         fields.forEach(function (fld) {
             var err = fld.check();
@@ -251,6 +283,9 @@
         });
         payBtn.disabled = !allOk;
     }
+
+    if (scheduleOrder) scheduleOrder.addEventListener('change', refresh);
+    if (scheduleInput) scheduleInput.addEventListener('change', refresh);
 
     if (useLoyalty) {
         useLoyalty.addEventListener('change', function () {
@@ -269,6 +304,20 @@
             loyaltyInput.value = String(Math.min(loyaltyMax, foodNaira));
             refresh();
         });
+    }
+
+    if (couponBtn && couponInput) {
+        couponBtn.addEventListener('click', function () {
+            var code = couponInput.value.trim().toUpperCase();
+            if (!code) { couponMessage.textContent = 'Enter a promo code first.'; couponDiscountKobo = 0; refresh(); return; }
+            couponBtn.disabled = true; couponMessage.textContent = 'Checking coupon…';
+            fetch('/checkout/coupon?code=' + encodeURIComponent(code), {headers:{'Accept':'application/json'}})
+              .then(function(r){ return r.json().then(function(data){ return {ok:r.ok, data:data}; }); })
+              .then(function(result){ if(result.ok && result.data.ok){ couponDiscountKobo = Number(result.data.discount_kobo || 0); couponMessage.textContent = '✓ ' + result.data.message; } else { couponDiscountKobo = 0; couponMessage.textContent = result.data.message || 'Coupon could not be applied.'; } refresh(); })
+              .catch(function(){ couponDiscountKobo = 0; couponMessage.textContent = 'Could not check the coupon. Try again.'; refresh(); })
+              .finally(function(){ couponBtn.disabled = false; });
+        });
+        couponInput.addEventListener('input', function(){ couponDiscountKobo = 0; couponMessage.textContent = ''; refresh(); });
     }
 
     radios.forEach(function (r) { r.addEventListener('change', refresh); });

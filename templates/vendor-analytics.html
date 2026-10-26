@@ -21,7 +21,7 @@
 </head>
 <body>
 <header class="vendor-header"><div class="vendor-brand"><a href="/vendor/dashboard">🍴 {{.VendorName}}</a><span>Vendor Analytics</span></div><nav class="vendor-nav" aria-label="Vendor navigation">
-<a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu">My menu</a><a href="/vendor/analytics" class="active">Analytics</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/ai">AI writing</a><a href="/vendor/billing">Billing</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav></header>
+<a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu">My menu</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics" class="active">Analytics</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/ai">AI writing</a><a href="/vendor/billing">Billing</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav></header>
 <main>
 <section class="hero"><div><p class="eyebrow">Business intelligence</p><h1>Know what is selling.</h1><p>Track revenue, order volume and your strongest menu items at a glance.</p></div><div class="filters" aria-label="Analytics period"><a class="filter {{if eq .Period "today"}}active{{end}}" href="/vendor/analytics?period=today">Today</a><a class="filter {{if eq .Period "week"}}active{{end}}" href="/vendor/analytics?period=week">7 days</a><a class="filter {{if eq .Period "month"}}active{{end}}" href="/vendor/analytics?period=month">30 days</a></div></section>
 <section class="metrics" aria-label="Analytics summary">

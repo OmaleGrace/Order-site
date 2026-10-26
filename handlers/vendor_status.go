@@ -37,7 +37,7 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 	res, err := h.DB.Exec(`
 		UPDATE orders
 		SET status = $1
-		WHERE id = $2 AND vendor_id = $3 AND status NOT IN ('pending', 'cancelled')
+		WHERE id = $2 AND vendor_id = $3 AND status NOT IN ('pending', 'scheduled', 'cancelled')
 	`, status, orderID, vendorID)
 	if err != nil {
 		log.Printf("vendor status: update failed: %v", err)

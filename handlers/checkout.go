@@ -131,6 +131,30 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	lga := strings.TrimSpace(r.FormValue("delivery_lga"))
 	address := strings.TrimSpace(r.FormValue("delivery_address"))
 	deliveryPhone := strings.TrimSpace(r.FormValue("delivery_phone"))
+	scheduledForText := strings.TrimSpace(r.FormValue("scheduled_for"))
+	var scheduledFor *time.Time
+	if scheduledForText != "" {
+		loc, locErr := time.LoadLocation("Africa/Lagos")
+		if locErr != nil {
+			errors.Render(w, "Could not read the scheduled time.", http.StatusInternalServerError)
+			return
+		}
+		t, parseErr := time.ParseInLocation("2006-01-02T15:04", scheduledForText, loc)
+		if parseErr != nil {
+			errors.Render(w, "Choose a valid scheduled date and time.", http.StatusBadRequest)
+			return
+		}
+		minTime, maxTime := scheduledOrderBounds(time.Now())
+		if t.Before(minTime) {
+			errors.Render(w, "Scheduled orders must be at least 15 minutes from now.", http.StatusBadRequest)
+			return
+		}
+		if t.After(maxTime) {
+			errors.Render(w, "Scheduled orders can only be placed up to 30 days ahead.", http.StatusBadRequest)
+			return
+		}
+		scheduledFor = &t
+	}
 	loyaltyPoints, err := strconv.Atoi(strings.TrimSpace(r.FormValue("loyalty_points")))
 	if err != nil {
 		loyaltyPoints = 0
@@ -157,6 +181,13 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			errors.Render(w, "You do not have enough loyalty points", http.StatusBadRequest)
 			return
 		}
+	}
+
+	couponCode := normalizeCouponCode(r.FormValue("coupon_code"))
+	couponID, couponDiscountKobo, err := h.validateCoupon(vendorID, couponCode, totalKobo)
+	if err != nil {
+		errors.Render(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	switch method {
@@ -226,7 +257,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	// amount. Delivery remains outside the commission calculation.
 	foodSubtotalKobo := totalKobo
 	loyaltyDiscountKobo := loyaltyPoints * 100 // 1 point = ₦1 = 100 kobo
-	foodPaidKobo := foodSubtotalKobo - loyaltyDiscountKobo
+	foodPaidKobo := foodSubtotalKobo - loyaltyDiscountKobo - couponDiscountKobo
+	if foodPaidKobo < 0 {
+		foodPaidKobo = 0
+	}
 	commission := commissionKobo(foodPaidKobo)
 
 	// The delivery fee is part of what the customer pays. Loyalty discounts
@@ -240,15 +274,31 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	defer tx.Rollback()
 
+	if couponID > 0 {
+		if err := h.reserveCoupon(tx, couponID); err != nil {
+			errors.Render(w, "This coupon is no longer available", http.StatusBadRequest)
+			return
+		}
+	}
+
 	var orderID int
 
+	// coupon_id is nullable. Never insert 0 for "no coupon" because 0 is
+	// still a real foreign-key value and cannot match coupons.id.
+	var couponIDValue interface{}
+	if couponID > 0 {
+		couponIDValue = couponID
+	}
+
+	initialStatus := "pending"
 	err = tx.QueryRow(`
 	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
 	                    delivery_method, delivery_state, delivery_lga, delivery_address,
-	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed)
-	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9, $10, $11)
+	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed,
+	                    coupon_id, coupon_code, coupon_discount_kobo, coupon_reserved, scheduled_for)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
 	RETURNING id
-`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints).Scan(&orderID)
+`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)

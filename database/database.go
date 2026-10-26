@@ -125,6 +125,46 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Vendor coupons and promo codes. Discounts apply to food only.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS coupons (
+			id SERIAL PRIMARY KEY,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			code TEXT NOT NULL,
+			discount_type TEXT NOT NULL CHECK (discount_type IN ('percentage','flat')),
+			discount_value INTEGER NOT NULL CHECK (discount_value > 0),
+			min_order_kobo INTEGER NOT NULL DEFAULT 0 CHECK (min_order_kobo >= 0),
+			max_discount_kobo INTEGER NOT NULL DEFAULT 0 CHECK (max_discount_kobo >= 0),
+			usage_limit INTEGER NOT NULL DEFAULT 0 CHECK (usage_limit >= 0),
+			used_count INTEGER NOT NULL DEFAULT 0 CHECK (used_count >= 0),
+			reserved_count INTEGER NOT NULL DEFAULT 0 CHECK (reserved_count >= 0),
+			active BOOLEAN NOT NULL DEFAULT TRUE,
+			starts_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			expires_at TIMESTAMPTZ,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE(vendor_id, code)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_coupons_vendor_active ON coupons(vendor_id, active, expires_at)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_id INTEGER REFERENCES coupons(id) ON DELETE SET NULL;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_discount_kobo INTEGER NOT NULL DEFAULT 0;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_reserved BOOLEAN NOT NULL DEFAULT FALSE;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// In-app notifications for customers.
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS notifications (
@@ -179,6 +219,16 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Ensure scheduled-order columns exist before creating the partial index that references them.
+	// Existing databases are upgraded safely with IF NOT EXISTS.
+	_, err = db.Exec(`
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// Hot-path indexes used by the home page, cart/header counters and order history.
 	// IF NOT EXISTS makes this safe for existing installations.
 	for _, indexSQL := range []string{
@@ -187,6 +237,7 @@ func Connect() (*sql.DB, error) {
 		`CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_orders_user_created ON orders(user_id, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_orders_vendor_status ON orders(vendor_id, status)`,
+		`CREATE INDEX IF NOT EXISTS idx_orders_scheduled_for ON orders(status, scheduled_for) WHERE scheduled_for IS NOT NULL`,
 		`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`,
 	} {
 		if _, err = db.Exec(indexSQL); err != nil {

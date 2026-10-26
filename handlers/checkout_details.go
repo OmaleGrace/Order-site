@@ -28,6 +28,7 @@ type CheckoutPage struct {
 	Phone           string
 	DefaultMethod   string
 	LoyaltyPoints   int
+	CouponError     string
 	States          []string
 }
 

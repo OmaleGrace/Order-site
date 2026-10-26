@@ -106,6 +106,12 @@ func (h *Handlers) ReviewOrder(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
 		return
 	}
+
+	// Read all rows before executing another statement on the same transaction.
+	// With lib/pq, leaving the result set open while issuing DELETE/INSERT can
+	// desynchronize the PostgreSQL protocol and produce "unexpected Parse
+	// response (C) CommandComplete" errors.
+	var itemIDs []int
 	for itemRows.Next() {
 		var itemID int
 		if err := itemRows.Scan(&itemID); err != nil {
@@ -113,19 +119,39 @@ func (h *Handlers) ReviewOrder(w http.ResponseWriter, r *http.Request) {
 			errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
 			return
 		}
+		itemIDs = append(itemIDs, itemID)
+	}
+	if err := itemRows.Err(); err != nil {
+		itemRows.Close()
+		errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
+		return
+	}
+	if err := itemRows.Close(); err != nil {
+		errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
+		return
+	}
+
+	for _, itemID := range itemIDs {
 		value := rating
 		if raw := r.FormValue("item_rating_" + strconv.Itoa(itemID)); raw != "" {
 			if parsed, parseErr := strconv.Atoi(raw); parseErr == nil && parsed >= 1 && parsed <= 5 {
 				value = parsed
 			}
 		}
-		if _, err := tx.Exec(`INSERT INTO order_item_reviews (order_review_id, order_id, menu_item_id, rating) VALUES ($1,$2,$3,$4) ON CONFLICT (order_review_id, menu_item_id) DO UPDATE SET rating=EXCLUDED.rating`, reviewID, orderID, itemID, value); err != nil {
-			itemRows.Close()
+		// Replace an existing item rating explicitly instead of relying on an
+		// ON CONFLICT target. This also works with databases created before the
+		// Stage 14 unique constraint was added.
+		if _, err := tx.Exec(`DELETE FROM order_item_reviews WHERE order_review_id = $1 AND menu_item_id = $2`, reviewID, itemID); err != nil {
+			log.Printf("delete item rating failed: order=%d review=%d item=%d: %v", orderID, reviewID, itemID, err)
+			errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
+			return
+		}
+		if _, err := tx.Exec(`INSERT INTO order_item_reviews (order_review_id, order_id, menu_item_id, rating) VALUES ($1,$2,$3,$4)`, reviewID, orderID, itemID, value); err != nil {
+			log.Printf("insert item rating failed: order=%d review=%d item=%d rating=%d: %v", orderID, reviewID, itemID, value, err)
 			errors.Render(w, "Could not save item ratings", http.StatusInternalServerError)
 			return
 		}
 	}
-	itemRows.Close()
 	if err := tx.Commit(); err != nil {
 		errors.Render(w, "Could not save your review", http.StatusInternalServerError)
 		return

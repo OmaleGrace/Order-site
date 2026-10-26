@@ -54,6 +54,7 @@
                         {{end}}
                     </div>
                     <p class="order-meta">Placed {{date .CreatedAt}}</p>
+                    {{if .ScheduledFor}}<p class="order-meta"><strong>Scheduled for {{date .ScheduledFor}}</strong></p>{{end}}
                     <div class="order-vendor">
                         <span class="order-vendor-label">Ordered from</span>
                         {{if .VendorSlug}}<a href="/v/{{.VendorSlug}}" class="order-vendor-link">{{.VendorName}}</a>{{else}}<strong>{{.VendorName}}</strong>{{end}}
@@ -66,7 +67,10 @@
                 <div class="tracking-topline">
                     <div>
                         <p class="tracking-kicker">Order progress</p>
-                        {{if eq .Status "paid"}}
+                        {{if eq .Status "scheduled"}}
+                            <h3>Scheduled order confirmed</h3>
+                            <p>Your payment is confirmed. We'll activate this order at the scheduled time.</p>
+                        {{else if eq .Status "paid"}}
                             <h3>Order confirmed</h3>
                             <p>Your order has been received and is waiting for the vendor to start preparing it.</p>
                         {{else if eq .Status "preparing"}}

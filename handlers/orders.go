@@ -36,6 +36,7 @@ type CustomerOrder struct {
 	DeliveryMethod      string
 	DeliveryAddress     string
 	Reviewed            bool
+	ScheduledFor        *time.Time
 	Items               []CustomerOrderItem
 }
 
@@ -62,7 +63,8 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		       COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = orders.id), 0),
 		       COALESCE(orders.loyalty_points_redeemed, 0) * 100, orders.delivery_fee_kobo, orders.status, orders.created_at, orders.delivery_method,
 		       TRIM(BOTH ', ' FROM CONCAT_WS(', ', delivery_address, delivery_lga, delivery_state)),
-               EXISTS(SELECT 1 FROM order_reviews r WHERE r.order_id = orders.id)
+               EXISTS(SELECT 1 FROM order_reviews r WHERE r.order_id = orders.id),
+               orders.scheduled_for
 		FROM orders
 		JOIN vendors v ON v.id = orders.vendor_id
 		WHERE orders.user_id = $1
@@ -94,6 +96,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 			&order.DeliveryMethod,
 			&order.DeliveryAddress,
 			&order.Reviewed,
+			&order.ScheduledFor,
 		)
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)

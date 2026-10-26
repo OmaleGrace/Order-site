@@ -37,6 +37,16 @@ func main() {
 
 	h := handlers.New(db)
 
+	// Lightweight in-process scheduler for scheduled customer orders. The database
+	// update is atomic, so repeated ticks cannot activate the same order twice.
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			h.ActivateScheduledOrders()
+		}
+	}()
+
 	mux := http.NewServeMux()
 
 	// Static files
@@ -91,6 +101,10 @@ func main() {
 	mux.HandleFunc("POST /vendor/orders/status", middleware.Logging(h.VendorUpdateOrderStatus))
 	mux.HandleFunc("GET /logout", middleware.Logging(h.Logout))
 	mux.HandleFunc("GET /vendor/menu", middleware.Logging(h.VendorMenu))
+	mux.HandleFunc("GET /vendor/coupons", middleware.Logging(middleware.RequireLogin(db, h.VendorCoupons)))
+	mux.HandleFunc("POST /vendor/coupons/save", middleware.Logging(middleware.RequireLogin(db, h.VendorCouponSave)))
+	mux.HandleFunc("POST /vendor/coupons/toggle", middleware.Logging(middleware.RequireLogin(db, h.VendorCouponToggle)))
+	mux.HandleFunc("POST /vendor/coupons/delete", middleware.Logging(middleware.RequireLogin(db, h.VendorCouponDelete)))
 	mux.HandleFunc("POST /vendor/menu/save", middleware.Logging(h.VendorMenuSave))
 	mux.HandleFunc("POST /vendor/menu/delete", middleware.Logging(h.VendorMenuDelete))
 	// Menu browsing is public so visitors and search crawlers can discover
@@ -100,6 +114,7 @@ func main() {
 	mux.HandleFunc("GET /sitemap.xml", middleware.Logging(h.SitemapXML))
 	mux.HandleFunc("GET /ads.txt", middleware.Logging(h.AdsTxt))
 	mux.HandleFunc("GET /checkout/details", middleware.Logging(middleware.RequireLogin(db, h.CheckoutDetails)))
+	mux.HandleFunc("GET /checkout/coupon", middleware.Logging(middleware.RequireLogin(db, h.CheckoutCoupon)))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
 		"POST /cart/add",

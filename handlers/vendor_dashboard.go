@@ -19,19 +19,20 @@ type VendorDashboardOrder struct {
 }
 
 type VendorDashboardPage struct {
-	VendorName     string
-	ShopStatus     string
-	Verified       bool
-	PayoutVerified bool
-	TodayOrders    int
-	TodaySalesKobo int
-	ActiveOrders   int
-	TotalOrders    int
-	Earnings       VendorEarnings
-	RecentOrders   []VendorDashboardOrder
-	ReviewAverage  float64
-	ReviewCount    int
-	Notice         string
+	VendorName      string
+	ShopStatus      string
+	Verified        bool
+	PayoutVerified  bool
+	TodayOrders     int
+	TodaySalesKobo  int
+	ActiveOrders    int
+	ScheduledOrders int
+	TotalOrders     int
+	Earnings        VendorEarnings
+	RecentOrders    []VendorDashboardOrder
+	ReviewAverage   float64
+	ReviewCount     int
+	Notice          string
 }
 
 func (h *Handlers) VendorDashboard(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +75,16 @@ func (h *Handlers) VendorDashboard(w http.ResponseWriter, r *http.Request) {
     `, vendorID).Scan(&page.ActiveOrders); err != nil {
 		log.Printf("vendor dashboard: active orders failed: %v", err)
 		errors.Render(w, "Could not load dashboard statistics", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.DB.QueryRow(`
+        SELECT COUNT(*)
+        FROM orders
+        WHERE vendor_id = $1 AND status = 'scheduled' AND scheduled_for IS NOT NULL
+    `, vendorID).Scan(&page.ScheduledOrders); err != nil {
+		log.Printf("vendor dashboard: scheduled orders failed: %v", err)
+		errors.Render(w, "Could not load scheduled orders", http.StatusInternalServerError)
 		return
 	}
 

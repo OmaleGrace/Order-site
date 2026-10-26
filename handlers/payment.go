@@ -156,7 +156,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	result, err := tx.Exec(`
 	UPDATE orders
-	SET status = 'paid'
+	SET status = CASE WHEN scheduled_for IS NOT NULL AND scheduled_for > NOW() THEN 'scheduled' ELSE 'paid' END
 	WHERE id = $1
 	AND status = 'pending'
 `, orderID)
@@ -184,6 +184,12 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if err := settleCoupon(tx, orderID); err != nil {
+		fmt.Println("Coupon settlement error:", err)
+		errors.Render(w, "Could not apply coupon", http.StatusInternalServerError)
+		return
+	}
+
 	if err := tx.Commit(); err != nil {
 		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
@@ -202,7 +208,18 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Order confirmation email error:", err)
 		}
 	}(orderID)
-	if err := createNotification(h.DB, userID, "order", "Order confirmed", "Your payment was confirmed and your order is now being processed.", "/orders"); err != nil {
+	var currentStatus string
+	_ = h.DB.QueryRow("SELECT status FROM orders WHERE id = $1", orderID).Scan(&currentStatus)
+	notificationTitle := "Order confirmed"
+	notificationMessage := "Your payment was confirmed and your order is now being processed."
+	if currentStatus == "scheduled" {
+		notificationTitle = "Scheduled order confirmed"
+		notificationMessage = "Your payment was confirmed. Your order will become active at the scheduled time."
+		if err := notifyVendorScheduledOrder(h.DB, orderID); err != nil {
+			fmt.Println("Vendor scheduled-order notification error:", err)
+		}
+	}
+	if err := createNotification(h.DB, userID, "order", notificationTitle, notificationMessage, "/orders"); err != nil {
 		fmt.Println("Order notification error:", err)
 	}
 
@@ -327,7 +344,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 
 	result, err := tx.Exec(`
 	UPDATE orders
-	SET status = 'paid'
+	SET status = CASE WHEN scheduled_for IS NOT NULL AND scheduled_for > NOW() THEN 'scheduled' ELSE 'paid' END
 	WHERE id = $1
 	AND status = 'pending'
 `, orderID)
@@ -356,6 +373,12 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if err := settleCoupon(tx, orderID); err != nil {
+		fmt.Println("Webhook coupon settlement error:", err)
+		errors.Render(w, "Could not apply coupon", http.StatusInternalServerError)
+		return
+	}
+
 	if err := tx.Commit(); err != nil {
 		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
@@ -372,7 +395,18 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Order confirmation email error:", err)
 		}
 	}(orderID)
-	if err := createNotification(h.DB, userID, "order", "Order confirmed", "Your payment was confirmed and your order is now being processed.", "/orders"); err != nil {
+	var currentStatus string
+	_ = h.DB.QueryRow("SELECT status FROM orders WHERE id = $1", orderID).Scan(&currentStatus)
+	notificationTitle := "Order confirmed"
+	notificationMessage := "Your payment was confirmed and your order is now being processed."
+	if currentStatus == "scheduled" {
+		notificationTitle = "Scheduled order confirmed"
+		notificationMessage = "Your payment was confirmed. Your order will become active at the scheduled time."
+		if err := notifyVendorScheduledOrder(h.DB, orderID); err != nil {
+			fmt.Println("Vendor scheduled-order notification error:", err)
+		}
+	}
+	if err := createNotification(h.DB, userID, "order", notificationTitle, notificationMessage, "/orders"); err != nil {
 		fmt.Println("Order notification error:", err)
 	}
 
