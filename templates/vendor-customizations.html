@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Customize {{.ItemName}} - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/vendor-customizations.css">
+</head>
+<body>
+<header class="custom-header">
+    <div class="custom-header-inner">
+        <a class="custom-brand" href="/vendor/dashboard" aria-label="ENIE Vendor Dashboard">
+            <span class="custom-brand-mark">E</span>
+            <span>ENIE</span>
+        </a>
+        <nav class="custom-nav" aria-label="Vendor navigation">
+            <a href="/vendor/menu">Menu</a>
+            <a href="/vendor/orders">Orders</a>
+            <a href="/vendor/dashboard">Dashboard</a>
+        <a href="/messages">Messages</a></nav>
+    </div>
+</header>
+
+<main class="custom-page">
+    <div class="custom-breadcrumb">
+        <a href="/vendor/menu">← Back to menu</a>
+    </div>
+
+    <section class="custom-hero">
+        <div>
+            <span class="eyebrow">Food customization</span>
+            <h1>{{.ItemName}}</h1>
+            <p>Let customers personalize this dish with sizes, extras, sides, and other choices before they add it to their cart.</p>
+        </div>
+    </section>
+
+    {{if .Notice}}
+    <div class="custom-notice" role="status">{{.Notice}}</div>
+    {{end}}
+
+    <section class="custom-card custom-create-card">
+        <div class="section-heading">
+            <div>
+                <span class="section-kicker">1. Create a group</span>
+                <h2>Add customization group</h2>
+                <p>Examples: Size, Extras, Protein, Sides or Spice level.</p>
+            </div>
+        </div>
+
+        <form class="group-form" action="/vendor/menu/customizations/group/save" method="post">
+            <input type="hidden" name="item_id" value="{{.ItemID}}">
+            <div class="field field-wide">
+                <label for="group-name">Group name</label>
+                <input id="group-name" name="name" placeholder="e.g. Extras" required maxlength="80">
+            </div>
+            <div class="field">
+                <label for="min-select">Minimum selections</label>
+                <input id="min-select" type="number" name="min_select" min="0" value="0" required>
+                <small>Set 0 if the group is optional.</small>
+            </div>
+            <div class="field">
+                <label for="max-select">Maximum selections</label>
+                <input id="max-select" type="number" name="max_select" min="1" value="1" required>
+                <small>How many choices a customer can pick.</small>
+            </div>
+            <div class="form-action">
+                <button class="btn-primary" type="submit">Save group</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="groups-section">
+        <div class="section-heading section-heading-row">
+            <div>
+                <span class="section-kicker">2. Configure choices</span>
+                <h2>Customization groups</h2>
+            </div>
+            <span class="section-hint">Customers will see active groups at checkout.</span>
+        </div>
+
+        {{range .Groups}}
+        <article class="custom-card group-card {{if not .Active}}is-inactive{{end}}">
+            <div class="group-header">
+                <div>
+                    <div class="group-title-row">
+                        <h3>{{.Name}}</h3>
+                        {{if .Active}}<span class="status-pill active">Active</span>{{else}}<span class="status-pill">Disabled</span>{{end}}
+                    </div>
+                    <p class="group-rule">
+                        Choose {{if eq .Min .Max}}exactly {{.Max}}{{else}}{{.Min}}–{{.Max}}{{end}} {{if eq .Max 1}}choice{{else}}choices{{end}}
+                    </p>
+                </div>
+                <form action="/vendor/menu/customizations/toggle" method="post">
+                    <input type="hidden" name="item_id" value="{{$.ItemID}}">
+                    <input type="hidden" name="group_id" value="{{.ID}}">
+                    <button class="btn-outline small" type="submit">{{if .Active}}Disable group{{else}}Enable group{{end}}</button>
+                </form>
+            </div>
+
+            <div class="options-heading">
+                <div>
+                    <strong>Options</strong>
+                    <span>{{len .Options}} configured</span>
+                </div>
+            </div>
+
+            {{if .Options}}
+            <div class="options-list">
+                {{range .Options}}
+                <div class="option-row {{if not .Active}}is-inactive{{end}}">
+                    <div class="option-main">
+                        <span class="option-dot"></span>
+                        <div>
+                            <strong>{{.Name}}</strong>
+                            {{if .Active}}<span class="option-status">Available</span>{{else}}<span class="option-status disabled">Disabled</span>{{end}}
+                        </div>
+                    </div>
+                    <div class="option-price">{{if eq .Price 0}}Free{{else}}+₦{{naira .Price}}{{end}}</div>
+                    <form action="/vendor/menu/customizations/toggle" method="post">
+                        <input type="hidden" name="item_id" value="{{$.ItemID}}">
+                        <input type="hidden" name="group_id" value="{{$.ID}}">
+                        <input type="hidden" name="option_id" value="{{.ID}}">
+                        <button class="text-button" type="submit">{{if .Active}}Disable{{else}}Enable{{end}}</button>
+                    </form>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="empty-options">
+                <div class="empty-icon">+</div>
+                <div>
+                    <strong>No options yet</strong>
+                    <p>Add the choices customers can select from this group.</p>
+                </div>
+            </div>
+            {{end}}
+
+            <div class="add-option">
+                <div class="add-option-heading">
+                    <strong>Add option</strong>
+                    <span>Leave price at ₦0 for a free choice.</span>
+                </div>
+                <form class="option-form" action="/vendor/menu/customizations/option/save" method="post">
+                    <input type="hidden" name="item_id" value="{{$.ItemID}}">
+                    <input type="hidden" name="group_id" value="{{.ID}}">
+                    <div class="field field-wide">
+                        <label for="option-name-{{.ID}}">Option name</label>
+                        <input id="option-name-{{.ID}}" name="name" placeholder="e.g. Extra cheese" required maxlength="80">
+                    </div>
+                    <div class="field">
+                        <label for="option-price-{{.ID}}">Extra price (₦)</label>
+                        <input id="option-price-{{.ID}}" type="number" name="price" min="0" step="0.01" value="0" required>
+                    </div>
+                    <div class="form-action">
+                        <button class="btn-primary" type="submit">Add option</button>
+                    </div>
+                </form>
+            </div>
+        </article>
+        {{else}}
+        <div class="custom-card empty-groups">
+            <div class="empty-icon large">+</div>
+            <h3>No customization groups yet</h3>
+            <p>Create your first group above. For example, create <strong>Extras</strong> and then add cheese, egg, or sausage as options.</p>
+        </div>
+        {{end}}
+    </section>
+
+    <div class="custom-footer-link">
+        <a href="/vendor/menu">← Back to menu</a>
+    </div>
+</main>
+<script src="/static/js/notification-bell.js"></script>
+</body>
+</html>

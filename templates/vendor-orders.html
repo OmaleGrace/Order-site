@@ -51,9 +51,9 @@
         <a href="/vendor/profile">Shop profile</a>
         <a href="/vendor/ai">AI writing</a>
         <a href="/vendor/billing">Billing</a>
-        <a href="/">View site</a>
-        <a href="/logout">Logout</a>
-    </nav>
+        <a href="/help">Help</a><a href="/">View site</a>
+        <a href="/help">Help</a><a href="/logout">Logout</a>
+    <a href="/messages">Messages</a></nav>
 </header>
 
 <main class="admin-container">
@@ -95,7 +95,7 @@
                 </ul>
                 {{end}}
                 <div class="scheduled-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
-                {{if eq .DeliveryMethod "delivery"}}<div class="scheduled-note">🛵 Delivery: {{.DeliveryAddress}} · {{.DeliveryPhone}}</div>{{else}}<div class="scheduled-note">🛍️ Pickup order — have the meal ready at the scheduled time.</div>{{end}}
+                {{if eq .DeliveryMethod "delivery"}}<div class="scheduled-note">🛵 Delivery: {{.DeliveryAddress}} · {{.DeliveryPhone}}{{if .RiderName}} · Rider: {{.RiderName}} ({{.RiderPhone}}) · {{.DeliveryStatus}}{{end}}</div>{{else}}<div class="scheduled-note">🛍️ Pickup order — have the meal ready at the scheduled time.</div>{{end}}
             </article>
             {{end}}
         </div>
@@ -163,9 +163,10 @@
                                 <div class="settlement-breakdown">
                     <h3>Transparent settlement</h3>
                     <div><span>Meal price</span><strong>₦{{naira .FoodSubtotalKobo}}</strong></div>
-                    {{if .LoyaltyDiscountKobo}}<div><span>Loyalty discount</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
-                    <div><span>Customer paid for food</span><strong>₦{{naira (sub .FoodSubtotalKobo .LoyaltyDiscountKobo)}}</strong></div>
-                    <div><span>ENIE commission ({{commissionPercent}}%)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
+                    {{if .CouponDiscountKobo}}<div><span>Coupon{{if .CouponCode}} ({{.CouponCode}}){{end}}</span><strong>-₦{{naira .CouponDiscountKobo}}</strong></div>{{end}}
+                    {{if .LoyaltyDiscountKobo}}<div><span>Loyalty points</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
+                    <div><span>Customer paid for food</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
+                    <div><span>ENIE commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
                     <div><span>Vendor food earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
                     {{if .DeliveryFeeKobo}}<div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>{{end}}
                     <div class="settlement-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
@@ -208,5 +209,6 @@
 </main>
 
 <script src="/static/js/vendor-banner.js"></script>
+<script src="/static/js/notification-bell.js"></script>
 </body>
 </html>

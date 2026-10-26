@@ -50,6 +50,14 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 	}
 
 	if status == "completed" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' THEN 'delivered' ELSE delivery_status END WHERE id=$1`, orderID)
+	} else if status == "preparing" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' AND rider_id IS NOT NULL THEN 'preparing' ELSE delivery_status END WHERE id=$1`, orderID)
+	} else if status == "ready" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' AND rider_id IS NOT NULL THEN 'ready_for_delivery' ELSE delivery_status END WHERE id=$1`, orderID)
+	}
+
+	if status == "completed" {
 		if err := h.awardLoyaltyForOrder(orderID); err != nil {
 			fmt.Printf("Loyalty award error: %v\n", err)
 		}

@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/notifications.css">
 </head>
 <body>
-<header class="notification-header"><div class="notification-header-inner"><a href="/menu" class="notification-logo"><img src="/static/img/enie-mark.svg" alt="{{brandName}}"> <span>{{brandName}}</span></a><nav><a href="/menu">Menu</a><a href="/orders">Orders</a><a href="/account">Account</a></nav></div></header>
+<header class="notification-header"><div class="notification-header-inner"><a href="/menu" class="notification-logo"><img src="/static/img/enie-mark.svg" alt="{{brandName}}"> <span>{{brandName}}</span></a><nav><a href="/menu">Menu</a><a href="/orders">Orders</a><a href="/account">Account</a><a href="/help">Help & Support</a></nav></div></header>
 <main class="notifications-page">
 <section class="notifications-hero"><div><p class="eyebrow">Stay in the loop</p><h1>Notifications</h1><p>Order updates and important account activity, all in one place.</p></div><form method="post" action="/notifications/read-all"><button class="mark-all" type="submit">Mark all as read</button></form></section>
 {{if .}}

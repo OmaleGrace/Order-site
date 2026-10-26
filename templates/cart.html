@@ -19,7 +19,7 @@
         <a href="/menu">Menu</a>
         <a href="/orders">My Orders</a>
         <a href="/logout">Logout</a>
-    </nav>
+    <a href="/help">Help & Support</a></nav>
 </header>
 
 <main class="cart-container">
@@ -67,6 +67,7 @@
                         <div>
                             <h2>{{.Name}}</h2>
                             {{if .Description}}<p class="item-desc">{{.Description}}</p>{{end}}
+                            {{if .Options}}<div style="margin-top:8px;color:var(--muted);font-size:.85rem"><strong>Customizations:</strong>{{range .Options}} <span>{{.Name}}{{if .PriceKobo}} (+₦{{naira .PriceKobo}}){{end}}</span>{{end}}</div>{{end}}
                         </div>
                         <strong class="item-price">₦{{naira .PriceKobo}}</strong>
                     </div>

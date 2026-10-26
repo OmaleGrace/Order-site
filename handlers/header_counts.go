@@ -23,22 +23,23 @@ func (h *Handlers) HeaderCounts(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("session_token")
 	if err != nil || cookie.Value == "" {
-		_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0})
+		_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0, "message_count": 0})
 		return
 	}
 
 	token := middleware.HashToken(cookie.Value)
-	var userID, cartCount, notificationCount int
+	var userID, cartCount, notificationCount, messageCount int
 	err = h.DB.QueryRowContext(r.Context(), `
         SELECT s.user_id,
                (SELECT COALESCE(SUM(quantity), 0) FROM cart_items WHERE user_id = s.user_id),
-               (SELECT COUNT(*) FROM notifications WHERE user_id = s.user_id AND read_at IS NULL)
+               (SELECT COUNT(*) FROM notifications WHERE user_id = s.user_id AND read_at IS NULL),
+               (SELECT COUNT(*) FROM messages m JOIN message_threads t ON t.id = m.thread_id JOIN vendors v ON v.id = t.vendor_id WHERE m.sender_user_id <> s.user_id AND m.read_at IS NULL AND (t.customer_id = s.user_id OR v.owner_user_id = s.user_id))
         FROM sessions s
         WHERE s.token = $1 AND s.expires_at > NOW()
-    `, token).Scan(&userID, &cartCount, &notificationCount)
+    `, token).Scan(&userID, &cartCount, &notificationCount, &messageCount)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0})
+			_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0, "message_count": 0})
 			return
 		}
 		http.Error(w, `{"error":"Could not load header counts"}`, http.StatusInternalServerError)
@@ -49,5 +50,6 @@ func (h *Handlers) HeaderCounts(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]int{
 		"cart_count":         cartCount,
 		"notification_count": notificationCount,
+		"message_count":      messageCount,
 	})
 }

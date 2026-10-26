@@ -25,7 +25,7 @@
     <nav aria-label="Checkout navigation">
         <a href="/cart">Cart</a>
         <a href="/orders">My Orders</a>
-    </nav>
+    <a href="/help">Help & Support</a></nav>
 </header>
 
 <main class="cart-container checkout-page">
@@ -155,7 +155,7 @@
                     </div>
                     <div class="review-lines">
                         {{range .Lines}}
-                        <div class="review-line"><span><strong>{{.Quantity}}×</strong> {{.Name}}</span><strong>₦{{naira .LineKobo}}</strong></div>
+                        <div class="review-line"><span><strong>{{.Quantity}}×</strong> {{.Name}}{{range .Options}}<small style="display:block;color:#6b746e;margin-left:22px">• {{.}}</small>{{end}}</span><strong>₦{{naira .LineKobo}}</strong></div>
                         {{end}}
                     </div>
                     <a href="/cart" class="edit-cart">← Edit items in cart</a>

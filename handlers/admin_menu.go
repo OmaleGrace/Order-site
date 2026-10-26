@@ -22,6 +22,7 @@ type AdminMenuItem struct {
 	PriceNaira  string
 	ImageURL    string
 	Category    string
+	Available   bool
 }
 
 type AdminMenuPage struct {
@@ -78,7 +79,7 @@ func menuRedirect(w http.ResponseWriter, r *http.Request, isAdmin bool, msg stri
 func (h *Handlers) renderMenuManager(w http.ResponseWriter, r *http.Request, vendorID int, vendorName string, isAdmin bool) {
 	query := `
 		SELECT id, name, COALESCE(description, ''), price_kobo,
-		       COALESCE(image_url, ''), COALESCE(category, '')
+		       COALESCE(image_url, ''), COALESCE(category, ''), COALESCE(available, TRUE)
 		FROM menu_items
 	`
 	var args []interface{}
@@ -106,7 +107,7 @@ func (h *Handlers) renderMenuManager(w http.ResponseWriter, r *http.Request, ven
 	for rows.Next() {
 		var it AdminMenuItem
 		var kobo int
-		if err := rows.Scan(&it.ID, &it.Name, &it.Description, &kobo, &it.ImageURL, &it.Category); err != nil {
+		if err := rows.Scan(&it.ID, &it.Name, &it.Description, &kobo, &it.ImageURL, &it.Category, &it.Available); err != nil {
 			log.Printf("menu manager: scan failed: %v", err)
 			errors.Render(w, "Could not read menu", http.StatusInternalServerError)
 			return
@@ -288,4 +289,94 @@ func (h *Handlers) VendorMenuDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.deleteMenuItem(w, r, id, false)
+}
+
+func (h *Handlers) VendorMenuAvailability(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		errors.Render(w, "Method not allowed", 405)
+		return
+	}
+	vendorID, _, ok := h.ownedVendor(w, r)
+	if !ok {
+		return
+	}
+	_ = r.ParseForm()
+	id, e := strconv.Atoi(r.FormValue("id"))
+	if e != nil || id <= 0 {
+		menuRedirect(w, r, false, "Invalid item")
+		return
+	}
+	_, e = h.DB.Exec(`UPDATE menu_items SET available=NOT COALESCE(available,TRUE) WHERE id=$1 AND vendor_id=$2`, id, vendorID)
+	if e != nil {
+		log.Printf("menu availability: %v", e)
+		menuRedirect(w, r, false, "Could not update availability")
+		return
+	}
+	menuRedirect(w, r, false, "Availability updated")
+}
+
+func (h *Handlers) VendorMenuDuplicate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		errors.Render(w, "Method not allowed", 405)
+		return
+	}
+	vendorID, _, ok := h.ownedVendor(w, r)
+	if !ok {
+		return
+	}
+	_ = r.ParseForm()
+	id, e := strconv.Atoi(r.FormValue("id"))
+	if e != nil || id <= 0 {
+		menuRedirect(w, r, false, "Invalid item")
+		return
+	}
+	_, e = h.DB.Exec(`INSERT INTO menu_items(name,description,price_kobo,image_url,category,vendor_id,available) SELECT name||' (Copy)',description,price_kobo,image_url,category,vendor_id,FALSE FROM menu_items WHERE id=$1 AND vendor_id=$2`, id, vendorID)
+	if e != nil {
+		log.Printf("menu duplicate: %v", e)
+		menuRedirect(w, r, false, "Could not duplicate item")
+		return
+	}
+	menuRedirect(w, r, false, "Item duplicated as unavailable")
+}
+
+func (h *Handlers) VendorMenuBulkUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		errors.Render(w, "Method not allowed", 405)
+		return
+	}
+	vendorID, _, ok := h.ownedVendor(w, r)
+	if !ok {
+		return
+	}
+	_ = r.ParseForm()
+	ids := r.Form["item_id"]
+	category := strings.TrimSpace(r.FormValue("category"))
+	if len(ids) == 0 || category == "" || len([]rune(category)) > 40 {
+		menuRedirect(w, r, false, "Choose items and enter a category")
+		return
+	}
+	tx, e := h.DB.Begin()
+	if e != nil {
+		menuRedirect(w, r, false, "Could not update menu")
+		return
+	}
+	defer tx.Rollback()
+	count := 0
+	for _, raw := range ids {
+		id, e := strconv.Atoi(raw)
+		if e != nil || id <= 0 {
+			continue
+		}
+		res, e := tx.Exec(`UPDATE menu_items SET category=$1 WHERE id=$2 AND vendor_id=$3`, category, id, vendorID)
+		if e == nil {
+			if n, _ := res.RowsAffected(); n > 0 {
+				count++
+			}
+		}
+	}
+	if e = tx.Commit(); e != nil {
+		menuRedirect(w, r, false, "Could not update menu")
+		return
+	}
+	menuRedirect(w, r, false, fmt.Sprintf("Updated %d menu items", count))
 }

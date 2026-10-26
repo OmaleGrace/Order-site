@@ -345,3 +345,8 @@ body .price-label { font-size: .9rem; font-weight: 700; }
     .notification-nav-label { display: none; }
     .notification-nav-item { width: 38px; justify-content: center; padding: 7px !important; }
 }
+
+.messages-nav-item,.notification-nav-item{position:relative;display:inline-flex!important;align-items:center;gap:5px}.messages-unread-badge,.notification-unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#c94b3e;color:#fff;font-size:.68rem;font-weight:850;line-height:1}.messages-unread-badge[hidden],.notification-unread-badge[hidden]{display:none!important}
+
+/* Stage 18 messaging polish */
+@media(max-width:700px){.messages-nav-label,.notification-nav-label{display:none}.messages-nav-item,.notification-nav-item{padding-left:8px!important;padding-right:8px!important}}

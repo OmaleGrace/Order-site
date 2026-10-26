@@ -165,6 +165,89 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Food customization/add-ons. Vendors can define option groups (for example, Size or Extras)
+	// and customers can select valid options before adding a dish to the cart. Prices are
+	// snapshotted into the cart and order so historical totals remain transparent.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS menu_option_groups (
+			id SERIAL PRIMARY KEY,
+			menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+			name TEXT NOT NULL,
+			min_select INTEGER NOT NULL DEFAULT 0 CHECK (min_select >= 0),
+			max_select INTEGER NOT NULL DEFAULT 1 CHECK (max_select >= 1 AND max_select >= min_select),
+			position INTEGER NOT NULL DEFAULT 0,
+			active BOOLEAN NOT NULL DEFAULT TRUE
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS menu_options (
+			id SERIAL PRIMARY KEY,
+			group_id INTEGER NOT NULL REFERENCES menu_option_groups(id) ON DELETE CASCADE,
+			name TEXT NOT NULL,
+			price_kobo INTEGER NOT NULL DEFAULT 0 CHECK (price_kobo >= 0),
+			position INTEGER NOT NULL DEFAULT 0,
+			active BOOLEAN NOT NULL DEFAULT TRUE
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS cart_item_options (
+			id SERIAL PRIMARY KEY,
+			cart_item_id INTEGER NOT NULL REFERENCES cart_items(id) ON DELETE CASCADE,
+			option_id INTEGER NOT NULL REFERENCES menu_options(id) ON DELETE RESTRICT,
+			name_at_addition TEXT NOT NULL,
+			price_kobo_at_addition INTEGER NOT NULL DEFAULT 0 CHECK (price_kobo_at_addition >= 0),
+			UNIQUE(cart_item_id, option_id)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS order_item_options (
+			id SERIAL PRIMARY KEY,
+			order_item_id INTEGER NOT NULL REFERENCES order_items(id) ON DELETE CASCADE,
+			name TEXT NOT NULL,
+			price_kobo INTEGER NOT NULL DEFAULT 0 CHECK (price_kobo >= 0)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_menu_option_groups_item ON menu_option_groups(menu_item_id, position); CREATE INDEX IF NOT EXISTS idx_menu_options_group ON menu_options(group_id, position); CREATE INDEX IF NOT EXISTS idx_cart_item_options_cart ON cart_item_options(cart_item_id); CREATE INDEX IF NOT EXISTS idx_order_item_options_item ON order_item_options(order_item_id)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Delivery riders and order assignment. Existing orders remain unassigned until an admin assigns a rider.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS riders (
+			id SERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			phone TEXT NOT NULL,
+			vehicle TEXT NOT NULL DEFAULT '',
+			active BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		);
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_id INTEGER REFERENCES riders(id) ON DELETE SET NULL;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_status TEXT NOT NULL DEFAULT 'unassigned';
+		CREATE INDEX IF NOT EXISTS idx_orders_rider_status ON orders(rider_id, status) WHERE rider_id IS NOT NULL;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// In-app notifications for customers.
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS notifications (
@@ -462,6 +545,48 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_user_created ON loyalty_transactions(user_id, created_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Stage 20 menu availability: vendors can temporarily hide dishes without deleting them.
+	_, err = db.Exec(`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS available BOOLEAN NOT NULL DEFAULT TRUE`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_menu_items_vendor_available ON menu_items(vendor_id, available)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Stage 19 support tickets. Customer/vendor support requests are retained for admin follow-up.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS support_tickets (
+			id BIGSERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+			category VARCHAR(40) NOT NULL DEFAULT 'General',
+			subject VARCHAR(160) NOT NULL,
+			message TEXT NOT NULL,
+			admin_reply TEXT NOT NULL DEFAULT '',
+			status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open','pending','resolved')),
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_support_tickets_status_updated ON support_tickets(status, updated_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_support_tickets_user_created ON support_tickets(user_id, created_at DESC)`)
 	if err != nil {
 		db.Close()
 		return nil, err

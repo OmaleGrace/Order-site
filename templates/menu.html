@@ -29,6 +29,7 @@
         {{if .LoggedIn}}
         <a href="/favorites">❤ Favourites</a>
         <a href="/orders">My Orders</a>
+        <a href="/messages">Messages</a>
         <a href="/account">Account</a>
         <a href="/loyalty">✨ Loyalty</a>
         <a href="/logout">Logout</a>
@@ -39,7 +40,7 @@
         <a href="/login">Login</a>
         <a href="/signup" class="signup-link">Sign Up</a>
         {{end}}
-    </nav>
+    <a href="/help">Help & Support</a></nav>
 </header>
 
 <section class="menu-intro">
@@ -126,9 +127,9 @@
                 <div class="food-bottom">
                     <strong class="food-price">₦{{naira .PriceKobo}}</strong>
 
-                    <form action="/cart/add" method="post">
+                    <form action="/cart/add" method="post" class="add-to-cart-form" data-item-id="{{.ID}}">
                         <input type="hidden" name="id" value="{{.ID}}">
-                        <button type="submit" class="add-cart-btn">+ Add to Cart</button>
+                        <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">{{if .ID}}+ Customize & Add{{end}}</button>
                     </form>
                 </div>
             </div>
@@ -147,6 +148,22 @@
 
 </main>
 
+<div id="customization-modal" class="customization-modal" data-customization-modal hidden>
+  <div class="customization-dialog" role="dialog" aria-modal="true" aria-labelledby="custom-title">
+    <div class="customization-head">
+      <div><span class="menu-eyebrow">Make it yours</span><h2 id="custom-title" data-custom-title>Customize your dish</h2></div>
+      <button type="button" class="customization-close" data-custom-close aria-label="Close customization">✕</button>
+    </div>
+    <form id="custom-form" data-custom-form action="/cart/add" method="post">
+      <input type="hidden" name="id" data-custom-item-id>
+      <div class="custom-price-summary"><div><span>Base price</span><strong data-custom-base>₦0</strong></div><div><span>Selected extras</span><strong>Included below</strong></div><div class="custom-total"><span>Total</span><strong data-custom-total>₦0</strong></div></div>
+      <div class="custom-error" data-custom-error role="alert" hidden></div>
+      <div class="custom-groups" data-custom-groups></div>
+      <button type="submit" class="add-cart-btn custom-submit">Add to cart</button>
+    </form>
+  </div>
+</div>
+
 <footer class="menu-footer">
     <div class="menu-footer-links">
         <a href="/">Home</a>
@@ -160,5 +177,6 @@
 <script src="/static/js/favorites.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
+<script src="/static/js/customization.js"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"Order-site/brand"
 	"Order-site/cart"
@@ -37,6 +38,16 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var available bool
+	if err := h.DB.QueryRow(`SELECT COALESCE(available, TRUE) FROM menu_items WHERE id = $1`, itemID).Scan(&available); err != nil {
+		errors.Render(w, "Could not find that menu item", http.StatusBadRequest)
+		return
+	}
+	if !available {
+		errors.Render(w, "This item is currently unavailable", http.StatusBadRequest)
+		return
+	}
+
 	if other, err := cart.OtherVendorInCart(h.DB, userID, itemID); err != nil {
 		fmt.Println("Vendor check error:", err)
 		errors.Render(w, "Could not add item to cart", http.StatusInternalServerError)
@@ -47,10 +58,15 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	added, err := cart.AddItem(h.DB, userID, itemID)
+	optionIDs := parseOptionIDs(r.Form["option_id"])
+	added, err := cart.AddItemWithOptions(h.DB, userID, itemID, optionIDs)
 	if err != nil {
 		fmt.Println("Add to cart error:", err)
-		errors.Render(w, "Could not add item to cart", http.StatusInternalServerError)
+		if strings.Contains(err.Error(), "customization") {
+			errors.Render(w, err.Error(), http.StatusBadRequest)
+		} else {
+			errors.Render(w, "Could not add item to cart", http.StatusInternalServerError)
+		}
 		return
 	}
 

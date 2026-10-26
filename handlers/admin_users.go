@@ -45,11 +45,15 @@ type AdminUsersPage struct {
 }
 
 type AdminDashboardPage struct {
-	Users        int
-	Vendors      int
-	Orders       int
-	MenuItems    int
-	Applications int
+	Users                int
+	Vendors              int
+	Orders               int
+	MenuItems            int
+	Applications         int
+	SupportOpen          int
+	ActiveRiders         int
+	UnassignedDeliveries int
+	TodaySalesKobo       int
 }
 
 func (h *Handlers) AdminDashboard(w http.ResponseWriter, r *http.Request) {
@@ -67,6 +71,10 @@ func (h *Handlers) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 		{"SELECT COUNT(*) FROM orders", &page.Orders},
 		{"SELECT COUNT(*) FROM menu_items", &page.MenuItems},
 		{"SELECT COUNT(*) FROM vendor_applications WHERE status = 'pending'", &page.Applications},
+		{"SELECT COUNT(*) FROM support_tickets WHERE status IN ('open','pending')", &page.SupportOpen},
+		{"SELECT COUNT(*) FROM riders WHERE active = TRUE", &page.ActiveRiders},
+		{"SELECT COUNT(*) FROM orders WHERE delivery_method='delivery' AND status IN ('paid','preparing','ready') AND rider_id IS NULL", &page.UnassignedDeliveries},
+		{"SELECT COALESCE(SUM(total_kobo),0) FROM orders WHERE created_at >= CURRENT_DATE AND status NOT IN ('pending','cancelled')", &page.TodaySalesKobo},
 	}
 	for _, q := range queries {
 		if err := h.DB.QueryRow(q.query).Scan(q.dest); err != nil {

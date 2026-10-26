@@ -96,7 +96,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
                COALESCE((SELECT AVG(r.rating) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
                COALESCE((SELECT COUNT(*) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0)
 		FROM menu_items
-		WHERE vendor_id = $1
+		WHERE vendor_id = $1 AND COALESCE(available, TRUE) = TRUE
 		ORDER BY category, name
 	`, vendorID)
 	if err != nil {

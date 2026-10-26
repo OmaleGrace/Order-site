@@ -24,9 +24,10 @@
         <a href="/menu">Menu</a>
         <a href="/vendors" class="active-link">Shops</a>
         <a href="/orders">My Orders</a>
+        <a href="/messages">Messages</a>
         <a href="/account">Account</a>
         <a href="/cart" class="cart-link">🛒 Cart</a>
-    </nav>
+    <a href="/help">Help & Support</a></nav>
 </header>
 
 <main class="shop-page">
@@ -99,7 +100,7 @@
                     <strong class="food-price">₦{{naira .PriceKobo}}</strong>
                     <form action="/cart/add" method="post">
                         <input type="hidden" name="id" value="{{.ID}}">
-                        <button type="submit" class="add-cart-btn">+ Add</button>
+                        <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">+ Customize & Add</button>
                     </form>
                 </div>
             </div>
@@ -123,8 +124,25 @@
 </main>
 
 <div class="mobile-cart-bar"><span>Ready to order?</span><a href="/cart">View cart →</a></div>
+<div id="shop-customization-modal" class="customization-modal" data-customization-modal hidden>
+  <div class="customization-dialog" role="dialog" aria-modal="true" aria-labelledby="shop-custom-title">
+    <div class="customization-head">
+      <div><span class="menu-eyebrow">Make it yours</span><h2 id="shop-custom-title" data-custom-title>Customize your dish</h2></div>
+      <button type="button" class="customization-close" data-custom-close aria-label="Close customization">✕</button>
+    </div>
+    <form data-custom-form action="/cart/add" method="post">
+      <input type="hidden" name="id" data-custom-item-id>
+      <div class="custom-price-summary"><div><span>Base price</span><strong data-custom-base>₦0</strong></div><div><span>Selected extras</span><strong>Included below</strong></div><div class="custom-total"><span>Total</span><strong data-custom-total>₦0</strong></div></div>
+      <div class="custom-error" data-custom-error role="alert" hidden></div>
+      <div class="custom-groups" data-custom-groups></div>
+      <button type="submit" class="add-cart-btn custom-submit">Add to cart</button>
+    </form>
+  </div>
+</div>
+
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/bottomnav.js"></script>
+<script src="/static/js/customization.js"></script>
 <script>
 (function () {
     const search = document.getElementById('shop-dish-search');

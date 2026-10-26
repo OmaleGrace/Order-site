@@ -15,10 +15,12 @@ import (
 )
 
 type CustomerOrderItem struct {
-	Name      string
-	Quantity  int
-	PriceKobo int
-	ImageURL  string
+	MenuItemID int
+	Name       string
+	Quantity   int
+	PriceKobo  int
+	ImageURL   string
+	Options    []string
 }
 
 type CustomerOrder struct {
@@ -37,6 +39,9 @@ type CustomerOrder struct {
 	DeliveryAddress     string
 	Reviewed            bool
 	ScheduledFor        *time.Time
+	RiderName           string
+	RiderPhone          string
+	DeliveryStatus      string
 	Items               []CustomerOrderItem
 }
 
@@ -64,9 +69,10 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(orders.loyalty_points_redeemed, 0) * 100, orders.delivery_fee_kobo, orders.status, orders.created_at, orders.delivery_method,
 		       TRIM(BOTH ', ' FROM CONCAT_WS(', ', delivery_address, delivery_lga, delivery_state)),
                EXISTS(SELECT 1 FROM order_reviews r WHERE r.order_id = orders.id),
-               orders.scheduled_for
+               orders.scheduled_for, COALESCE(r.name,''), COALESCE(r.phone,''), COALESCE(orders.delivery_status,'unassigned')
 		FROM orders
 		JOIN vendors v ON v.id = orders.vendor_id
+        LEFT JOIN riders r ON r.id = orders.rider_id
 		WHERE orders.user_id = $1
 		ORDER BY orders.created_at DESC
 	`, userID)
@@ -97,6 +103,9 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 			&order.DeliveryAddress,
 			&order.Reviewed,
 			&order.ScheduledFor,
+			&order.RiderName,
+			&order.RiderPhone,
+			&order.DeliveryStatus,
 		)
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
@@ -106,6 +115,7 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 
 		itemRows, err := h.DB.Query(`
 			SELECT
+				oi.menu_item_id,
 				m.name,
 				oi.quantity,
 				oi.price_kobo,
@@ -136,6 +146,21 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			optionRows, optErr := h.DB.Query(`SELECT name, price_kobo FROM order_item_options WHERE order_item_id = (SELECT oi2.id FROM order_items oi2 WHERE oi2.order_id=$1 AND oi2.menu_item_id=$2 ORDER BY oi2.id DESC LIMIT 1) ORDER BY id`, order.ID, item.MenuItemID)
+			if optErr == nil {
+				for optionRows.Next() {
+					var n string
+					var p int
+					if optionRows.Scan(&n, &p) == nil {
+						if p > 0 {
+							item.Options = append(item.Options, fmt.Sprintf("%s (+₦%d)", n, p/100))
+						} else {
+							item.Options = append(item.Options, n)
+						}
+					}
+				}
+				optionRows.Close()
+			}
 			order.Items = append(order.Items, item)
 		}
 

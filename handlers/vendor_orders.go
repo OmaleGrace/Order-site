@@ -24,6 +24,8 @@ type VendorOrder struct {
 	TotalKobo              int
 	FoodSubtotalKobo       int
 	LoyaltyDiscountKobo    int
+	CouponDiscountKobo     int
+	CouponCode             string
 	CommissionKobo         int
 	VendorFoodEarningsKobo int
 	Status                 string
@@ -32,6 +34,9 @@ type VendorOrder struct {
 	DeliveryAddress        string
 	DeliveryPhone          string
 	DeliveryFeeKobo        int
+	RiderName              string
+	RiderPhone             string
+	DeliveryStatus         string
 	ScheduledFor           *time.Time
 	Items                  []VendorOrderItem
 }
@@ -52,14 +57,17 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 		rows, err := h.DB.Query(`
 			SELECT o.id, u.name, u.email, COALESCE(u.phone, ''), o.total_kobo,
 			       COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) AS food_subtotal_kobo,
-			       COALESCE(o.loyalty_points_redeemed, 0) * 100 AS loyalty_discount_kobo,
-			       o.commission_kobo,
-			       GREATEST(COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) - COALESCE(o.loyalty_points_redeemed, 0) * 100 - o.commission_kobo, 0) AS vendor_food_earnings_kobo,
+			   COALESCE(o.loyalty_points_redeemed, 0) * 100 AS loyalty_discount_kobo,
+			   COALESCE(o.coupon_discount_kobo, 0) AS coupon_discount_kobo,
+			   COALESCE(o.coupon_code, '') AS coupon_code,
+			   o.commission_kobo,
+			   GREATEST(COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) - COALESCE(o.loyalty_points_redeemed, 0) * 100 - COALESCE(o.coupon_discount_kobo, 0) - o.commission_kobo, 0) AS vendor_food_earnings_kobo,
 			       o.status,
 			       TO_CHAR(o.created_at, 'DD Mon YYYY, HH24:MI'),
-			       o.delivery_method, o.delivery_address || ', ' || o.delivery_lga || ', ' || o.delivery_state, o.delivery_phone, o.delivery_fee_kobo, o.scheduled_for
+			       o.delivery_method, o.delivery_address || ', ' || o.delivery_lga || ', ' || o.delivery_state, o.delivery_phone, o.delivery_fee_kobo, COALESCE(r.name, ''), COALESCE(r.phone, ''), COALESCE(o.delivery_status, 'unassigned'), o.scheduled_for
 			FROM orders o
 			JOIN users u ON u.id = o.user_id
+            LEFT JOIN riders r ON r.id = o.rider_id
 			WHERE o.vendor_id = $1 AND `+statusFilter+`
 			ORDER BY `+orderBy+`
 		`, vendorID)
@@ -71,7 +79,7 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 		var result []VendorOrder
 		for rows.Next() {
 			var o VendorOrder
-			if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.FoodSubtotalKobo, &o.LoyaltyDiscountKobo, &o.CommissionKobo, &o.VendorFoodEarningsKobo, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.DeliveryAddress, &o.DeliveryPhone, &o.DeliveryFeeKobo, &o.ScheduledFor); err != nil {
+			if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.FoodSubtotalKobo, &o.LoyaltyDiscountKobo, &o.CouponDiscountKobo, &o.CouponCode, &o.CommissionKobo, &o.VendorFoodEarningsKobo, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.DeliveryAddress, &o.DeliveryPhone, &o.DeliveryFeeKobo, &o.RiderName, &o.RiderPhone, &o.DeliveryStatus, &o.ScheduledFor); err != nil {
 				return nil, err
 			}
 			result = append(result, o)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ type CheckoutLine struct {
 	Name     string
 	Quantity int
 	LineKobo int
+	Options  []string
 }
 
 type CheckoutPage struct {
@@ -97,7 +99,15 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 
 	for _, it := range items {
 		line := it.PriceKobo * it.Quantity
-		page.Lines = append(page.Lines, CheckoutLine{Name: it.Name, Quantity: it.Quantity, LineKobo: line})
+		var options []string
+		for _, option := range it.Options {
+			if option.PriceKobo > 0 {
+				options = append(options, option.Name+" (+₦"+fmt.Sprintf("%d", option.PriceKobo/100)+")")
+			} else {
+				options = append(options, option.Name)
+			}
+		}
+		page.Lines = append(page.Lines, CheckoutLine{Name: it.Name, Quantity: it.Quantity, LineKobo: line, Options: options})
 		page.SubtotalKobo += line
 	}
 

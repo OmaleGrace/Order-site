@@ -116,6 +116,7 @@ func (h *Handlers) loadHomePublicData() homePublicData {
                 WHERE o.status NOT IN ('pending', 'cancelled')
                 GROUP BY oi.menu_item_id
             ) p ON p.menu_item_id = m.id
+            WHERE COALESCE(m.available, TRUE) = TRUE
             ORDER BY COALESCE(p.ordered_qty, 0) DESC, m.name
             LIMIT 8
         `)
@@ -127,7 +128,7 @@ func (h *Handlers) loadHomePublicData() homePublicData {
             SELECT DISTINCT m.category
             FROM menu_items m
             JOIN vendors v ON v.id = m.vendor_id AND v.status = 'active' AND v.paid_until > NOW()
-            WHERE m.category <> ''
+            WHERE COALESCE(m.available, TRUE) = TRUE AND m.category <> ''
             ORDER BY m.category
         `)
 		if err != nil {
@@ -186,6 +187,7 @@ func (h *Handlers) Home(w http.ResponseWriter, r *http.Request) {
                   AND o.status NOT IN ('pending', 'cancelled')
                 GROUP BY oi.menu_item_id
             ) r ON r.menu_item_id = m.id
+            WHERE COALESCE(m.available, TRUE) = TRUE
             ORDER BY r.last_ordered DESC
             LIMIT 8
         `, middleware.HashToken(cookie.Value))

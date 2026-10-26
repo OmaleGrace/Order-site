@@ -23,21 +23,23 @@
 
 <body>
 
-<header class="site-header">
-    <div class="brand">
+<aside class="home-sidebar" aria-label="Main navigation">
+    <div class="home-sidebar-brand">
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
-
-    <nav aria-label="Main navigation">
-        <a href="/menu">Menu</a>
-        <a href="/vendors">Shops</a>
-        <a href="/become-a-vendor">Sell with us</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/login">Login</a>
-        <a href="/signup" class="signup-link">Sign Up</a>
+    <nav class="home-sidebar-nav">
+        <a href="/menu">🍽️ <span>Menu</span></a>
+        <a href="/vendors">🏪 <span>Shops</span></a>
+        <a href="/become-a-vendor">🤝 <span>Sell with us</span></a>
+        <a href="/about">ℹ️ <span>About</span></a>
+        <a href="/contact">✉️ <span>Contact</span></a>
+        <a href="/help">🆘 <span>Help & Support</span></a>
     </nav>
-</header>
+    <div class="home-sidebar-account">
+        <a href="/login">Log in</a>
+        <a href="/signup" class="signup-link">Sign Up</a>
+    </div>
+</aside>
 
 <section class="hero hero-home">
     <div class="hero-glow hero-glow-one" aria-hidden="true"></div>

@@ -63,6 +63,16 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var unavailableCount int
+	if err := h.DB.QueryRow(`SELECT COUNT(*) FROM cart_items ci JOIN menu_items m ON m.id = ci.menu_item_id WHERE ci.user_id = $1 AND COALESCE(m.available, TRUE) = FALSE`, userID).Scan(&unavailableCount); err != nil {
+		errors.Render(w, "Could not validate cart availability", http.StatusInternalServerError)
+		return
+	}
+	if unavailableCount > 0 {
+		errors.Render(w, "One or more items in your cart are currently unavailable. Please remove them and try again.", http.StatusBadRequest)
+		return
+	}
+
 	// Calculate total
 	var totalKobo int
 
@@ -307,21 +317,28 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, item := range items {
+		var orderItemID int
 		_, err = tx.Exec(`
 		INSERT INTO order_items
 		(order_id, menu_item_id, quantity, price_kobo)
 		VALUES ($1, $2, $3, $4)
-	`,
-			orderID,
-			item.MenuItemID,
-			item.Quantity,
-			item.PriceKobo,
-		)
-
+	`, orderID, item.MenuItemID, item.Quantity, item.PriceKobo)
 		if err != nil {
 			fmt.Println("Create order item error:", err)
 			errors.Render(w, "Could not create order items", http.StatusInternalServerError)
 			return
+		}
+		if err = tx.QueryRow(`SELECT id FROM order_items WHERE order_id=$1 AND menu_item_id=$2 ORDER BY id DESC LIMIT 1`, orderID, item.MenuItemID).Scan(&orderItemID); err != nil {
+			fmt.Println("Find order item error:", err)
+			errors.Render(w, "Could not save item customizations", http.StatusInternalServerError)
+			return
+		}
+		for _, option := range item.Options {
+			if _, err = tx.Exec(`INSERT INTO order_item_options(order_item_id,name,price_kobo) VALUES ($1,$2,$3)`, orderItemID, option.Name, option.PriceKobo); err != nil {
+				fmt.Println("Create order item option error:", err)
+				errors.Render(w, "Could not save item customizations", http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 

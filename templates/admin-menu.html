@@ -70,6 +70,10 @@
         td.row-actions button { padding: 7px 14px; font-size: 0.85rem; }
 
         .muted { color: var(--muted); font-size: 0.85rem; }
+        .secondary { background:#efe6d6; color:var(--ink); border:0; }
+        .secondary:hover { background:#e4d8c2; }
+        #menu-filter { min-width:0; }
+        @media (max-width:600px) { table { min-width:780px; } .table-wrap { overflow-x:auto; } }
 
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
@@ -82,7 +86,7 @@
         <a href="/admin/users">Users</a>
         <a href="/admin/orders">Orders</a>
         <a href="/admin/menu" class="active">Menu</a>
-        <a href="/admin/vendors">Vendors</a>
+        <a href="/admin/vendors">Vendors</a><a href="/admin/support">Support</a>
         <a href="/admin/earnings">Earnings</a>
         <a href="/admin/applications">Applications</a>
         {{else}}
@@ -133,17 +137,26 @@
         </div>
 
         <div class="card">
+            {{if not .IsAdmin}}<form method="get" style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px">
+                <input id="menu-filter" type="search" placeholder="Search your menu by name or category…" aria-label="Search menu">
+                <a href="/vendor/menu" class="secondary" style="display:flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;text-decoration:none">Reset</a>
+            </form>{{end}}
             <h2>Menu items ({{len .Items}})</h2>
             {{if .Items}}
             <div class="table-wrap">
-            <table>
+            <form action="/vendor/menu/bulk" method="post" id="bulk-form">
+            <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px">
+                <div><label for="bulk-category">Set category for selected</label><input id="bulk-category" name="category" placeholder="e.g. Rice"></div>
+                <button type="submit">Apply to selected</button>
+            </div>
+            <div class="table-wrap"><table>
                 <thead>
-                    <tr><th>Item</th><th>Category</th><th>Price</th><th></th></tr>
+                    <tr><th><input type="checkbox" id="select-all" aria-label="Select all"></th><th>Item</th><th>Category</th><th>Price</th><th>Availability</th><th></th></tr>
                 </thead>
                 <tbody>
                     {{range .Items}}
-                    <tr>
-                        <td>
+                    <tr class="menu-row" data-search="{{.Name}} {{.Category}}">
+                        <td><input type="checkbox" name="item_id" value="{{.ID}}" class="item-check" aria-label="Select {{.Name}}"></td><td>
                             <div class="item-cell">
                                 {{if .ImageURL}}
                                 <img src="{{.ImageURL}}" alt="{{.Name}}" class="thumb zoomable" loading="lazy">
@@ -158,7 +171,9 @@
                         </td>
                         <td>{{if .Category}}<span class="tag">{{.Category}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
                         <td class="price">₦{{.PriceNaira}}</td>
+                        <td>{{if .Available}}<span class="tag">Available</span>{{else}}<span class="tag" style="background:#fbe7e5;color:#a12a20">Hidden</span>{{end}}</td>
                         <td class="row-actions">
+                            {{if not $.IsAdmin}}<a class="secondary" style="text-decoration:none;display:inline-block;padding:10px 12px;border-radius:10px" href="/vendor/menu/customizations?item_id={{.ID}}">Customize</a>{{end}}
                             <button type="button" class="secondary edit-btn"
                                 data-id="{{.ID}}"
                                 data-name="{{.Name}}"
@@ -171,12 +186,13 @@
                                 <input type="hidden" name="id" value="{{.ID}}">
                                 <button type="submit" class="danger">Delete</button>
                             </form>
+                            {{if not $.IsAdmin}}<form action="/vendor/menu/availability" method="post"><input type="hidden" name="id" value="{{.ID}}"><button type="submit" class="secondary">{{if .Available}}Hide{{else}}Show{{end}}</button></form><form action="/vendor/menu/duplicate" method="post"><input type="hidden" name="id" value="{{.ID}}"><button type="submit" class="secondary">Duplicate</button></form>{{end}}
                         </td>
                     </tr>
                     {{end}}
                 </tbody>
             </table>
-            </div>
+            </div></form>
             {{else}}
             <p class="muted">No items yet. Add your first one above.</p>
             {{end}}
@@ -224,6 +240,8 @@
 
         cancelBtn.addEventListener('click', resetForm);
     })();
+    document.getElementById('select-all')?.addEventListener('change', function(){document.querySelectorAll('.item-check').forEach(function(c){c.checked=this.checked},this)});
+        document.getElementById('menu-filter')?.addEventListener('input', function(){var q=this.value.toLowerCase().trim();document.querySelectorAll('.menu-row').forEach(function(row){row.style.display=!q||row.dataset.search.toLowerCase().includes(q)?'':'none'})});
     </script>
     <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/vendor-banner.js"></script>

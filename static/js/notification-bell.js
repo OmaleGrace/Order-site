@@ -24,6 +24,35 @@
         return item;
     }
 
+    function buildMessagesLink() {
+        var nav = document.querySelector('header nav');
+        if (!nav || nav.querySelector('.messages-nav-item')) return null;
+        var item = document.createElement('a');
+        item.href = '/messages';
+        item.className = 'messages-nav-item';
+        item.setAttribute('aria-label', 'Messages');
+        item.title = 'Messages';
+        item.innerHTML = '<span class="messages-nav-icon" aria-hidden="true">💬</span>' +
+            '<span class="messages-nav-label">Messages</span>' +
+            '<span class="messages-unread-badge" hidden>0</span>';
+        nav.insertBefore(item, nav.firstChild ? nav.firstChild.nextSibling : null);
+        return item;
+    }
+
+    function updateMessageBadge(item, count) {
+        if (!item) return;
+        var badge = item.querySelector('.messages-unread-badge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : String(count);
+            badge.hidden = false;
+            item.setAttribute('aria-label', 'Messages, ' + count + ' unread');
+        } else {
+            badge.hidden = true;
+            item.setAttribute('aria-label', 'Messages');
+        }
+    }
+
     function updateBadge(item, count) {
         if (!item) return;
         var badge = item.querySelector('.notification-unread-badge');
@@ -53,11 +82,13 @@
 
     function loadCount() {
         var item = buildBell();
-        if (!item) return;
+        var messages = buildMessagesLink();
+        if (!item && !messages) return;
 
         loadCounts()
             .then(function (data) {
                 updateBadge(item, Number(data.notification_count) || 0);
+                updateMessageBadge(messages, Number(data.message_count) || 0);
             })
             .catch(function () {
                 if (item && item.parentNode) item.parentNode.removeChild(item);

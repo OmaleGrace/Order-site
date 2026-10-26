@@ -31,7 +31,7 @@ func GetAllWithOptions(db *sql.DB, search, category, sortBy string, minPriceKobo
 		       m.image_url, m.category, v.id, v.name, v.slug
 		FROM menu_items m
 		JOIN vendors v ON v.id = m.vendor_id
-		WHERE ` + LiveVendorSQL + `
+		WHERE ` + LiveVendorSQL + ` AND COALESCE(m.available, TRUE) = TRUE
 	`
 	var args []interface{}
 	argIndex := 1
