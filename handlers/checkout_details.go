@@ -27,6 +27,7 @@ type CheckoutPage struct {
 	PickupAddress   string
 	Phone           string
 	DefaultMethod   string
+	LoyaltyPoints   int
 	States          []string
 }
 
@@ -100,6 +101,15 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.DB.QueryRow("SELECT COALESCE(phone, '') FROM users WHERE id = $1", userID).Scan(&page.Phone)
+	if err := h.DB.QueryRow(`
+		SELECT COALESCE(SUM(CASE WHEN type = 'earned' THEN points ELSE -points END), 0)
+		FROM loyalty_transactions
+		WHERE user_id = $1
+	`, userID).Scan(&page.LoyaltyPoints); err != nil {
+		// Existing databases may not have the loyalty table yet; checkout should
+		// still work without rewards in that case.
+		page.LoyaltyPoints = 0
+	}
 
 	page.States = nigerianStates
 	page.DefaultMethod = "pickup"

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -130,6 +131,33 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	lga := strings.TrimSpace(r.FormValue("delivery_lga"))
 	address := strings.TrimSpace(r.FormValue("delivery_address"))
 	deliveryPhone := strings.TrimSpace(r.FormValue("delivery_phone"))
+	loyaltyPoints, err := strconv.Atoi(strings.TrimSpace(r.FormValue("loyalty_points")))
+	if err != nil {
+		loyaltyPoints = 0
+	}
+	if loyaltyPoints < 0 {
+		errors.Render(w, "Invalid loyalty points amount", http.StatusBadRequest)
+		return
+	}
+	if loyaltyPoints > totalKobo/100 {
+		errors.Render(w, "You cannot use more loyalty points than the food subtotal", http.StatusBadRequest)
+		return
+	}
+	if loyaltyPoints > 0 {
+		var availablePoints int
+		if err := h.DB.QueryRow(`
+			SELECT COALESCE(SUM(CASE WHEN type = 'earned' THEN points ELSE -points END), 0)
+			FROM loyalty_transactions
+			WHERE user_id = $1
+		`, userID).Scan(&availablePoints); err != nil {
+			errors.Render(w, "Could not verify loyalty points", http.StatusInternalServerError)
+			return
+		}
+		if loyaltyPoints > availablePoints {
+			errors.Render(w, "You do not have enough loyalty points", http.StatusBadRequest)
+			return
+		}
+	}
 
 	switch method {
 	case "pickup":
@@ -193,12 +221,17 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		deliveryPhone = normalized
 	}
 
-	// The platform's cut is taken from the food only, not the delivery fee.
-	// It is fixed now, so later rate changes never alter an existing order.
-	commission := commissionKobo(totalKobo)
+	// Loyalty points reduce the amount the customer actually pays for food.
+	// The vendor/platform split is then calculated from that post-discount food
+	// amount. Delivery remains outside the commission calculation.
+	foodSubtotalKobo := totalKobo
+	loyaltyDiscountKobo := loyaltyPoints * 100 // 1 point = ₦1 = 100 kobo
+	foodPaidKobo := foodSubtotalKobo - loyaltyDiscountKobo
+	commission := commissionKobo(foodPaidKobo)
 
-	// The delivery fee is part of what the customer pays
-	totalKobo += deliveryFeeKobo
+	// The delivery fee is part of what the customer pays. Loyalty discounts
+	// apply to food only, never to the delivery fee.
+	totalKobo = foodPaidKobo + deliveryFeeKobo
 	tx, err := h.DB.Begin()
 	if err != nil {
 		errors.Render(w, "Could not start order", http.StatusInternalServerError)
@@ -212,10 +245,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow(`
 	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
 	                    delivery_method, delivery_state, delivery_lga, delivery_address,
-	                    delivery_phone, delivery_fee_kobo, commission_kobo)
-	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9, $10)
+	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed)
+	VALUES ($1, $2, 'pending', $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	RETURNING id
-`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission).Scan(&orderID)
+`, userID, totalKobo, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)

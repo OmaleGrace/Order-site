@@ -9,6 +9,13 @@
     <title>Checkout - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
+    <style>
+        [hidden] { display: none !important; }
+        .loyalty-checkout-control { display: grid; gap: 12px; }
+        #loyalty-input-wrap { padding: 14px; border: 1px solid #dfe8e2; border-radius: 14px; background: #f7faf8; }
+        #loyalty-input-wrap label { display:block; margin-bottom:6px; font-weight:800; }
+        #loyalty_points { width:100%; max-width:260px; padding:11px 12px; border:1px solid #cfdad2; border-radius:10px; font:inherit; }
+    </style>
 </head>
 <body>
 <header class="cart-header">
@@ -100,6 +107,29 @@
                     </div>
                 </section>
 
+                <section class="checkout-card loyalty-checkout-card" aria-labelledby="loyalty-heading">
+                    <div class="card-heading">
+                        <span class="number-badge">✨</span>
+                        <div><h2 id="loyalty-heading">Use ENIE points</h2><p>1 point = ₦1. You can use points on food, not delivery.</p></div>
+                    </div>
+                    {{if gt .LoyaltyPoints 0}}
+                    <div class="loyalty-checkout-control">
+                        <label class="loyalty-toggle"><input type="checkbox" id="use-loyalty"><span>Use my loyalty points</span></label>
+                        <div id="loyalty-input-wrap" hidden>
+                            <label for="loyalty_points">Points to use <span>*</span></label>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                                <input type="number" name="loyalty_points" id="loyalty_points" min="0" max="{{.LoyaltyPoints}}" value="0" inputmode="numeric">
+                                <button type="button" id="use-all-loyalty" class="checkout-btn" style="min-height:42px;padding:0 16px">Use all</button>
+                            </div>
+                            <small>You have <strong>{{.LoyaltyPoints}}</strong> points available. You can choose any amount up to the food subtotal.</small>
+                        </div>
+                    </div>
+                    {{else}}
+                    <div class="loyalty-empty">You don't have loyalty points available yet. Complete an order to start earning. </div>
+                    <input type="hidden" name="loyalty_points" value="0">
+                    {{end}}
+                </section>
+
                 <section class="checkout-card" aria-labelledby="review-heading">
                     <div class="card-heading">
                         <span class="number-badge">2</span>
@@ -118,6 +148,8 @@
                 <div class="summary-kicker">Final review</div>
                 <h2 id="final-total-heading">Order total</h2>
                 <div class="summary-line"><span>Food subtotal</span><strong>₦{{naira .SubtotalKobo}}</strong></div>
+                <div class="summary-line" id="loyalty-discount-row" hidden><span>Loyalty discount</span><strong id="loyalty-discount-line">-₦0</strong></div>
+                <p class="summary-note" id="commission-transparency-note" hidden>ENIE's commission is calculated from the food amount actually paid after your loyalty discount.</p>
                 <div class="summary-line"><span>Delivery</span><strong id="fee-line">₦0</strong></div>
                 <div class="summary-divider"></div>
                 <div class="total-row"><span>Total</span><strong id="total-line">₦{{naira .SubtotalKobo}}</strong></div>
@@ -148,6 +180,15 @@
     var hint = document.getElementById('phone-hint');
     var payBtn = document.getElementById('pay-btn');
     var payLabel = payBtn.innerHTML;
+    var useLoyalty = document.getElementById('use-loyalty');
+    var loyaltyWrap = document.getElementById('loyalty-input-wrap');
+    var loyaltyInput = document.getElementById('loyalty_points');
+    var loyaltyDiscountRow = document.getElementById('loyalty-discount-row');
+    var loyaltyDiscountLine = document.getElementById('loyalty-discount-line');
+    var commissionTransparencyNote = document.getElementById('commission-transparency-note');
+    var loyaltyMax = loyaltyInput ? Number(loyaltyInput.max || 0) : 0;
+    var useAllLoyalty = document.getElementById('use-all-loyalty');
+    var foodNaira = Math.floor(subtotal / 100);
 
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
     function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
@@ -180,8 +221,26 @@
         pickupBox.hidden = delivery;
         hint.textContent = delivery ? '(required for delivery)' : '(optional for pickup)';
         var currentFee = delivery ? fee : 0;
+
+        var points = 0;
+        if (useLoyalty && useLoyalty.checked && loyaltyInput) {
+            points = Number(loyaltyInput.value || 0);
+            if (!Number.isFinite(points)) points = 0;
+            points = Math.max(0, Math.min(Math.floor(points), loyaltyMax, foodNaira));
+            loyaltyInput.value = String(points);
+            loyaltyWrap.hidden = false;
+            loyaltyDiscountRow.hidden = points === 0;
+            if (commissionTransparencyNote) commissionTransparencyNote.hidden = points === 0;
+        } else if (loyaltyWrap) {
+            loyaltyWrap.hidden = true;
+            loyaltyDiscountRow.hidden = true;
+            if (commissionTransparencyNote) commissionTransparencyNote.hidden = true;
+        }
+
+        var discountKobo = points * 100;
         feeLine.textContent = delivery ? (currentFee ? naira(currentFee) : 'Free') : '₦0';
-        totalLine.textContent = naira(subtotal + currentFee);
+        loyaltyDiscountLine.textContent = '-' + naira(discountKobo);
+        totalLine.textContent = naira(subtotal - discountKobo + currentFee);
         var allOk = method() !== '';
         fields.forEach(function (fld) {
             var err = fld.check();
@@ -191,6 +250,25 @@
             fld.el.classList.toggle('invalid', show && !!err);
         });
         payBtn.disabled = !allOk;
+    }
+
+    if (useLoyalty) {
+        useLoyalty.addEventListener('change', function () {
+            if (!useLoyalty.checked && loyaltyInput) loyaltyInput.value = '0';
+            refresh();
+        });
+    }
+    if (loyaltyInput) {
+        loyaltyInput.addEventListener('input', refresh);
+        loyaltyInput.addEventListener('blur', refresh);
+    }
+    if (useAllLoyalty) {
+        useAllLoyalty.addEventListener('click', function () {
+            if (!useLoyalty || !loyaltyInput) return;
+            useLoyalty.checked = true;
+            loyaltyInput.value = String(Math.min(loyaltyMax, foodNaira));
+            refresh();
+        });
     }
 
     radios.forEach(function (r) { r.addEventListener('change', refresh); });

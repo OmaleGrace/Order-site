@@ -148,6 +148,37 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Loyalty rewards: 1 point per ₦100 of food on completed orders.
+	// Existing databases are upgraded safely; redeemed and earned records may
+	// reference the same order, while only earned records are unique per order.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS loyalty_transactions (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+			points INTEGER NOT NULL CHECK (points > 0),
+			type TEXT NOT NULL DEFAULT 'earned' CHECK (type IN ('earned', 'redeemed')),
+			description TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	if _, err = db.Exec(`ALTER TABLE loyalty_transactions DROP CONSTRAINT IF EXISTS loyalty_transactions_order_id_key`); err != nil {
+		db.Close()
+		return nil, err
+	}
+	if _, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_user_created ON loyalty_transactions(user_id, created_at DESC)`); err != nil {
+		db.Close()
+		return nil, err
+	}
+	if _, err = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_loyalty_earned_order ON loyalty_transactions(order_id) WHERE type = 'earned' AND order_id IS NOT NULL`); err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// Hot-path indexes used by the home page, cart/header counters and order history.
 	// IF NOT EXISTS makes this safe for existing installations.
 	for _, indexSQL := range []string{
@@ -193,6 +224,9 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_state TEXT NOT NULL DEFAULT '';
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_lga TEXT NOT NULL DEFAULT '';
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS commission_kobo INTEGER NOT NULL DEFAULT 0;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS loyalty_points_redeemed INTEGER NOT NULL DEFAULT 0;
+		ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_loyalty_points_redeemed_check;
+		ALTER TABLE orders ADD CONSTRAINT orders_loyalty_points_redeemed_check CHECK (loyalty_points_redeemed >= 0);
 	`)
 	if err != nil {
 		db.Close()
@@ -354,6 +388,71 @@ func Connect() (*sql.DB, error) {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
 	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Loyalty rewards for completed customer orders. This additive migration
+	// also creates the table for existing databases that predate Stage 12.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS loyalty_transactions (
+			id BIGSERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			order_id INTEGER UNIQUE REFERENCES orders(id) ON DELETE SET NULL,
+			points INTEGER NOT NULL CHECK (points > 0),
+			type TEXT NOT NULL DEFAULT 'earned' CHECK (type IN ('earned', 'redeemed')),
+			description TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_user_created ON loyalty_transactions(user_id, created_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Verified-purchase reviews. A customer can review a completed order once,
+	// with optional per-dish ratings. This is additive for existing databases.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS order_reviews (
+			id BIGSERIAL PRIMARY KEY,
+			order_id INTEGER NOT NULL UNIQUE REFERENCES orders(id) ON DELETE CASCADE,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+			comment TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS order_item_reviews (
+			id BIGSERIAL PRIMARY KEY,
+			order_review_id BIGINT NOT NULL REFERENCES order_reviews(id) ON DELETE CASCADE,
+			order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+			menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+			rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+			UNIQUE (order_review_id, menu_item_id)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_order_reviews_vendor_created ON order_reviews(vendor_id, created_at DESC)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_order_item_reviews_menu_item ON order_item_reviews(menu_item_id)`)
 	if err != nil {
 		db.Close()
 		return nil, err

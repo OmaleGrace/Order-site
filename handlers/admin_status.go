@@ -47,6 +47,12 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if status == "completed" {
+		if err := h.awardLoyaltyForOrder(orderID); err != nil {
+			fmt.Printf("Loyalty award error: %v\n", err)
+		}
+	}
+
 	var customerID int
 	if err := h.DB.QueryRow(`SELECT user_id FROM orders WHERE id=$1`, orderID).Scan(&customerID); err == nil {
 		statusLabel := strings.Title(strings.ReplaceAll(status, "_", " "))

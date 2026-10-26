@@ -22,14 +22,21 @@ type CustomerOrderItem struct {
 }
 
 type CustomerOrder struct {
-	ID              int
-	Reference       string
-	TotalKobo       int
-	Status          string
-	CreatedAt       time.Time
-	DeliveryMethod  string
-	DeliveryAddress string
-	Items           []CustomerOrderItem
+	ID                  int
+	Reference           string
+	VendorID            int
+	VendorName          string
+	VendorSlug          string
+	TotalKobo           int
+	FoodSubtotalKobo    int
+	LoyaltyDiscountKobo int
+	DeliveryFeeKobo     int
+	Status              string
+	CreatedAt           time.Time
+	DeliveryMethod      string
+	DeliveryAddress     string
+	Reviewed            bool
+	Items               []CustomerOrderItem
 }
 
 func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +58,15 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.DB.Query(`
-		SELECT id, total_kobo, status, created_at, delivery_method,
-		       TRIM(BOTH ', ' FROM CONCAT_WS(', ', delivery_address, delivery_lga, delivery_state))
+		SELECT orders.id, orders.vendor_id, v.name, v.slug, orders.total_kobo,
+		       COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = orders.id), 0),
+		       COALESCE(orders.loyalty_points_redeemed, 0) * 100, orders.delivery_fee_kobo, orders.status, orders.created_at, orders.delivery_method,
+		       TRIM(BOTH ', ' FROM CONCAT_WS(', ', delivery_address, delivery_lga, delivery_state)),
+               EXISTS(SELECT 1 FROM order_reviews r WHERE r.order_id = orders.id)
 		FROM orders
-		WHERE user_id = $1
-		ORDER BY created_at DESC
+		JOIN vendors v ON v.id = orders.vendor_id
+		WHERE orders.user_id = $1
+		ORDER BY orders.created_at DESC
 	`, userID)
 
 	if err != nil {
@@ -71,11 +82,18 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 
 		err := rows.Scan(
 			&order.ID,
+			&order.VendorID,
+			&order.VendorName,
+			&order.VendorSlug,
 			&order.TotalKobo,
+			&order.FoodSubtotalKobo,
+			&order.LoyaltyDiscountKobo,
+			&order.DeliveryFeeKobo,
 			&order.Status,
 			&order.CreatedAt,
 			&order.DeliveryMethod,
 			&order.DeliveryAddress,
+			&order.Reviewed,
 		)
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)

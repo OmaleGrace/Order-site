@@ -49,6 +49,7 @@
             <div class="shop-meta-row">
                 {{if .Area}}<span>📍 {{.Area}}</span>{{end}}
                 {{if .Completed}}<span>✓ {{.Completed}} completed orders</span>{{else}}<span>New shop</span>{{end}}
+                {{if .ReviewCount}}<span>★ {{printf "%.1f" .ReviewAverage}} · {{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<span>☆ No reviews yet</span>{{end}}
                 {{if .OffersDelivery}}<span>🛵 Delivery{{if .DeliveryFeeKobo}} · ₦{{naira .DeliveryFeeKobo}}{{else}} · Free{{end}}</span>{{end}}
                 {{if .OffersPickup}}<span>🛍️ Pickup available</span>{{end}}
             </div>
@@ -88,6 +89,7 @@
             <div class="food-image shop-food-image">
                 {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">{{else}}<div class="no-image">🍽️</div>{{end}}
                 {{if .Category}}<span class="food-tag">{{.Category}}</span>{{end}}
+                {{if .ReviewCount}}<span class="food-tag rating-tag">★ {{printf "%.1f" .Rating}}</span>{{end}}
             </div>
             <div class="food-content shop-food-content">
                 <div class="shop-food-topline"><span class="shop-food-category">{{if .Category}}{{.Category}}{{else}}Menu item{{end}}</span></div>
@@ -105,6 +107,11 @@
         {{else}}
         <div class="empty-menu shop-empty"><div class="empty-emoji">🍽️</div><p><strong>No dishes yet</strong></p><p>This shop hasn't added any dishes yet. Check back soon.</p></div>
         {{end}}
+    </section>
+
+    <section class="shop-reviews" aria-labelledby="reviews-title">
+        <div class="reviews-heading"><div><span class="menu-eyebrow">Customer feedback</span><h2 id="reviews-title">What customers say</h2></div><div class="review-score">{{if .ReviewCount}}<strong>{{printf "%.1f" .ReviewAverage}}</strong><span>★ average<br>{{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<strong>New</strong><span>No reviews yet</span>{{end}}</div></div>
+        {{if .Reviews}}<div class="review-list">{{range .Reviews}}<article class="review-card"><div class="review-card-top"><strong>{{.Customer}}</strong><span>{{.CreatedAt}}</span></div><div class="review-stars" aria-label="{{.Rating}} out of 5 stars">{{if ge .Rating 1}}★{{end}}{{if ge .Rating 2}}★{{end}}{{if ge .Rating 3}}★{{end}}{{if ge .Rating 4}}★{{end}}{{if ge .Rating 5}}★{{end}}</div><p>{{.Comment}}</p><span class="verified-review">✓ Verified purchase</span></article>{{end}}</div>{{else}}<p class="reviews-note">{{if .ReviewCount}}Customers have rated this shop, but no written reviews have been shared yet.{{else}}Reviews come from customers who completed an order with this shop.{{end}}</p>{{end}}
     </section>
 
     <div id="shop-no-results" class="empty-menu shop-no-results" hidden>

@@ -29,6 +29,8 @@ type VendorDashboardPage struct {
 	TotalOrders    int
 	Earnings       VendorEarnings
 	RecentOrders   []VendorDashboardOrder
+	ReviewAverage  float64
+	ReviewCount    int
 	Notice         string
 }
 
@@ -82,6 +84,12 @@ func (h *Handlers) VendorDashboard(w http.ResponseWriter, r *http.Request) {
     `, vendorID).Scan(&page.TotalOrders); err != nil {
 		log.Printf("vendor dashboard: total orders failed: %v", err)
 		errors.Render(w, "Could not load dashboard statistics", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.DB.QueryRow(`SELECT COALESCE(AVG(rating),0), COUNT(*) FROM order_reviews WHERE vendor_id=$1`, vendorID).Scan(&page.ReviewAverage, &page.ReviewCount); err != nil {
+		log.Printf("vendor dashboard: review stats failed: %v", err)
+		errors.Render(w, "Could not load review statistics", http.StatusInternalServerError)
 		return
 	}
 

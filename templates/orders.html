@@ -54,6 +54,10 @@
                         {{end}}
                     </div>
                     <p class="order-meta">Placed {{date .CreatedAt}}</p>
+                    <div class="order-vendor">
+                        <span class="order-vendor-label">Ordered from</span>
+                        {{if .VendorSlug}}<a href="/v/{{.VendorSlug}}" class="order-vendor-link">{{.VendorName}}</a>{{else}}<strong>{{.VendorName}}</strong>{{end}}
+                    </div>
                 </div>
                 <span class="status-label status-{{.Status}}">{{.Status}}</span>
             </div>
@@ -111,8 +115,11 @@
                     <strong>{{if eq .DeliveryMethod "delivery"}}{{if .DeliveryAddress}}{{.DeliveryAddress}}{{else}}Address provided at checkout{{end}}{{else}}Pickup from the vendor{{end}}</strong>
                 </div>
                 <div class="detail-box">
-                    <span class="detail-label">Order total</span>
-                    <strong class="total-value">₦{{naira .TotalKobo}}</strong>
+                    <span class="detail-label">Payment breakdown</span>
+                    <strong>Food: ₦{{naira .FoodSubtotalKobo}}</strong>
+                    {{if .LoyaltyDiscountKobo}}<small>Loyalty discount: -₦{{naira .LoyaltyDiscountKobo}}</small>{{end}}
+                    {{if .DeliveryFeeKobo}}<small>Delivery: ₦{{naira .DeliveryFeeKobo}}</small>{{end}}
+                    <strong class="total-value">Paid: ₦{{naira .TotalKobo}}</strong>
                 </div>
             </div>
 
@@ -134,6 +141,9 @@
             <div class="order-card-footer">
                 <span class="order-support">Reference: <strong>{{.Reference}}</strong></span>
                 <div class="order-footer-actions">
+                    {{if eq .Status "completed"}}
+                        {{if .Reviewed}}<span class="reviewed-badge">★ Reviewed</span>{{else}}<a class="review-btn" href="/orders/{{.ID}}/review">★ Rate & review</a>{{end}}
+                    {{end}}
                     {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
                     <form action="/orders/reorder" method="post">
                         <input type="hidden" name="order_id" value="{{.ID}}">

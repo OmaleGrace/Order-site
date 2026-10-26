@@ -131,3 +131,34 @@
 .reorder-btn { border:1px solid rgba(23,74,50,.18); background:#fff; color:var(--green); min-height:36px; padding:0 12px; border-radius:10px; font:inherit; font-size:.76rem; font-weight:800; cursor:pointer; }
 .reorder-btn:hover { background:#e7f6ed; }
 @media (max-width:520px){ .order-footer-actions { width:100%; justify-content:space-between; } .reorder-btn { min-height:38px; } }
+
+.review-btn,.reviewed-badge{display:inline-flex;align-items:center;padding:8px 11px;border-radius:10px;font-size:.78rem;font-weight:850;text-decoration:none}.review-btn{background:#fff5d6;color:#805d00;border:1px solid #f0dc98}.reviewed-badge{background:#e9f6ec;color:#287446}
+
+.order-vendor {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 7px;
+    flex-wrap: wrap;
+}
+
+.order-vendor-label {
+    color: var(--muted, #667085);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.order-vendor-link,
+.order-vendor strong {
+    color: var(--text, #17202a);
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.order-vendor-link {
+    text-decoration: none;
+}
+
+.order-vendor-link:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyalty - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/account.css">
+    <link rel="stylesheet" href="/static/css/loyalty.css">
+</head>
+<body>
+<header class="account-header">
+    <div class="header-inner">
+        <a href="/menu" class="logo"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+        <nav aria-label="Account navigation">
+            <a href="/menu">Menu</a><a href="/cart">Cart</a><a href="/orders">Orders</a><a href="/account">Account</a><a href="/loyalty" class="active">Loyalty</a><a href="/logout">Logout</a>
+        </nav>
+    </div>
+</header>
+
+<main class="account-container loyalty-page">
+    <section class="loyalty-hero">
+        <div>
+            <p class="eyebrow">ENIE Rewards</p>
+            <h1>Earn points every time you order.</h1>
+            <p>Complete orders earn loyalty points automatically. Your progress builds toward higher tiers as you keep ordering.</p>
+        </div>
+        <div class="loyalty-balance" aria-label="Current loyalty points"><strong>{{.Points}}</strong><span>points available</span><small>Worth ₦{{.Points}} on food</small></div>
+    </section>
+
+    <section class="loyalty-grid">
+        <article class="loyalty-card tier-card">
+            <div class="loyalty-card-top"><span class="tier-badge">{{.Tier}}</span><span>{{.Lifetime}} lifetime points</span></div>
+            <h2>{{.Tier}} member</h2>
+            {{if ne .Tier "Platinum"}}
+            <p>{{.NextTierAt}} lifetime points unlocks {{.NextTier}}.</p>
+            <div class="tier-progress"><span style="width: {{.Progress}}%"></span></div>
+            {{else}}
+            <p>You've reached the highest ENIE loyalty tier.</p>
+            <div class="tier-progress"><span style="width: 100%"></span></div>
+            {{end}}
+        </article>
+        <article class="loyalty-card earning-card">
+            <span class="loyalty-icon">✨</span>
+            <h2>How you earn</h2>
+            <p><strong>1 point</strong> for every ₦100 spent on food in a completed order.</p>
+            <small>Delivery fees don't count toward points.</small>
+        </article>
+    </section>
+
+    <section class="account-section loyalty-history">
+        <div class="section-title-row"><div><p class="eyebrow">Your rewards activity</p><h2>Points history</h2></div><a href="/menu" class="section-link">Order food →</a></div>
+        {{if .Transactions}}
+        <div class="loyalty-history-list">
+            {{range .Transactions}}
+            <div class="loyalty-history-row">
+                <div><strong>{{.Description}}</strong><small>{{.CreatedAt}}{{if .Reference}} · {{.Reference}}{{end}}</small></div>
+                {{if eq .Points 0}}<b>0 pts</b>{{else if gt .Points 0}}<b>+{{.Points}} pts</b>{{else}}<b class="points-used">{{.Points}} pts</b>{{end}}
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="account-empty"><span>✨</span><div><h3>Your points journey starts here.</h3><p>Complete your first order to start earning ENIE loyalty points.</p></div><a href="/menu" class="account-button">Browse food</a></div>
+        {{end}}
+    </section>
+
+    <section class="loyalty-note"><strong>Use your points at checkout.</strong><span>Every 100 naira spent on food earns 1 point, and every point is worth ₦1 when you use it on a future food order. Delivery fees are not covered by points.</span></section>
+</main>
+<script src="/static/js/notification-bell.js"></script>
+<script src="/static/js/bottomnav.js"></script>
+</body>
+</html>

@@ -7,6 +7,13 @@
     <title>Orders - {{.VendorName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/admin-orders.css">
+    <style>
+      .settlement-breakdown{margin-top:18px;padding:16px;border:1px solid #e1e8e2;border-radius:14px;background:#f8fbf9}
+      .settlement-breakdown h3{margin:0 0 10px;color:#174a32;font-size:.95rem}
+      .settlement-breakdown>div{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid #e7ece8;font-size:.88rem}
+      .settlement-breakdown>div:last-child{border-bottom:0}
+      .settlement-total{margin-top:4px;padding-top:11px!important;font-weight:800}
+    </style>
 </head>
 
 <body>
@@ -95,7 +102,18 @@
                     </ul>
                 </div>
 
-                                <div class="order-bottom">
+                                <div class="settlement-breakdown">
+                    <h3>Transparent settlement</h3>
+                    <div><span>Meal price</span><strong>₦{{naira .FoodSubtotalKobo}}</strong></div>
+                    {{if .LoyaltyDiscountKobo}}<div><span>Loyalty discount</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
+                    <div><span>Customer paid for food</span><strong>₦{{naira (sub .FoodSubtotalKobo .LoyaltyDiscountKobo)}}</strong></div>
+                    <div><span>ENIE commission ({{commissionPercent}}%)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
+                    <div><span>Vendor food earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
+                    {{if .DeliveryFeeKobo}}<div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>{{end}}
+                    <div class="settlement-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                </div>
+
+                <div class="order-bottom">
                     <div class="total">
                         <span>Total</span>
                         <strong>₦{{naira .TotalKobo}}</strong>

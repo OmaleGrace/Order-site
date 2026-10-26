@@ -140,14 +140,26 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark the order as paid
-	result, err := h.DB.Exec(`
+	// Mark the order as paid and redeem loyalty points atomically.
+	tx, err := h.DB.Begin()
+	if err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var loyaltyPoints int
+	if err := tx.QueryRow(`SELECT loyalty_points_redeemed FROM orders WHERE id = $1 FOR UPDATE`, orderID).Scan(&loyaltyPoints); err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := tx.Exec(`
 	UPDATE orders
 	SET status = 'paid'
 	WHERE id = $1
 	AND status = 'pending'
 `, orderID)
-
 	if err != nil {
 		fmt.Println("Update order error:", err)
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)
@@ -159,9 +171,21 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
 	}
-
 	if rowsAffected == 0 {
 		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		return
+	}
+
+	if loyaltyPoints > 0 {
+		if err := redeemLoyaltyForOrder(tx, userID, orderID, loyaltyPoints); err != nil {
+			fmt.Println("Loyalty redemption error:", err)
+			errors.Render(w, "Could not apply loyalty points", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
 	}
 
@@ -288,13 +312,25 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.DB.Exec(`
+	tx, err := h.DB.Begin()
+	if err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var loyaltyPoints int
+	if err := tx.QueryRow(`SELECT loyalty_points_redeemed FROM orders WHERE id = $1 FOR UPDATE`, orderID).Scan(&loyaltyPoints); err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := tx.Exec(`
 	UPDATE orders
 	SET status = 'paid'
 	WHERE id = $1
 	AND status = 'pending'
 `, orderID)
-
 	if err != nil {
 		fmt.Println("Webhook update order error:", err)
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)
@@ -309,6 +345,19 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if rowsAffected == 0 {
 		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if loyaltyPoints > 0 {
+		if err := redeemLoyaltyForOrder(tx, userID, orderID, loyaltyPoints); err != nil {
+			fmt.Println("Webhook loyalty redemption error:", err)
+			errors.Render(w, "Could not apply loyalty points", http.StatusBadRequest)
+			return
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		errors.Render(w, "Could not confirm payment", http.StatusInternalServerError)
 		return
 	}
 

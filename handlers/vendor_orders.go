@@ -16,18 +16,22 @@ type VendorOrderItem struct {
 }
 
 type VendorOrder struct {
-	ID              int
-	Name            string
-	Email           string
-	Phone           string
-	TotalKobo       int
-	Status          string
-	CreatedAt       string
-	DeliveryMethod  string
-	DeliveryAddress string
-	DeliveryPhone   string
-	DeliveryFeeKobo int
-	Items           []VendorOrderItem
+	ID                     int
+	Name                   string
+	Email                  string
+	Phone                  string
+	TotalKobo              int
+	FoodSubtotalKobo       int
+	LoyaltyDiscountKobo    int
+	CommissionKobo         int
+	VendorFoodEarningsKobo int
+	Status                 string
+	CreatedAt              string
+	DeliveryMethod         string
+	DeliveryAddress        string
+	DeliveryPhone          string
+	DeliveryFeeKobo        int
+	Items                  []VendorOrderItem
 }
 
 type VendorOrdersPage struct {
@@ -42,7 +46,12 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.DB.Query(`
-		SELECT o.id, u.name, u.email, COALESCE(u.phone, ''), o.total_kobo, o.status,
+		SELECT o.id, u.name, u.email, COALESCE(u.phone, ''), o.total_kobo,
+		       COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) AS food_subtotal_kobo,
+		       COALESCE(o.loyalty_points_redeemed, 0) * 100 AS loyalty_discount_kobo,
+		       o.commission_kobo,
+		       GREATEST(COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) - COALESCE(o.loyalty_points_redeemed, 0) * 100 - o.commission_kobo, 0) AS vendor_food_earnings_kobo,
+		       o.status,
 		       TO_CHAR(o.created_at, 'DD Mon YYYY, HH24:MI'),
 		       o.delivery_method, o.delivery_address || ', ' || o.delivery_lga || ', ' || o.delivery_state, o.delivery_phone, o.delivery_fee_kobo
 		FROM orders o
@@ -59,7 +68,7 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 	var orders []VendorOrder
 	for rows.Next() {
 		var o VendorOrder
-		if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.DeliveryAddress, &o.DeliveryPhone, &o.DeliveryFeeKobo); err != nil {
+		if err := rows.Scan(&o.ID, &o.Name, &o.Email, &o.Phone, &o.TotalKobo, &o.FoodSubtotalKobo, &o.LoyaltyDiscountKobo, &o.CommissionKobo, &o.VendorFoodEarningsKobo, &o.Status, &o.CreatedAt, &o.DeliveryMethod, &o.DeliveryAddress, &o.DeliveryPhone, &o.DeliveryFeeKobo); err != nil {
 			rows.Close()
 			log.Printf("vendor orders: scan failed: %v", err)
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
@@ -95,7 +104,7 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmpl, err := template.New("vendor-orders.html").
-		Funcs(template.FuncMap{"naira": naira}).
+		Funcs(template.FuncMap{"naira": naira, "sub": func(a, b int) int { return a - b }, "commissionPercent": commissionPercent}).
 		Funcs(brand.Funcs()).
 		ParseFiles("templates/vendor-orders.html")
 	if err != nil {

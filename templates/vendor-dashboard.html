@@ -105,6 +105,7 @@
         <article class="metric"><span class="metric-label">Today's orders</span><strong class="metric-value">{{.TodayOrders}}</strong><span class="metric-note">Orders since midnight</span></article>
         <article class="metric"><span class="metric-label">Active orders</span><strong class="metric-value">{{.ActiveOrders}}</strong><span class="metric-note">Preparing or ready</span></article>
         <article class="metric"><span class="metric-label">Total orders</span><strong class="metric-value">{{.TotalOrders}}</strong><span class="metric-note">Paid orders to date</span></article>
+        <article class="metric"><span class="metric-label">Customer rating</span><strong class="metric-value">{{if .ReviewCount}}{{printf "%.1f" .ReviewAverage}} ★{{else}}New{{end}}</strong><span class="metric-note">{{.ReviewCount}} verified review{{if ne .ReviewCount 1}}s{{end}}</span></article>
     </section>
 
     <div class="grid">
