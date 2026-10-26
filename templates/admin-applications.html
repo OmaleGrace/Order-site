@@ -53,19 +53,12 @@
 
         @media (max-width: 600px) { .details { grid-template-columns: 1fr; } }
     </style>
-</head>
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body>
     <header class="admin-header">
         <h1><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span> · Admin</h1>
-        <a href="/admin">Overview</a>
-        <a href="/admin/users">Users</a>
-        <a href="/admin/orders">Orders</a>
-        <a href="/admin/menu">Menu</a>
-        <a href="/admin/vendors">Vendors</a>
-        <a href="/admin/earnings">Earnings</a>
-        <a href="/admin/applications" class="active">Applications</a>
-        <a href="/">View site</a>
-    </header>
+        <nav class="portal-nav" aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/applications" class="active" aria-current="page">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users">Users</a><a href="/admin/earnings">Earnings</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav>
+</header>
 
     <main>
         {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
@@ -176,5 +169,6 @@
         });
     })();
     </script>
+<script src="/static/js/nav-active.js"></script>
 </body>
 </html>

@@ -77,27 +77,13 @@
 
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
-</head>
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body>
         <header class="admin-header">
         <h1>🍴 {{if .IsAdmin}}{{brandName}} · Admin{{else}}{{.VendorName}}{{end}}</h1>
-        {{if .IsAdmin}}
-        <a href="/admin">Overview</a>
-        <a href="/admin/users">Users</a>
-        <a href="/admin/orders">Orders</a>
-        <a href="/admin/menu" class="active">Menu</a>
-        <a href="/admin/vendors">Vendors</a><a href="/admin/support">Support</a>
-        <a href="/admin/earnings">Earnings</a>
-        <a href="/admin/applications">Applications</a>
-        {{else}}
-        <a href="/vendor/menu" class="active">My menu</a>
-        <a href="/vendor/orders">Orders</a>
-        <a href="/vendor/profile">Shop profile</a>
-        {{if not .IsAdmin}}<a href="/vendor/ai">AI writing</a>{{end}}
-        <a href="/vendor/billing">Billing</a>
-        {{end}}
-        <a href="/">View site</a>
-    </header>
+        {{if .IsAdmin}}<nav class="portal-nav" aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/applications">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu" class="active" aria-current="page">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users">Users</a><a href="/admin/earnings">Earnings</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav>
+{{else}}<nav class="portal-nav" aria-label="Vendor navigation"><a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu" class="active" aria-current="page">My menu</a><a href="/messages">Messages</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a><a href="/vendor/ai">AI writing</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing">Billing</a><a href="/help">Help</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav>{{end}}
+</header>
 
     <main>
         {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
@@ -245,5 +231,6 @@
     </script>
     <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/vendor-banner.js"></script>
+<script src="/static/js/nav-active.js"></script>
 </body>
 </html>

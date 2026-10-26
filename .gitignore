@@ -3,3 +3,11 @@ grace_kitchen_backup.sql
 
 *.zip
 *.save
+
+# build output, scratch and backup files
+/enie
+*.tmp
+.unzip/
+.env.bak
+.env.*.bak
+!.env.example

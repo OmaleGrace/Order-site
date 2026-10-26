@@ -69,21 +69,11 @@
         @media (max-width:650px) { .vendor-header{padding:12px 4vw} .vendor-brand{width:100%; margin:0} .vendor-nav{width:100%; gap:13px; overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px} main{padding:25px 4vw 60px} .hero{align-items:flex-start; flex-direction:column} .hero-actions{width:100%}.btn{flex:1} .metrics{grid-template-columns:1fr 1fr; gap:10px}.metric{padding:16px}.metric-value{font-size:1.3rem}.order-row{grid-template-columns:1fr auto}.order-row .status{grid-column:2; grid-row:1}.order-total{grid-column:1; grid-row:2} }
         @media (max-width:420px) { .metrics{grid-template-columns:1fr} .btn{width:100%} }
     </style>
-</head>
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body>
 <header class="vendor-header">
     <div class="vendor-brand"><a href="/vendor/dashboard">🍴 {{.VendorName}}</a><span>Vendor Dashboard</span></div>
-    <nav class="vendor-nav" aria-label="Vendor navigation">
-        <a href="/vendor/dashboard" class="active">Dashboard</a>
-        <a href="/vendor/orders">Orders</a>
-        <a href="/vendor/menu">My menu</a>
-        <a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a>
-        <a href="/vendor/profile">Shop profile</a>
-        <a href="/vendor/ai">AI writing</a>
-        <a href="/vendor/billing">Billing</a>
-        <a href="/" target="_blank" rel="noopener">View site</a>
-        <a href="/help">Help & Support</a><a href="/logout">Logout</a>
-    <a href="/messages">Messages</a><a href="/help">Help & Support</a></nav>
+    <nav class="vendor-nav" aria-label="Vendor navigation"><a href="/vendor/dashboard" class="active" aria-current="page">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu">My menu</a><a href="/messages">Messages</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a><a href="/vendor/ai">AI writing</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing">Billing</a><a href="/help">Help</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav>
 </header>
 
 <main>
@@ -155,5 +145,6 @@
     </div>
 </main>
 <script src="/static/js/notification-bell.js"></script>
+<script src="/static/js/nav-active.js"></script>
 </body>
 </html>

@@ -27,6 +27,21 @@
     function buildMessagesLink() {
         var nav = document.querySelector('header nav');
         if (!nav || nav.querySelector('.messages-nav-item')) return null;
+        // If the page already has a Messages link, upgrade it with the unread badge
+        // instead of adding a second, duplicate Messages item.
+        var existing = nav.querySelector('a[href="/messages"]');
+        if (existing) {
+            existing.classList.add('messages-nav-item');
+            if (!existing.querySelector('.messages-unread-badge')) {
+                var badge = document.createElement('span');
+                badge.className = 'messages-unread-badge';
+                badge.hidden = true;
+                badge.textContent = '0';
+                existing.appendChild(document.createTextNode(' '));
+                existing.appendChild(badge);
+            }
+            return existing;
+        }
         var item = document.createElement('a');
         item.href = '/messages';
         item.className = 'messages-nav-item';

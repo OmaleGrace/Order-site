@@ -17,12 +17,7 @@
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
 
-    <nav class="menu-nav">
-        <a href="/menu">Menu</a>
-        <a href="/orders">My Orders</a>
-        <a href="/account">Account</a>
-        <a href="/cart" class="cart-link">🛒 Cart</a>
-    <a href="/help">Help & Support</a></nav>
+    <nav class="menu-nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites" class="active active-link" aria-current="page">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
 </header>
 
 <section class="menu-intro favorites-intro">
@@ -83,5 +78,7 @@
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/favorites.js"></script>
 <script src="/static/js/bottomnav.js"></script>
+<script src="/static/js/notification-bell.js"></script>
+<script src="/static/js/nav-active.js"></script>
 </body>
 </html>

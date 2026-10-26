@@ -1,0 +1,38 @@
+/* Shared navigation and usability polish for vendor and admin pages.
+   Loaded after each page's own styles; only adds, never redesigns. */
+
+/* The current page: same look whether marked with .active or aria-current */
+.admin-header a[aria-current="page"], .vendor-nav a[aria-current="page"], .ai-nav a[aria-current="page"],
+.custom-nav a[aria-current="page"], .portal-nav a[aria-current="page"], header nav.nav a[aria-current="page"],
+header nav a[aria-current="page"] {
+  color: var(--green, #174a32); font-weight: 800; border-bottom: 2px solid currentColor;
+}
+
+/* Links in a header-direct nav keep taking part in the header's own layout */
+.portal-nav { display: contents; }
+.admin-header { gap: 10px 16px; }
+
+/* Easier to hit with a thumb, clear for keyboard users */
+.admin-header a, .vendor-header a, header.top a, header nav a { min-height: 40px; display: inline-flex; align-items: center; }
+.admin-header a:focus-visible, .vendor-header a:focus-visible, header.top a:focus-visible, header nav a:focus-visible,
+main a:focus-visible, main button:focus-visible, main input:focus-visible, main select:focus-visible, main textarea:focus-visible {
+  outline: 3px solid #f26a1b; outline-offset: 2px; border-radius: 6px;
+}
+main button, main .btn, main input[type="submit"] { min-height: 40px; }
+
+/* Phones: one swipeable row of links instead of wrapped lines; roomy edges */
+@media (max-width: 760px) {
+  .portal-nav { display: flex; flex-wrap: nowrap; overflow-x: auto; width: 100%; gap: 18px; padding-bottom: 4px;
+                scrollbar-width: none; -webkit-overflow-scrolling: touch; padding-right: 28px; }
+  .portal-nav::-webkit-scrollbar { display: none; }
+  .portal-nav a { flex: 0 0 auto; white-space: nowrap; }
+  .vendor-nav, .ai-nav, .custom-nav, header nav.nav { flex-wrap: nowrap !important; overflow-x: auto; max-width: 100%; scrollbar-width: none; padding-right: 28px; }
+  .vendor-nav a, .ai-nav a, .custom-nav a, header nav.nav a { flex: 0 0 auto; white-space: nowrap; }
+  .admin-header { padding-left: 4vw; padding-right: 4vw; }
+  /* Wide tables scroll sideways inside the page instead of breaking the layout */
+  main table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

@@ -20,14 +20,7 @@
     <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
-    <nav class="menu-nav" aria-label="Main navigation">
-        <a href="/menu">Menu</a>
-        <a href="/vendors" class="active-link">Shops</a>
-        <a href="/orders">My Orders</a>
-        <a href="/messages">Messages</a>
-        <a href="/account">Account</a>
-        <a href="/cart" class="cart-link">🛒 Cart</a>
-    <a href="/help">Help & Support</a></nav>
+    <nav class="menu-nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors" class="active active-link" aria-current="page">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
 </header>
 
 <main class="shop-page">
@@ -175,5 +168,7 @@
     applyFilters();
 })();
 </script>
+<script src="/static/js/notification-bell.js"></script>
+<script src="/static/js/nav-active.js"></script>
 </body>
 </html>
