@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	emailer "Order-site/email"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +26,7 @@ func generateToken() (string, error) {
 }
 
 func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
-	tmpl := brand.Parse("templates/forgot-password.html")
+	tmpl := render.MustPage("forgot-password.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -101,7 +101,7 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ResetPassword(w http.ResponseWriter, r *http.Request) {
-	tmpl := brand.Parse("templates/reset-password.html")
+	tmpl := render.MustPage("reset-password.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()

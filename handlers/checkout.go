@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/cart"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 var httpClient = &http.Client{Timeout: 20 * time.Second}
@@ -244,20 +243,6 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			errors.Render(w, "This shop does not deliver to the selected state and LGA. Choose another area or select pickup.", http.StatusBadRequest)
 			return
 		}
-
-		// Area pricing: the area's own fee, a minimum order, or free delivery over an
-		// amount. Without a rule for this area the shop's default fee stays in place.
-		areaFee, blockedReason, rateErr := resolveDeliveryFee(h.DB, vendorID, state, lga, totalKobo, deliveryFeeKobo)
-		if rateErr != nil {
-			fmt.Println("Delivery pricing error:", rateErr)
-			errors.Render(w, "Could not work out the delivery fee", http.StatusInternalServerError)
-			return
-		}
-		if blockedReason != "" {
-			errors.Render(w, blockedReason, http.StatusBadRequest)
-			return
-		}
-		deliveryFeeKobo = areaFee
 		if deliveryPhone == "" {
 			errors.Render(w, "Enter a phone number the rider can reach you on.", http.StatusBadRequest)
 			return
@@ -446,9 +431,7 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) OrderSuccess(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(
-		brand.ParseE("templates/order-success.html"),
-	)
+	tmpl := render.MustPage("order-success.html")
 
 	err := tmpl.Execute(w, nil)
 	if err != nil {

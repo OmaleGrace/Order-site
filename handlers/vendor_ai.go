@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 const defaultGeminiModel = "gemini-2.5-flash"
@@ -532,7 +532,7 @@ func (h *Handlers) renderVendorAI(
 	p VendorAIPage,
 	status int,
 ) {
-	tmpl, err := brand.ParseE("templates/vendor-ai.html")
+	tmpl, err := render.Page("vendor-ai.html")
 	if err != nil {
 		log.Printf("vendor AI: template failed: %v", err)
 		errors.Render(

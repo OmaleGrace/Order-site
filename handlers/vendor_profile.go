@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type VendorProfilePage struct {
@@ -101,7 +101,7 @@ func (h *Handlers) VendorProfile(w http.ResponseWriter, r *http.Request) {
 	areaRows.Close()
 	p.Notice = r.URL.Query().Get("msg")
 
-	tmpl, err := brand.ParseE("templates/vendor-profile.html")
+	tmpl, err := render.Page("vendor-profile.html")
 	if err != nil {
 		log.Printf("vendor profile: template failed: %v", err)
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)

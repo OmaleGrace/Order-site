@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 
-	"Order-site/brand"
 	"Order-site/cart"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type CheckoutLine struct {
@@ -32,7 +32,6 @@ type CheckoutPage struct {
 	LoyaltyPoints   int
 	CouponError     string
 	States          []string
-	Rates           []CheckoutRate // per-area delivery pricing set by the shop
 }
 
 func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
@@ -124,20 +123,12 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.States = nigerianStates
-	if rates, ratesErr := loadCheckoutRates(h.DB, userID); ratesErr != nil {
-		log.Printf("checkout details: delivery rates failed: %v", ratesErr)
-	} else {
-		page.Rates = rates
-	}
 	page.DefaultMethod = "pickup"
 	if !page.OffersPickup {
 		page.DefaultMethod = "delivery"
 	}
 
-	tmpl, err := template.New("checkout-details.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/checkout-details.html")
+	tmpl, err := render.Page("checkout-details.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		log.Printf("checkout details: template failed: %v", err)
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)

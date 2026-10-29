@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
     <title>{{brandName}} | Discover Local Food Shops and Order Online</title>
     <meta name="description" content="Discover participating local food shops, explore menus, compare prices, and order meals for pickup or delivery with {{brandName}}.">
     <meta name="robots" content="index,follow">
@@ -341,23 +339,10 @@
     <p class="footer-copy">&copy; 2026 {{brandName}}</p>
 </footer>
 
-<script>
-(function () {
-    var tabs = document.querySelectorAll('.tab-btn');
-    tabs.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            tabs.forEach(function (b) {
-                var on = b === btn;
-                b.classList.toggle('active', on);
-                b.setAttribute('aria-selected', on ? 'true' : 'false');
-                document.getElementById('tab-' + b.dataset.tab).hidden = !on;
-            });
-        });
-    });
-})();
-</script>
+<script src="/static/js/pages/home.js"></script>
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

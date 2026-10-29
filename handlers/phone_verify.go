@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 	"Order-site/sms"
 )
 
@@ -81,7 +81,7 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := brand.ParseE("templates/verify-phone.html")
+	tmpl, err := render.Page("verify-phone.html")
 	if err != nil {
 		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return

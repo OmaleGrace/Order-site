@@ -14,3 +14,5 @@
 .back-link { display: inline-block; margin-top: 22px; color: var(--muted); text-decoration: none; font-weight: 650; }
 .back-link:hover { color: var(--green); }
 @media (max-width: 520px) { .success-wrapper { padding: 38px 20px; border-radius: 22px; } }
+
+.success-box { text-align:center; padding:18px; }

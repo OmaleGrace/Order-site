@@ -1,14 +1,15 @@
 package handlers
 
 import (
+	"Order-site/errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/menu"
 	"Order-site/middleware"
+	"Order-site/render"
 
 	"html/template"
 )
@@ -18,14 +19,9 @@ func naira(kobo int) int {
 }
 
 func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(
-		template.New("menu.html").
-			Funcs(template.FuncMap{
-				"naira": naira,
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/menu.html"),
-	)
+	tmpl := render.MustPage("menu.html", template.FuncMap{
+		"naira": naira,
+	})
 
 	search := strings.TrimSpace(r.URL.Query().Get("search"))
 	category := strings.TrimSpace(r.URL.Query().Get("category"))
@@ -54,7 +50,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	items, err := menu.GetAllWithOptions(h.DB, search, category, sortBy, minPrice, maxPrice)
 	if err != nil {
 		fmt.Println("Menu load error", err)
-		http.Error(w, "Could not load menu", http.StatusInternalServerError)
+		errors.Render(w, "We couldn't load the menu right now. Please try again in a moment.", http.StatusInternalServerError)
 		return
 	}
 
@@ -123,7 +119,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		fmt.Println("Template error:", err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "We couldn't load the menu categories right now. Please try again in a moment.", http.StatusInternalServerError)
 		return
 	}
 }

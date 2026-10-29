@@ -14,6 +14,7 @@ import (
 	"Order-site/brand"
 	"Order-site/email"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type AdminApplication struct {
@@ -94,7 +95,7 @@ func (h *Handlers) AdminApplications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := brand.ParseE("templates/admin-applications.html")
+	tmpl, err := render.Page("admin-applications.html")
 	if err != nil {
 		log.Printf("admin applications: template failed: %v", err)
 		errors.Render(w, "Could not display applications", http.StatusInternalServerError)

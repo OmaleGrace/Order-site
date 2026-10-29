@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 	"database/sql"
 	"html/template"
 	"net/http"
@@ -62,7 +62,7 @@ func (h *Handlers) Notifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(template.New("notifications.html").Funcs(template.FuncMap{"date": func(t time.Time) string { return t.Format("02 Jan 2006, 3:04 PM") }}).Funcs(brand.Funcs()).ParseFiles("templates/notifications.html"))
+	tmpl := render.MustPage("notifications.html", template.FuncMap{"date": func(t time.Time) string { return t.Format("02 Jan 2006, 3:04 PM") }})
 	if err := tmpl.Execute(w, notifications); err != nil {
 		errors.Render(w, "Could not display notifications", 500)
 	}

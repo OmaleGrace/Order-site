@@ -2,15 +2,14 @@ package handlers
 
 import (
 	"database/sql"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type SupportTicket struct {
@@ -74,7 +73,7 @@ func (h *Handlers) Help(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not read support requests", 500)
 		return
 	}
-	tmpl, err := template.New("help.html").Funcs(brand.Funcs()).ParseFiles("templates/help.html")
+	tmpl, err := render.Page("help.html")
 	if err != nil {
 		errors.Render(w, "Could not display support", 500)
 		return
@@ -154,7 +153,7 @@ func (h *Handlers) AdminSupport(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not read support requests", 500)
 		return
 	}
-	tmpl, err := template.New("admin-support.html").Funcs(brand.Funcs()).ParseFiles("templates/admin-support.html")
+	tmpl, err := render.Page("admin-support.html")
 	if err != nil {
 		errors.Render(w, "Could not display support", 500)
 		return

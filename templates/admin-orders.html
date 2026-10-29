@@ -1,4 +1,94 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Orders - {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css"><link rel="stylesheet" href="/static/css/admin-orders.css"><style>.rider-box{margin:14px 0;padding:14px;border:1px solid #dfe7e1;border-radius:13px;background:#f8fbf8}.rider-box form{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.rider-box select{padding:9px;border:1px solid #cbd8ce;border-radius:9px}.rider-state{font-size:.85rem;color:#68776f;margin-top:6px}.settlement{margin:14px 0;padding:15px;border:1px solid #dfe7e1;border-radius:13px;background:#fbfcfb}.settlement div{display:flex;justify-content:space-between;gap:15px;padding:5px 0}.settlement .strong{font-weight:800;border-top:1px solid #e1e8e2;padding-top:9px;margin-top:5px}.help-link{display:inline-block;margin-top:8px;font-weight:800;color:#14532d;text-decoration:none}</style><link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head><body><header class="admin-header"><div class="brand"><a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div><nav aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders" class="active" aria-current="page">Orders</a><a href="/admin/applications">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users">Users</a><a href="/admin/earnings">Earnings</a><a href="/admin/settlements">Settlements</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav></header><main class="admin-container"><div class="page-heading"><div><h1>Order Dashboard</h1><p>Manage orders, transparent settlement and delivery assignments.</p><a class="help-link" href="/admin/support">Need help with an order or delivery? Open Help & Support →</a></div></div>{{if .Orders}}<section class="orders-list">{{range .Orders}}<article class="order-card"><div class="order-top"><div><h2>Order #{{.ID}}</h2><span class="order-date">{{.CreatedAt}}</span></div><span class="status status-{{.Status}}">{{.Status}}</span></div><div class="customer-info"><div><span class="label">Customer</span><strong>{{.Name}}</strong></div><div><span class="label">Email</span><strong>{{.Email}}</strong></div><div><span class="label">Vendor</span><strong>{{.VendorName}}</strong></div></div>{{if eq .DeliveryMethod "delivery"}}<div class="delivery-box"><strong>🛵 Deliver to</strong><p>{{.DeliveryAddress}}</p><p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p><p>Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p><div class="rider-state">Rider: {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}}{{else}}Unassigned{{end}} · {{.DeliveryStatus}}</div><div class="rider-box"><form action="/admin/orders/rider" method="post"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider<br><select name="rider_id"><option value="0">Unassigned</option>{{range $.Riders}}<option value="{{.ID}}">{{.Name}} · {{.Phone}}</option>{{end}}</select></label><button type="submit">Save rider</button></form></div></div>{{else}}<div class="delivery-box pickup"><strong>🛍️ Pickup</strong><p>The customer will collect this order.</p></div>{{end}}<div class="order-items"><h3>Items</h3><ul>{{range .Items}}<li><span>{{.Name}} × {{.Quantity}}</span><strong>₦{{naira .PriceKobo}}</strong></li>{{end}}</ul></div><div class="settlement"><strong>Transparent settlement</strong><div><span>Food subtotal</span><strong>₦{{naira .FoodSubtotalKobo}}</strong></div>{{if .CouponDiscountKobo}}<div><span>Coupon {{if .CouponCode}}({{.CouponCode}}){{end}}</span><strong>−₦{{naira .CouponDiscountKobo}}</strong></div>{{end}}{{if .LoyaltyDiscountKobo}}<div><span>Loyalty points</span><strong>−₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}<div><span>Food paid</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div><div><span>ENIE commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div><div class="strong"><span>Vendor earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div><div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div><div class="strong"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div></div><div class="order-bottom"><form action="/admin/orders/status" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><select name="status"><option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option><option value="paid" {{if eq .Status "paid"}}selected{{end}}>Paid</option><option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option><option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option><option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option><option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>Cancelled</option></select><button type="submit">Update Status</button></form></div></article>{{end}}</section>{{else}}<section class="empty-orders"><div class="empty-icon">📦</div><h2>No orders yet</h2><p>Customer orders will appear here when they are placed.</p></section>{{end}}</main><script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en">
+    <head>
+        {{template "head-common"}}
+        {{template "meta-noindex"}}
+        <title>Admin Orders - {{brandName}}</title>
+        <link rel="stylesheet" href="/static/css/base.css">
+        <link rel="stylesheet" href="/static/css/admin-orders.css">
+        <link rel="stylesheet" href="/static/css/pages/admin-orders.css">
+        <link rel="stylesheet" href="/static/css/portal-nav.css">
+    </head>
+    <body>
+        <header class="admin-header">
+            <div class="brand"><a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div>
+            {{template "admin-nav" dict "Class" "" "Active" "/admin/orders"}}
+        </header>
+        <main class="admin-container">
+            <div class="page-heading">
+                <div>
+                    <h1>Order Dashboard</h1>
+                    <p>Manage orders, transparent settlement and delivery assignments.</p><a class="help-link" href="/admin/support">Need help with an order or delivery? Open Help & Support →</a></div>
+            </div>
+            {{if .Orders}}
+                <section class="orders-list">
+                    {{range .Orders}}
+                        <article class="order-card">
+                            <div class="order-top">
+                                <div>
+                                    <h2>Order #{{.ID}}</h2><span class="order-date">{{.CreatedAt}}</span></div><span class="status status-{{.Status}}">{{.Status}}</span></div>
+                            <div class="customer-info">
+                                <div><span class="label">Customer</span><strong>{{.Name}}</strong></div>
+                                <div><span class="label">Email</span><strong>{{.Email}}</strong></div>
+                                <div><span class="label">Vendor</span><strong>{{.VendorName}}</strong></div>
+                            </div>
+                            {{if eq .DeliveryMethod "delivery"}}
+                                <div class="delivery-box"><strong>🛵 Deliver to</strong><p>{{.DeliveryAddress}}</p>
+                                    <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
+                                    <p>Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>
+                                    <div class="rider-state">Rider: {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}}{{else}}Unassigned{{end}} · {{.DeliveryStatus}}</div>
+                                    <div class="rider-box">
+                                        <form action="/admin/orders/rider" method="post"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider<br><select name="rider_id"><option value="0">Unassigned</option>
+                                            {{range $.Riders}}
+                                                <option value="{{.ID}}">{{.Name}} · {{.Phone}}</option>
+                                            {{end}}</select></label><button type="submit">Save rider</button></form>
+                                    </div>
+                                </div>
+                            {{else}}
+                                <div class="delivery-box pickup"><strong>🛍️ Pickup</strong><p>The customer will collect this order.</p>
+                                </div>
+                            {{end}}
+                            <div class="order-items">
+                                <h3>Items</h3>
+                                <ul>
+                                    {{range .Items}}
+                                        <li><span>{{.Name}} × {{.Quantity}}</span><strong>₦{{naira .PriceKobo}}</strong></li>
+                                    {{end}}
+                                </ul>
+                            </div>
+                            <div class="settlement"><strong>Transparent settlement</strong><div><span>Food subtotal</span><strong>₦{{naira .FoodSubtotalKobo}}</strong></div>
+                                {{if .CouponDiscountKobo}}
+                                    <div><span>Coupon {{if .CouponCode}}({{.CouponCode}}){{end}}</span><strong>−₦{{naira .CouponDiscountKobo}}</strong></div>
+                                {{end}}
+                                {{if .LoyaltyDiscountKobo}}
+                                    <div><span>Loyalty points</span><strong>−₦{{naira .LoyaltyDiscountKobo}}</strong></div>
+                                {{end}}
+                                <div><span>Food paid</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
+                                <div><span>ENIE commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div>
+                                <div class="strong"><span>Vendor earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
+                                <div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>
+                                <div class="strong"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                            </div>
+                            <div class="order-bottom">
+                                <form action="/admin/orders/status" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><select name="status"><option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                                    <option value="paid" {{if eq .Status "paid"}}selected{{end}}>Paid</option>
+                                    <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
+                                    <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
+                                    <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
+                                    <option value="cancelled" {{if eq .Status "cancelled"}}selected{{end}}>Cancelled</option></select><button type="submit">Update Status</button></form>
+                            </div>
+                        </article>
+                    {{end}}
+                </section>
+            {{else}}
+                <section class="empty-orders">
+                    <div class="empty-icon">📦</div>
+                    <h2>No orders yet</h2>
+                    <p>Customer orders will appear here when they are placed.</p>
+                </section>
+            {{end}}
+        </main>
+        <script src="/static/js/nav-active.js"></script>
+        {{template "scripts-common"}}
+    </body>
+</html>

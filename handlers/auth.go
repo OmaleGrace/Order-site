@@ -14,6 +14,7 @@ import (
 	emailer "Order-site/email"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -27,7 +28,7 @@ var dummyHash = func() string {
 }()
 
 func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
-	tmpl := brand.Parse("templates/login.html")
+	tmpl := render.MustPage("login.html")
 
 	if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -127,7 +128,7 @@ func signupFail(w http.ResponseWriter, r *http.Request, msg string, code int) {
 }
 
 func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
-	tmpl := brand.Parse("templates/signup.html")
+	tmpl := render.MustPage("signup.html")
 
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {

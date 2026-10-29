@@ -57,13 +57,13 @@ func projectRoot() (string, error) {
 	}
 }
 
-// loadSchema reads schema.sql and drops the pg_dump lines that only psql understands.
+// loadSchema reads db/schema.sql and drops the pg_dump lines that only psql understands.
 func loadSchema() (string, error) {
 	root, err := projectRoot()
 	if err != nil {
 		return "", err
 	}
-	data, err := os.ReadFile(filepath.Join(root, "schema.sql"))
+	data, err := os.ReadFile(filepath.Join(root, "db", "schema.sql"))
 	if err != nil {
 		return "", err
 	}

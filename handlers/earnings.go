@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 // VendorEarnings adds up a shop's sales. Only paid orders count (not pending or cancelled).
@@ -134,10 +134,7 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("admin-earnings.html").
-		Funcs(template.FuncMap{"money": money, "money2": money2}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/admin-earnings.html")
+	tmpl, err := render.Page("admin-earnings.html", template.FuncMap{"money": money, "money2": money2})
 	if err != nil {
 		log.Printf("admin earnings: template failed: %v", err)
 		errors.Render(w, "Could not display earnings", http.StatusInternalServerError)

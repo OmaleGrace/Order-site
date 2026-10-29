@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type FavItem struct {
@@ -121,10 +121,7 @@ func (h *Handlers) Favorites(w http.ResponseWriter, r *http.Request) {
 		items = append(items, it)
 	}
 
-	tmpl, err := template.New("favorites.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/favorites.html")
+	tmpl, err := render.Page("favorites.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		log.Printf("favorites: template failed: %v", err)
 		errors.Render(w, "Could not display favourites", http.StatusInternalServerError)

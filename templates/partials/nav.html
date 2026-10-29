@@ -1,0 +1,30 @@
+{{/* Admin navigation. Call: {{template "admin-nav" dict "Class" "portal-nav" "Active" "/path"}} */}}
+{{define "admin-nav"}}<nav{{with .Class}} class="{{.}}"{{end}} aria-label="Admin navigation">
+    <a href="/admin"{{if eq .Active "/admin"}} class="active" aria-current="page"{{end}}>Overview</a>
+    <a href="/admin/orders"{{if eq .Active "/admin/orders"}} class="active" aria-current="page"{{end}}>Orders</a>
+    <a href="/admin/applications"{{if eq .Active "/admin/applications"}} class="active" aria-current="page"{{end}}>Applications</a>
+    <a href="/admin/vendors"{{if eq .Active "/admin/vendors"}} class="active" aria-current="page"{{end}}>Vendors</a>
+    <a href="/admin/menu"{{if eq .Active "/admin/menu"}} class="active" aria-current="page"{{end}}>Menu</a>
+    <a href="/admin/riders"{{if eq .Active "/admin/riders"}} class="active" aria-current="page"{{end}}>Riders</a>
+    <a href="/admin/support"{{if eq .Active "/admin/support"}} class="active" aria-current="page"{{end}}>Help &amp; Support</a>
+    <a href="/admin/users"{{if eq .Active "/admin/users"}} class="active" aria-current="page"{{end}}>Users</a>
+    <a href="/admin/earnings"{{if eq .Active "/admin/earnings"}} class="active" aria-current="page"{{end}}>Earnings</a>
+    <a href="/" target="_blank" rel="noopener">View site</a>
+    <a href="/logout">Log out</a>
+</nav>{{end}}
+
+{{/* Vendor navigation. Call: {{template "vendor-nav" dict "Class" "portal-nav" "Active" "/path"}} */}}
+{{define "vendor-nav"}}<nav{{with .Class}} class="{{.}}"{{end}} aria-label="Vendor navigation">
+    <a href="/vendor/dashboard"{{if eq .Active "/vendor/dashboard"}} class="active" aria-current="page"{{end}}>Dashboard</a>
+    <a href="/vendor/orders"{{if eq .Active "/vendor/orders"}} class="active" aria-current="page"{{end}}>Orders</a>
+    <a href="/vendor/menu"{{if eq .Active "/vendor/menu"}} class="active" aria-current="page"{{end}}>My menu</a>
+    <a href="/messages"{{if eq .Active "/messages"}} class="active" aria-current="page"{{end}}>Messages</a>
+    <a href="/vendor/coupons"{{if eq .Active "/vendor/coupons"}} class="active" aria-current="page"{{end}}>Coupons</a>
+    <a href="/vendor/analytics"{{if eq .Active "/vendor/analytics"}} class="active" aria-current="page"{{end}}>Analytics</a>
+    <a href="/vendor/ai"{{if eq .Active "/vendor/ai"}} class="active" aria-current="page"{{end}}>AI writing</a>
+    <a href="/vendor/profile"{{if eq .Active "/vendor/profile"}} class="active" aria-current="page"{{end}}>Shop profile</a>
+    <a href="/vendor/billing"{{if eq .Active "/vendor/billing"}} class="active" aria-current="page"{{end}}>Billing</a>
+    <a href="/help"{{if eq .Active "/help"}} class="active" aria-current="page"{{end}}>Help</a>
+    <a href="/" target="_blank" rel="noopener">View site</a>
+    <a href="/logout">Logout</a>
+</nav>{{end}}

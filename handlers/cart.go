@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/cart"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
@@ -79,17 +79,12 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) Cart(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(
-		template.New("cart.html").
-			Funcs(template.FuncMap{
-				"naira": naira,
-				"multiply": func(price, quantity int) int {
-					return price * quantity
-				},
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/cart.html"),
-	)
+	tmpl := render.MustPage("cart.html", template.FuncMap{
+		"naira": naira,
+		"multiply": func(price, quantity int) int {
+			return price * quantity
+		},
+	})
 
 	cookie, err := r.Cookie("session_token")
 	if err != nil {

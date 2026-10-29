@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type AdminMenuItem struct {
@@ -134,7 +134,7 @@ func (h *Handlers) renderMenuManager(w http.ResponseWriter, r *http.Request, ven
 		}
 	}
 
-	tmpl, err := brand.ParseE("templates/admin-menu.html")
+	tmpl, err := render.Page("admin-menu.html")
 	if err != nil {
 		log.Printf("menu manager: template failed: %v", err)
 		errors.Render(w, "Could not display menu", http.StatusInternalServerError)

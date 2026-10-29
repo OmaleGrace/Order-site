@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type AccountRecentOrder struct {
@@ -153,14 +153,9 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	}
 	data.IsVendor = vendorCount > 0
 
-	tmpl := template.Must(
-		template.New("account.html").
-			Funcs(template.FuncMap{
-				"naira": naira,
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/account.html"),
-	)
+	tmpl := render.MustPage("account.html", template.FuncMap{
+		"naira": naira,
+	})
 
 	if err := tmpl.Execute(w, data); err != nil {
 		errors.Render(w, "Could not render account page", http.StatusInternalServerError)

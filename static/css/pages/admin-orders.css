@@ -1,0 +1,56 @@
+.rider-box {
+  margin:14px 0;
+  padding:14px;
+  border:1px solid #dfe7e1;
+  border-radius:13px;
+  background:#f8fbf8;
+}
+
+.rider-box form {
+  display:flex;
+  gap:8px;
+  align-items:end;
+  flex-wrap:wrap;
+}
+
+.rider-box select {
+  padding:9px;
+  border:1px solid #cbd8ce;
+  border-radius:9px;
+}
+
+.rider-state {
+  font-size:.85rem;
+  color:#68776f;
+  margin-top:6px;
+}
+
+.settlement {
+  margin:14px 0;
+  padding:15px;
+  border:1px solid #dfe7e1;
+  border-radius:13px;
+  background:#fbfcfb;
+}
+
+.settlement div {
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  padding:5px 0;
+}
+
+.settlement .strong {
+  font-weight:800;
+  border-top:1px solid #e1e8e2;
+  padding-top:9px;
+  margin-top:5px;
+}
+
+.help-link {
+  display:inline-block;
+  margin-top:8px;
+  font-weight:800;
+  color:#14532d;
+  text-decoration:none;
+}

@@ -1,22 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    <meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Checkout - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
-    <style>
-        [hidden] { display: none !important; }
-        .loyalty-checkout-control { display: grid; gap: 12px; }
-        #loyalty-input-wrap { padding: 14px; border: 1px solid #dfe8e2; border-radius: 14px; background: #f7faf8; }
-        #loyalty-input-wrap label { display:block; margin-bottom:6px; font-weight:800; }
-        #loyalty_points { width:100%; max-width:260px; padding:11px 12px; border:1px solid #cfdad2; border-radius:10px; font:inherit; }
-    </style>
-    <link rel="stylesheet" href="/static/css/mobile-nav.css">
+    <link rel="stylesheet" href="/static/css/pages/checkout-details.css">
 </head>
 <body>
 <header class="cart-header">
@@ -90,7 +80,6 @@
                                 <label for="delivery_lga">Local government area <span>*</span></label>
                                 <input type="text" name="delivery_lga" id="delivery_lga" maxlength="60" placeholder="e.g. Ikeja" autocomplete="address-level2">
                                 <p class="field-error" id="lga-error" aria-live="polite"></p>
-                                <p id="rate-hint" aria-live="polite" style="margin:6px 0 0;font-size:.9rem;color:#5c6b61"></p>
                             </div>
                         </div>
                         <div class="field">
@@ -114,9 +103,9 @@
                         <span class="number-badge">%</span>
                         <div><h2 id="coupon-heading">Have a promo code?</h2><p>Enter a coupon from this shop. Discounts apply to food only.</p></div>
                     </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
-                        <div style="flex:1;min-width:220px"><label for="coupon_code">Promo code</label><input type="text" name="coupon_code" id="coupon_code" maxlength="40" placeholder="e.g. WELCOME10" autocomplete="off" style="width:100%;padding:11px 12px;border:1px solid #cfdad2;border-radius:10px;font:inherit;text-transform:uppercase"></div>
-                        <button type="button" id="apply-coupon" class="checkout-btn" style="min-height:42px;padding:0 16px">Apply</button>
+                    <div class="coupon-row">
+                        <div class="coupon-field"><label for="coupon_code">Promo code</label><input type="text" name="coupon_code" id="coupon_code" maxlength="40" placeholder="e.g. WELCOME10" autocomplete="off" class="checkout-input checkout-input-upper"></div>
+                        <button type="button" id="apply-coupon" class="checkout-btn checkout-btn-compact">Apply</button>
                     </div>
                     <p id="coupon-message" class="summary-note" aria-live="polite"></p>
                 </section>
@@ -131,9 +120,9 @@
                         <label class="loyalty-toggle"><input type="checkbox" id="use-loyalty"><span>Use my loyalty points</span></label>
                         <div id="loyalty-input-wrap" hidden>
                             <label for="loyalty_points">Points to use <span>*</span></label>
-                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                            <div class="loyalty-row">
                                 <input type="number" name="loyalty_points" id="loyalty_points" min="0" max="{{.LoyaltyPoints}}" value="0" inputmode="numeric">
-                                <button type="button" id="use-all-loyalty" class="checkout-btn" style="min-height:42px;padding:0 16px">Use all</button>
+                                <button type="button" id="use-all-loyalty" class="checkout-btn checkout-btn-compact">Use all</button>
                             </div>
                             <small>You have <strong>{{.LoyaltyPoints}}</strong> points available. You can choose any amount up to the food subtotal.</small>
                         </div>
@@ -147,7 +136,7 @@
                 <section class="checkout-card" aria-labelledby="schedule-heading">
                 <div class="card-heading"><span class="number-badge">⏰</span><div><h2 id="schedule-heading">Schedule your order</h2><p>Order now and choose a future preparation time.</p></div></div>
                 <label class="loyalty-toggle"><input type="checkbox" id="schedule-order"> <span>Schedule this order</span></label>
-                <div id="schedule-input-wrap" hidden style="margin-top:12px"><label for="scheduled_for">Scheduled date and time <span>*</span></label><input type="datetime-local" name="scheduled_for" id="scheduled_for" style="width:100%;padding:11px 12px;border:1px solid #cfdad2;border-radius:10px;font:inherit"><small>At least 15 minutes from now, up to 30 days ahead.</small></div>
+                <div id="schedule-input-wrap" class="mt-12" hidden><label for="scheduled_for">Scheduled date and time <span>*</span></label><input type="datetime-local" name="scheduled_for" id="scheduled_for" class="checkout-input"><small>At least 15 minutes from now, up to 30 days ahead.</small></div>
             </section>
 
             <section class="checkout-card" aria-labelledby="review-heading">
@@ -157,7 +146,7 @@
                     </div>
                     <div class="review-lines">
                         {{range .Lines}}
-                        <div class="review-line"><span><strong>{{.Quantity}}×</strong> {{.Name}}{{range .Options}}<small style="display:block;color:#6b746e;margin-left:22px">• {{.}}</small>{{end}}</span><strong>₦{{naira .LineKobo}}</strong></div>
+                        <div class="review-line"><span><strong>{{.Quantity}}×</strong> {{.Name}}{{range .Options}}<small class="option-hint">• {{.}}</small>{{end}}</span><strong>₦{{naira .LineKobo}}</strong></div>
                         {{end}}
                     </div>
                     <a href="/cart" class="edit-cart">← Edit items in cart</a>
@@ -188,7 +177,6 @@
 (function () {
     var subtotal = {{.SubtotalKobo}};
     var fee = {{.DeliveryFeeKobo}};
-    var rates = {{.Rates}} || [];
     var form = document.getElementById('checkout-form');
     var radios = document.querySelectorAll('input[name="delivery_method"]');
     var stateEl = document.getElementById('delivery_state');
@@ -222,33 +210,6 @@
     var scheduleInput = document.getElementById('scheduled_for');
 
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
-    var rateHint = document.getElementById('rate-hint');
-    function norm(v) { return String(v || '').trim().toLowerCase(); }
-    function areaRate() {
-        for (var i = 0; i < rates.length; i++) {
-            if (norm(rates[i].state) === norm(stateEl.value) && norm(rates[i].lga) === norm(lgaEl.value)) return rates[i];
-        }
-        return null;
-    }
-    // Preview only: the server works out the real fee when the order is placed.
-    function areaFee() {
-        var r = areaRate();
-        var f = (r && r.fee_kobo !== null && r.fee_kobo !== undefined) ? r.fee_kobo : fee;
-        if (r && r.free_over_kobo > 0 && subtotal >= r.free_over_kobo) return 0;
-        return f;
-    }
-    function areaNote() {
-        var r = areaRate();
-        if (!r) return '';
-        if (r.min_order_kobo > 0 && subtotal < r.min_order_kobo) {
-            return 'Minimum order for delivery to ' + r.lga + ' is ' + naira(r.min_order_kobo) + '. Add more items or choose pickup.';
-        }
-        if (r.free_over_kobo > 0) {
-            return subtotal >= r.free_over_kobo ? 'You get free delivery to ' + r.lga + '.'
-                : 'Spend ' + naira(r.free_over_kobo - subtotal) + ' more for free delivery to ' + r.lga + '.';
-        }
-        return '';
-    }
     function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
     function isDelivery() { return method() === 'delivery'; }
     function checkState() { return !isDelivery() || stateEl.value ? '' : 'Choose your state'; }
@@ -279,8 +240,7 @@
         deliveryBox.hidden = !delivery;
         pickupBox.hidden = delivery;
         hint.textContent = delivery ? '(required for delivery)' : '(optional for pickup)';
-        var currentFee = delivery ? areaFee() : 0;
-        if (rateHint) rateHint.textContent = delivery ? areaNote() : '';
+        var currentFee = delivery ? fee : 0;
 
         var points = 0;
         if (useLoyalty && useLoyalty.checked && loyaltyInput) {
@@ -368,6 +328,6 @@
 </script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

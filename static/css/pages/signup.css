@@ -1,0 +1,15 @@
+.signup-name-grid,.signup-location-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.signup-name-grid .form-group,.signup-location-grid .form-group{margin-bottom:0}
+.signup-section-label{margin:25px 0 12px;padding-top:2px;color:var(--green);font-size:.78rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+.optional-label{color:var(--muted);font-size:.76rem;font-weight:650}
+.terms-box{display:flex;align-items:flex-start;gap:11px;margin:5px 0 18px;padding:13px 14px;border:1px solid #dce4db;border-radius:13px;background:#f8faf7}
+.terms-box input{width:19px;height:19px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--green);cursor:pointer}
+.terms-box label{margin:0;color:#526057;font-size:.82rem;line-height:1.55;cursor:pointer}
+.terms-box a{color:var(--green);font-weight:800;text-decoration:none}
+.terms-box a:hover{text-decoration:underline}
+.terms-box.invalid{border-color:#c0392b;background:#fff8f7}
+.select-wrap{position:relative}
+.select-wrap select{width:100%;box-sizing:border-box;padding:14px 15px;border:1.5px solid #dce4db;border-radius:13px;font:inherit;background:#fbfcfa;color:#25362c;appearance:auto}
+.select-wrap select:focus{outline:none;border-color:var(--green);background:#fff;box-shadow:0 0 0 4px rgba(23,74,50,.10)}
+.signup-submit-note{margin:10px 0 0;color:var(--muted);font-size:.75rem;line-height:1.45;text-align:center}
+@media(max-width:560px){.signup-name-grid,.signup-location-grid{grid-template-columns:1fr;gap:0}.signup-name-grid .form-group,.signup-location-grid .form-group{margin-bottom:18px}}

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type ShopDish struct {
@@ -122,10 +122,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, err := template.New("shop.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/shop.html")
+	tmpl, err := render.Page("shop.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		log.Printf("shop: template failed: %v", err)
 		errors.Render(w, "Could not display this shop", http.StatusInternalServerError)

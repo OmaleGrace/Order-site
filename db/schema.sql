@@ -422,8 +422,7 @@ CREATE TABLE public.vendor_payout_verifications (
     account_name text NOT NULL,
     expires_at timestamp with time zone NOT NULL,
     used_at timestamp with time zone,
-    CONSTRAINT vendor_payout_verifications_pkey PRIMARY KEY (token),
-    CONSTRAINT vendor_payout_verifications_vendor_id_fkey FOREIGN KEY (vendor_id) REFERENCES public.vendors(id) ON DELETE CASCADE
+    CONSTRAINT vendor_payout_verifications_pkey PRIMARY KEY (token)
 );
 
 CREATE TABLE public.vendor_delivery_areas (
@@ -806,6 +805,10 @@ ALTER TABLE ONLY public.vendor_payments
 ALTER TABLE ONLY public.vendors
     ADD CONSTRAINT vendors_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
+-- Added after vendors_pkey exists (a foreign key cannot be created before its target key).
+ALTER TABLE ONLY public.vendor_payout_verifications
+    ADD CONSTRAINT vendor_payout_verifications_vendor_id_fkey FOREIGN KEY (vendor_id) REFERENCES public.vendors(id) ON DELETE CASCADE;
+
 
 --
 -- PostgreSQL database dump complete
@@ -891,20 +894,3 @@ ALTER TABLE public.orders
     DROP CONSTRAINT IF EXISTS orders_loyalty_points_redeemed_check;
 ALTER TABLE public.orders
     ADD CONSTRAINT orders_loyalty_points_redeemed_check CHECK (loyalty_points_redeemed >= 0);
-
---
--- Name: vendor_delivery_rates; Type: TABLE; Schema: public; Owner: -
--- Per-area delivery pricing. A NULL fee_kobo means the shop's default fee applies.
---
-
-CREATE TABLE IF NOT EXISTS public.vendor_delivery_rates (
-    id SERIAL PRIMARY KEY,
-    vendor_id integer NOT NULL REFERENCES public.vendors(id) ON DELETE CASCADE,
-    state text NOT NULL,
-    lga text NOT NULL,
-    fee_kobo integer CHECK (fee_kobo IS NULL OR fee_kobo >= 0),
-    min_order_kobo integer DEFAULT 0 NOT NULL CHECK (min_order_kobo >= 0),
-    free_over_kobo integer DEFAULT 0 NOT NULL CHECK (free_over_kobo >= 0),
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    UNIQUE (vendor_id, state, lga)
-);

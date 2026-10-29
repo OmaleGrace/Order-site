@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type CustomOption struct {
@@ -207,7 +207,7 @@ func (h *Handlers) VendorCustomizationPage(w http.ResponseWriter, r *http.Reques
 			groups = append(groups, g)
 		}
 	}
-	tmpl, err := template.New("vendor-customizations.html").Funcs(template.FuncMap{"naira": naira}).Funcs(brand.Funcs()).ParseFiles("templates/vendor-customizations.html")
+	tmpl, err := render.Page("vendor-customizations.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		errors.Render(w, "Could not display customizations", 500)
 		return

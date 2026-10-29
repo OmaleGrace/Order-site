@@ -1,19 +1,64 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Users - {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
-<style>
- body{margin:0;background:#f5f8f5;color:#18352b;font-family:system-ui,-apple-system,Segoe UI,sans-serif}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px clamp(16px,4vw,52px);background:#fff;border-bottom:1px solid #e4eae5}.brand{font-size:1.15rem;font-weight:800;color:#18352b;text-decoration:none}.brand small{display:block;color:#68776f;font-size:.78rem;font-weight:500}nav{display:flex;gap:6px;flex-wrap:wrap}nav a{padding:9px 11px;border-radius:9px;color:#18352b;text-decoration:none;font-weight:650;font-size:.9rem}nav a:hover,nav a.active{background:#e7f2e9;color:#14532d}main{max-width:1250px;margin:auto;padding:30px clamp(16px,4vw,52px) 64px}.heading{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}.heading h1{margin:0;font-size:clamp(1.7rem,4vw,2.4rem)}.heading p{color:#68776f;margin:8px 0 0}.summary{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.pill{padding:10px 14px;background:#fff;border:1px solid #e4eae5;border-radius:12px;font-weight:650}.notice{margin:18px 0;padding:13px 16px;background:#e8f5eb;border:1px solid #c7e5ce;border-radius:12px;color:#14532d;font-weight:600}.table-wrap{background:#fff;border:1px solid #e4eae5;border-radius:16px;overflow:auto;box-shadow:0 6px 24px #18352b08}table{width:100%;border-collapse:collapse;min-width:860px}th,td{text-align:left;padding:15px 16px;border-bottom:1px solid #edf0ed;font-size:.92rem}th{background:#f8faf8;color:#68776f;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}tbody tr:last-child td{border-bottom:0}td strong{display:block}td small{display:block;color:#68776f;margin-top:4px}.role{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef2ef;font-size:.78rem;font-weight:700}.role.admin{background:#e8f1ff;color:#234f91}.delete{border:0;border-radius:9px;padding:9px 12px;background:#fff0ee;color:#a3291c;font:inherit;font-weight:750;cursor:pointer}.delete:hover{background:#fbd9d4}.delete:disabled{opacity:.4;cursor:not-allowed}.empty{padding:30px;text-align:center;color:#68776f}.search{width:min(100%,330px);padding:11px 13px;border:1px solid #d6e0d8;border-radius:10px;font:inherit;background:white}.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.hint{font-size:.85rem;color:#68776f}@media(max-width:600px){th,td{padding:12px}}
-</style><link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head>
-<body><header class="top"><a class="brand" href="/admin"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}<small>Platform administration</small></a><nav aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/applications">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users" class="active" aria-current="page">Users</a><a href="/admin/earnings">Earnings</a><a href="/admin/settlements">Settlements</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav></header>
-<main><section class="heading"><div><h1>Platform users</h1><p>Review every registered account and related activity.</p></div><span class="pill">Main admin: {{.OwnerEmail}}</span></section>
-<div class="summary"><span class="pill">👥 {{.TotalUsers}} total users</span><span class="pill">🛡️ {{.AdminCount}} admin account(s)</span></div>
-{{if .Notice}}<div class="notice" role="status">{{.Notice}}</div>{{end}}
-<div class="actions"><input class="search" id="user-search" type="search" placeholder="Search name or email…" aria-label="Search users"><span class="hint">Deleting an account is permanent. Vendor shops owned by that account will be suspended.</span></div>
-<div class="table-wrap"><table><thead><tr><th>User</th><th>Joined</th><th>Role</th><th>Shops</th><th>Orders</th><th>Actions</th></tr></thead><tbody id="user-rows">
-{{range .Users}}<tr data-search="{{.Name}} {{.Email}}"><td><strong>{{.Name}}</strong><small>{{.Email}}</small></td><td>{{.CreatedAt}}</td><td>{{if .IsAdmin}}<span class="role admin">Administrator</span>{{else}}<span class="role">Customer</span>{{end}}</td><td>{{.Vendors}}</td><td>{{.Orders}}</td><td>{{if or (eq .ID $.CurrentID) (eq .Email $.OwnerEmail)}}<button class="delete" type="button" disabled title="Protected account">Protected</button>{{else}}<form action="/admin/users/delete" method="post" onsubmit="return confirm('Permanently delete {{.Name}} ({{.Email}})? This cannot be undone.');"><input type="hidden" name="user_id" value="{{.ID}}"><button class="delete" type="submit">Delete user</button></form>{{end}}</td></tr>{{else}}<tr><td class="empty" colspan="6">No users were found.</td></tr>{{end}}
-</tbody></table></div></main>
-<script>(function(){var input=document.getElementById('user-search');var rows=Array.from(document.querySelectorAll('#user-rows tr[data-search]'));input.addEventListener('input',function(){var q=input.value.trim().toLowerCase();rows.forEach(function(row){row.hidden=!row.dataset.search.toLowerCase().includes(q);});});})();</script><script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
-</body></html>
+    <head>
+        {{template "head-common"}}
+        {{template "meta-noindex"}}
+        <title>Users - {{brandName}}</title>
+        <link rel="stylesheet" href="/static/css/base.css">
+        <link rel="stylesheet" href="/static/css/pages/admin-users.css">
+        <link rel="stylesheet" href="/static/css/portal-nav.css">
+    </head>
+    <body>
+        <header class="top"><a class="brand" href="/admin"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}<small>Platform administration</small></a>{{template "admin-nav" dict "Class" "" "Active" "/admin/users"}}
+        </header>
+        <main>
+            <section class="heading">
+                <div>
+                    <h1>Platform users</h1>
+                    <p>Review every registered account and related activity.</p>
+                </div><span class="pill">Main admin: {{.OwnerEmail}}</span></section>
+            <div class="summary"><span class="pill">👥 {{.TotalUsers}} total users</span><span class="pill">🛡️ {{.AdminCount}} admin account(s)</span></div>
+            {{if .Notice}}
+                <div class="notice" role="status">{{.Notice}}</div>
+            {{end}}
+            <div class="actions"><input class="search" id="user-search" type="search" placeholder="Search name or email…" aria-label="Search users"><span class="hint">Deleting an account is permanent. Vendor shops owned by that account will be suspended.</span></div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Joined</th>
+                            <th>Role</th>
+                            <th>Shops</th>
+                            <th>Orders</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-rows">
+                        {{range .Users}}
+                            <tr data-search="{{.Name}} {{.Email}}">
+                                <td><strong>{{.Name}}</strong><small>{{.Email}}</small></td>
+                                <td>{{.CreatedAt}}</td>
+                                <td>{{if .IsAdmin}}<span class="role admin">Administrator</span>{{else}}<span class="role">Customer</span>{{end}}
+                                </td>
+                                <td>{{.Vendors}}</td>
+                                <td>{{.Orders}}</td>
+                                <td>{{if or (eq .ID $.CurrentID) (eq .Email $.OwnerEmail)}}<button class="delete" type="button" disabled title="Protected account">Protected</button>{{else}}
+                                        <form action="/admin/users/delete" method="post" data-confirm="Permanently delete {{.Name}} ({{.Email}})? This cannot be undone." data-confirm-title="Delete this account?" data-confirm-ok="Delete account" data-confirm-tone="danger"><input type="hidden" name="user_id" value="{{.ID}}"><button class="delete" type="submit">Delete user</button></form>
+                                    {{end}}
+                                </td>
+                            </tr>
+                        {{else}}
+                            <tr>
+                                <td class="empty" colspan="6">No users were found.</td>
+                            </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        <script src="/static/js/pages/admin-users.js"></script>
+        <script src="/static/js/nav-active.js"></script>
+        {{template "scripts-common"}}
+    </body>
+</html>

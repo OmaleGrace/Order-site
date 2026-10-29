@@ -1,43 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Billing - {{.Name}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
-    <style>
-        .admin-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; padding: 14px 5vw; background: rgba(253, 248, 240, 0.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
-        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
-        .admin-header a { text-decoration: none; font-weight: 600; }
-        .admin-header a:hover { color: var(--red); }
-        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
-
-        main { max-width: 640px; margin: 0 auto; padding: 24px 5vw 70px; }
-        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
-
-        .card { background: var(--card); border-radius: 22px; border-top: 6px solid var(--green); box-shadow: var(--shadow-lg); padding: 24px; margin-bottom: 22px; }
-        .card.closed { border-top-color: var(--red); }
-        .card h2 { margin: 0 0 8px; font-size: 1.3rem; color: var(--green); }
-        .card.closed h2 { color: var(--red-dark); }
-        .card p { margin: 6px 0; }
-        .muted { color: var(--muted); font-size: 0.9rem; }
-        .amount { font-size: 2.2rem; font-weight: 800; color: var(--red); margin: 12px 0 4px; }
-
-        .pay-btn { margin-top: 14px; width: 100%; padding: 14px; border: 0; border-radius: 999px; background: var(--red); color: #fff; font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer; box-shadow: 0 6px 16px rgba(200, 56, 42, 0.3); }
-        .pay-btn:hover:not(:disabled) { background: var(--red-dark); }
-        .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .history h3 { margin: 0 0 10px; font-size: 1rem; color: var(--green); }
-        .history-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
-        .history-row:last-child { border-bottom: 0; }
-    </style>
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head>
+    <link rel="stylesheet" href="/static/css/pages/vendor-billing.css">
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body>
     <header class="admin-header">
         <h1>🍴 {{.Name}}</h1>
-        <nav class="portal-nav" aria-label="Vendor navigation"><a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu">My menu</a><a href="/vendor/delivery">Delivery</a><a href="/messages">Messages</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a><a href="/vendor/statements">Statements</a><a href="/vendor/ai">AI writing</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing" class="active" aria-current="page">Billing</a><a href="/help">Help</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav>
+        {{template "vendor-nav" dict "Class" "portal-nav" "Active" "/vendor/billing"}}
 </header>
 
     <main>
@@ -102,20 +75,9 @@
         {{end}}
     </main>
 
-    <script>
-    document.querySelectorAll('.pay-form').forEach(function (f) {
-        f.addEventListener('submit', function () {
-            var b = f.querySelector('button');
-            b.disabled = true;
-            b.textContent = 'Taking you to Paystack...';
-        });
-    });
-    window.addEventListener('pageshow', function () {
-        document.querySelectorAll('.pay-form button').forEach(function (b) { b.disabled = false; });
-    });
-    </script>
+    <script src="/static/js/pages/vendor-billing.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

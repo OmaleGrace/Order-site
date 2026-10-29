@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-desc" "Log in to your account to order food from local shops for pickup or delivery."}}
     <title>Login - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/auth.css">
@@ -27,13 +26,13 @@
             <form action="/login" method="post" novalidate>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" name="email" id="email" required>
+                    <input type="email" name="email" id="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
                     <p class="field-error" id="email-error" aria-live="polite"></p>
                 </div>
 
                 <div class="form-group password-field">
                     <label for="password">Password</label>
-                    <input type="password" name="password" id="password" required>
+                    <input type="password" name="password" id="password" autocomplete="current-password" required>
                     <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
                         <svg class="eye-icon eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -71,55 +70,7 @@
         </div>
     </main>
 
-    <script>
-    document.querySelectorAll('.toggle-password').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var input = document.getElementById(btn.dataset.target);
-            var isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            btn.querySelector('.eye-open').style.display = isHidden ? 'none' : 'block';
-            btn.querySelector('.eye-closed').style.display = isHidden ? 'block' : 'none';
-            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-        });
-    });
-
-    (function () {
-        var emailEl = document.getElementById('email');
-        var passEl = document.getElementById('password');
-        var emailMsg = document.getElementById('email-error');
-        var submitBtn = document.querySelector('form button[type="submit"]');
-        var capsLock = document.getElementById('caps-lock');
-        passEl.addEventListener('keydown', function(e){
-            if (typeof e.getModifierState === 'function') capsLock.classList.toggle('visible', e.getModifierState('CapsLock'));
-        });
-        passEl.addEventListener('keyup', function(e){
-            if (typeof e.getModifierState === 'function') capsLock.classList.toggle('visible', e.getModifierState('CapsLock'));
-        });
-
-        function emailOk(v) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
-        }
-
-        function showEmail() {
-            var bad = emailEl.value !== '' && !emailOk(emailEl.value);
-            emailMsg.textContent = bad ? 'Enter a valid email address' : '';
-            emailEl.classList.toggle('invalid', bad);
-        }
-
-        function refresh() {
-            submitBtn.disabled = !(emailOk(emailEl.value) && passEl.value.length > 0);
-        }
-
-        emailEl.addEventListener('input', function () { showEmail(); refresh(); });
-        emailEl.addEventListener('blur', showEmail);
-        passEl.addEventListener('input', refresh);
-        emailEl.addEventListener('change', refresh);
-        passEl.addEventListener('change', refresh);
-
-        // Browsers can autofill saved logins without firing input events
-        refresh();
-        setTimeout(refresh, 300);
-    })();
-    </script>
+    <script src="/static/js/pages/login.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

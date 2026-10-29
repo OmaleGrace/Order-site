@@ -1,0 +1,173 @@
+body {
+  margin:0;
+  background:#f5f8f5;
+  color:#18352b;
+  font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+}
+
+.top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+  padding:18px 5vw;
+  background:#fff;
+  border-bottom:1px solid #e4eae5;
+}
+
+.brand {
+  font-size:1.1rem;
+  font-weight:800;
+  color:#18352b;
+  text-decoration:none;
+}
+
+.brand small {
+  display:block;
+  font-size:.75rem;
+  color:#68776f;
+}
+
+.nav {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.nav a {
+  padding:9px 11px;
+  border-radius:10px;
+  color:#18352b;
+  text-decoration:none;
+  font-weight:700;
+  font-size:.88rem;
+}
+
+.nav a:hover, .nav a.active {
+  background:#e7f2e9;
+  color:#14532d;
+}
+
+.wrap {
+  max-width:1200px;
+  margin:auto;
+  padding:32px 5vw 70px;
+}
+
+.hero {
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:end;
+  flex-wrap:wrap;
+}
+
+.hero h1 {
+  margin:0;
+  font-size:2.3rem;
+}
+
+.muted {
+  color:#68776f;
+}
+
+.stats {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
+  margin:24px 0;
+}
+
+.stat, .tile {
+  background:#fff;
+  border:1px solid #e4eae5;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 7px 25px #18352b08;
+}
+
+.stat span {
+  display:block;
+  color:#68776f;
+  font-size:.82rem;
+}
+
+.stat strong {
+  display:block;
+  font-size:1.7rem;
+  margin-top:7px;
+}
+
+.section {
+  margin-top:26px;
+}
+
+.tiles {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.tile {
+  text-decoration:none;
+  color:inherit;
+}
+
+.tile .icon {
+  font-size:1.4rem;
+}
+
+.tile h3 {
+  margin:10px 0 5px;
+}
+
+.tile p {
+  margin:0;
+  color:#68776f;
+  line-height:1.45;
+  font-size:.88rem;
+}
+
+.alert {
+  background:#fff8e8;
+  border:1px solid #eeddb7;
+  color:#745315;
+  padding:14px 16px;
+  border-radius:14px;
+  margin-top:20px;
+}
+
+.support {
+  background:#eaf6ed;
+  border-color:#c9e4d0;
+  color:#14532d;
+}
+
+.go {
+  display:inline-block;
+  margin-top:13px;
+  font-weight:800;
+  color:#14532d;
+}
+
+@media(max-width:1000px) {
+  .stats {
+    grid-template-columns:repeat(3,1fr);
+  }
+  .tiles {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:600px) {
+  .stats, .tiles {
+    grid-template-columns:1fr;
+  }
+  .wrap {
+    padding:25px 4vw;
+  }
+  .hero h1 {
+    font-size:1.9rem;
+  }
+}

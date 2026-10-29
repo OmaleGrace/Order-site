@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type AdminVendor struct {
@@ -88,7 +88,7 @@ func (h *Handlers) AdminVendors(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := brand.ParseE("templates/admin-vendors.html")
+	tmpl, err := render.Page("admin-vendors.html")
 	if err != nil {
 		log.Printf("admin vendors: template failed: %v", err)
 		errors.Render(w, "Could not display vendors", http.StatusInternalServerError)

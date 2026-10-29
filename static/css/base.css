@@ -350,3 +350,52 @@ body .price-label { font-size: .9rem; font-weight: 700; }
 
 /* Stage 18 messaging polish */
 @media(max-width:700px){.messages-nav-label,.notification-nav-label{display:none}.messages-nav-item,.notification-nav-item{padding-left:8px!important;padding-right:8px!important}}
+
+/* ---------- Accessibility: visible keyboard focus + reduced motion (all pages) ---------- */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring, #1a7f4b);
+  outline-offset: 2px;
+}
+/* Page stylesheets remove the default outline on inputs and replace it with a border colour;
+   keep a ring for keyboard users so they can always see where they are. */
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--focus-ring, #1a7f4b) !important;
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Buttons while a form is being sent (see /static/js/form-guard.js) ---------- */
+button[aria-busy="true"], input[aria-busy="true"] { cursor: progress; opacity: .7; }
+
+/* ---------- Styled confirmation dialog (see /static/js/confirm-dialog.js) ---------- */
+.confirm-dialog {
+  border: 0; border-radius: 18px; padding: 0; max-width: min(92vw, 420px); width: 100%;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28); color: inherit; background: #fff;
+}
+.confirm-dialog::backdrop { background: rgba(20, 30, 25, .55); }
+.confirm-dialog-box { padding: 26px 24px 20px; }
+.confirm-dialog-title { margin: 0 0 8px; font-size: 1.2rem; }
+.confirm-dialog-text { margin: 0 0 22px; color: #55645b; line-height: 1.5; }
+.confirm-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.confirm-dialog-actions button {
+  border-radius: 999px; padding: 10px 20px; font: inherit; font-weight: 700; cursor: pointer;
+}
+.confirm-dialog-cancel { background: #fff; border: 2px solid #cbd8ce; color: #18352b; }
+.confirm-dialog-ok { background: #14532d; border: 2px solid #14532d; color: #fff; }
+.confirm-dialog-ok.danger { background: #b42318; border-color: #b42318; }
+
+/* ---------- Small shared helpers (replace one-off inline styles) ---------- */
+.add-cart-btn.link-btn { display:inline-block; text-decoration:none; }
+.mt-10 { margin-top:10px !important; }
+.mt-12 { margin-top:12px !important; }
+.mt-18 { margin-top:18px !important; }
+.mt-22 { margin-top:22px !important; }
+.ml-8  { margin-left:8px !important; }

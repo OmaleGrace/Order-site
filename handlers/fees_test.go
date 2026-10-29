@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"Order-site/brand"
+	"Order-site/render"
 )
 
 func TestCommission(t *testing.T) {
@@ -44,10 +44,10 @@ func TestMoney(t *testing.T) {
 	}
 }
 
-func render(t *testing.T, file string, funcs template.FuncMap, data interface{}) string {
+func renderPage(t *testing.T, file string, funcs template.FuncMap, data interface{}) string {
 	t.Helper()
 	var b strings.Builder
-	tm, err := template.New(file).Funcs(funcs).Funcs(brand.Funcs()).ParseFiles("../templates/" + file)
+	tm, err := render.Page(file, funcs)
 	if err != nil {
 		t.Fatalf("%s: %v", file, err)
 	}
@@ -60,7 +60,7 @@ func render(t *testing.T, file string, funcs template.FuncMap, data interface{})
 func TestPagesRenderWithoutMonthlyFee(t *testing.T) {
 	f := template.FuncMap{"naira": naira, "money": money, "money2": money2}
 
-	out := render(t, "vendor-billing.html", f, VendorBillingPage{
+	out := renderPage(t, "vendor-billing.html", f, VendorBillingPage{
 		Name: "Mama Put", State: "active", CommissionPercent: 10,
 		Earnings: VendorEarnings{Orders: 2, SalesKobo: 500000, CommissionKobo: 45000, PaidOutKobo: 100000, BalanceKobo: 355000},
 		Payouts:  []VendorPayoutRow{{AmountKobo: 100000, Note: "Transfer", PaidAt: "19 Oct 2026"}},
@@ -74,20 +74,20 @@ func TestPagesRenderWithoutMonthlyFee(t *testing.T) {
 		t.Error("billing page must not mention renewing")
 	}
 
-	setup := render(t, "vendor-billing.html", f, VendorBillingPage{Name: "X", State: "setup", PayAmountKobo: 500000, CommissionPercent: 10, CanPay: true})
+	setup := renderPage(t, "vendor-billing.html", f, VendorBillingPage{Name: "X", State: "setup", PayAmountKobo: 500000, CommissionPercent: 10, CanPay: true})
 	if !strings.Contains(setup, "₦5000") && !strings.Contains(setup, "₦5,000") {
 		t.Error("setup state should show the setup fee")
 	}
 
-	e := render(t, "admin-earnings.html", f, AdminEarningsPage{CommissionPercent: 10, TotalSalesKobo: 500000, TotalCommission: 45000, TotalOwedKobo: 355000,
-		Rows: []AdminEarningsRow{{VendorID: 1, Name: "Mama Put", VendorEarnings: VendorEarnings{Orders: 2, SalesKobo: 500000, CommissionKobo: 45000, BalanceKobo: 455000}}}})
+	e := renderPage(t, "admin-earnings.html", f, AdminEarningsPage{CommissionPercent: 10, TotalSalesKobo: 500000, TotalCommission: 45000, TotalOwedKobo: 355000,
+		Rows: []AdminEarningsRow{{VendorID: 1, Name: "Mama Put", AccountVerified: true, VendorEarnings: VendorEarnings{Orders: 2, SalesKobo: 500000, CommissionKobo: 45000, BalanceKobo: 455000}}}})
 	for _, want := range []string{"Mama Put", "₦4,550.00", `max="4550.00"`, "/admin/earnings/payout"} {
 		if !strings.Contains(e, want) {
 			t.Errorf("admin earnings missing %q", want)
 		}
 	}
 
-	h := render(t, "home.html", f, struct {
+	h := renderPage(t, "home.html", f, struct {
 		Popular, Again    []HomeDish
 		Categories        []HomeCategory
 		Shops             []ShopCard
@@ -101,7 +101,7 @@ func TestPagesRenderWithoutMonthlyFee(t *testing.T) {
 		t.Error("home page should show the commission")
 	}
 
-	a := render(t, "become-vendor.html", f, VendorApplyPage{State: "form", SetupFeeKobo: 500000, CommissionPercent: 10, IDTypes: idTypeOptions})
+	a := renderPage(t, "become-vendor.html", f, VendorApplyPage{State: "form", SetupFeeKobo: 500000, CommissionPercent: 10, IDTypes: idTypeOptions})
 	if strings.Contains(a, "a month") || !strings.Contains(a, "10%") {
 		t.Error("become-vendor page copy wrong")
 	}

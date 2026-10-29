@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -8,7 +9,7 @@ import (
 
 func (h *Handlers) AdminAssignRider(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+		errors.Render(w, "Riders are assigned from the admin orders page.", http.StatusMethodNotAllowed)
 		return
 	}
 	orderID, _ := strconv.Atoi(r.FormValue("order_id"))

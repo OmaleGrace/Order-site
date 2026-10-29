@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type HomeDish struct {
@@ -40,12 +40,7 @@ var homeCache struct {
 	data homePublicData
 }
 
-var homeTemplate = template.Must(
-	template.New("home.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/home.html"),
-)
+var homeTemplate = render.MustPage("home.html", template.FuncMap{"naira": naira})
 
 func categoryIcon(name string) string {
 	n := strings.ToLower(name)

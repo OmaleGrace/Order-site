@@ -1,0 +1,13 @@
+{{define "head-common"}}<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#174a32">
+    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">{{end}}
+
+{{/* Search-engine description for public pages: {{template "meta-desc" "Short summary"}} */}}
+{{define "meta-desc"}}<meta name="description" content="{{.}}">
+    <meta property="og:site_name" content="{{brandName}}">
+    <meta property="og:description" content="{{.}}">{{end}}
+
+{{/* Keeps private pages (accounts, vendor and admin tools) out of search results. */}}
+{{define "meta-noindex"}}<meta name="robots" content="noindex, nofollow">{{end}}

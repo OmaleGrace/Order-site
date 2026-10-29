@@ -1,176 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Name}} | {{brandName}}</title>
-    <meta name="description" content="{{.Name}} on {{brandName}}. Explore available dishes, prices, and pickup or delivery options.">
-    <meta name="robots" content="index,follow">
-    {{if adsensePublisherID}}
-    <meta name="google-adsense-account" content="ca-{{adsensePublisherID}}">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-{{adsensePublisherID}}" crossorigin="anonymous"></script>
-    {{end}}
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/menu.css">
-    <link rel="stylesheet" href="/static/css/shop.css">
-    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head>
-<body>
-<header class="menu-header shop-header">
-    <div class="brand">
+    <head>
+        {{template "head-common"}}
+        <title>{{.Name}} | {{brandName}}</title>
+        <meta name="description" content="{{.Name}} on {{brandName}}. Explore available dishes, prices, and pickup or delivery options.">
+        <meta name="robots" content="index,follow">
+        {{if adsensePublisherID}}
+            <meta name="google-adsense-account" content="ca-{{adsensePublisherID}}">
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-{{adsensePublisherID}}" crossorigin="anonymous"></script>
+        {{end}}
+        <link rel="stylesheet" href="/static/css/base.css">
+        <link rel="stylesheet" href="/static/css/menu.css">
+        <link rel="stylesheet" href="/static/css/shop.css">
+    </head>
+    <body>
+        <header class="menu-header shop-header">
+            <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
     </div>
-    <nav class="menu-nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors" class="active active-link" aria-current="page">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
-</header>
-
-<main class="shop-page">
-    <div class="shop-breadcrumb"><a href="/vendors">Shops</a><span aria-hidden="true">›</span><strong>{{.Name}}</strong></div>
-
-    <section class="shop-hero shop-hero-modern">
-        <div class="shop-hero-cover" aria-hidden="true"></div>
-        <div class="shop-logo shop-logo-large">
-            {{if .LogoURL}}<img src="{{.LogoURL}}" alt="{{.Name}} logo" class="zoomable">{{else}}<span>🍴</span>{{end}}
-        </div>
-        <div class="shop-info shop-info-modern">
-            <div class="shop-title-row">
-                <div>
-                    <div class="shop-kicker">LOCAL FOOD SHOP</div>
-                    <h1>{{.Name}}</h1>
+            <nav class="menu-nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors" class="active active-link" aria-current="page">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+        </header>
+        <main class="shop-page">
+            <div class="shop-breadcrumb"><a href="/vendors">Shops</a><span aria-hidden="true">›</span><strong>{{.Name}}</strong></div>
+            <section class="shop-hero shop-hero-modern">
+                <div class="shop-hero-cover" aria-hidden="true">
                 </div>
-                {{if .Verified}}<span class="verified-badge">✓ Verified</span>{{end}}
-            </div>
-            {{if .Description}}<p class="shop-desc">{{.Description}}</p>{{end}}
-            <div class="shop-meta-row">
-                {{if .Area}}<span>📍 {{.Area}}</span>{{end}}
-                {{if .Completed}}<span>✓ {{.Completed}} completed orders</span>{{else}}<span>New shop</span>{{end}}
-                {{if .ReviewCount}}<span>★ {{printf "%.1f" .ReviewAverage}} · {{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<span>☆ No reviews yet</span>{{end}}
-                {{if .OffersDelivery}}<span>🛵 Delivery{{if .DeliveryFeeKobo}} · ₦{{naira .DeliveryFeeKobo}}{{else}} · Free{{end}}</span>{{end}}
-                {{if .OffersPickup}}<span>🛍️ Pickup available</span>{{end}}
-            </div>
-            <div class="shop-actions">
-                {{if and .OffersPickup .Address}}<span class="shop-location">🏠 {{.Address}}</span>{{end}}
-                {{if .PhoneLink}}<a href="{{.PhoneLink}}" class="shop-action-link">📞 Call shop</a>{{end}}
-                <form action="/messages/start" method="post">
+                <div class="shop-logo shop-logo-large">
+                    {{if .LogoURL}}<img src="{{.LogoURL}}" alt="{{.Name}} logo" class="zoomable">{{else}}<span>🍴</span>{{end}}
+                </div>
+                <div class="shop-info shop-info-modern">
+                    <div class="shop-title-row">
+                        <div>
+                            <div class="shop-kicker">LOCAL FOOD SHOP</div>
+                            <h1>{{.Name}}</h1>
+                        </div>
+                        {{if .Verified}}<span class="verified-badge">✓ Verified</span>{{end}}
+                    </div>
+                    {{if .Description}}
+                        <p class="shop-desc">{{.Description}}</p>
+                    {{end}}
+                    <div class="shop-meta-row">
+                        {{if .Area}}<span>📍 {{.Area}}</span>{{end}}
+                        {{if .Completed}}<span>✓ {{.Completed}} completed orders</span>{{else}}<span>New shop</span>{{end}}
+                        {{if .ReviewCount}}<span>★ {{printf "%.1f" .ReviewAverage}} · {{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<span>☆ No reviews yet</span>{{end}}
+                        {{if .OffersDelivery}}<span>🛵 Delivery{{if .DeliveryFeeKobo}} · ₦{{naira .DeliveryFeeKobo}}{{else}} · Free{{end}}</span>{{end}}
+                        {{if .OffersPickup}}<span>🛍️ Pickup available</span>{{end}}
+                    </div>
+                    <div class="shop-actions">
+                        {{if and .OffersPickup .Address}}<span class="shop-location">🏠 {{.Address}}</span>{{end}}
+                        {{if .PhoneLink}}<a href="{{.PhoneLink}}" class="shop-action-link">📞 Call shop</a>{{end}}
+                        <form action="/messages/start" method="post">
                     <input type="hidden" name="vendor_id" value="{{.VendorID}}">
                     <button type="submit" class="shop-message-btn">💬 Message shop</button>
                 </form>
-            </div>
-        </div>
-    </section>
-
-    <section class="menu-toolbar" aria-label="Menu controls">
-        <div>
+                    </div>
+                </div>
+            </section>
+            <section class="menu-toolbar" aria-label="Menu controls">
+                <div>
             <span class="menu-eyebrow">Today's menu</span>
             <h2>Choose what you’re craving</h2>
-            <p>{{len .Dishes}} {{if eq (len .Dishes) 1}}dish{{else}}dishes{{end}} available from {{.Name}}.</p>
-        </div>
+                    <p>{{len .Dishes}} {{if eq (len .Dishes) 1}}dish{{else}}dishes{{end}} available from {{.Name}}.</p>
+                </div>
         <label class="shop-menu-search">
             <span aria-hidden="true">⌕</span>
             <input id="shop-dish-search" type="search" placeholder="Search this menu…" autocomplete="off" aria-label="Search this shop's menu">
         </label>
     </section>
-
-    {{if .Categories}}
-    <nav class="shop-category-nav" aria-label="Menu categories">
+            {{if .Categories}}
+                <nav class="shop-category-nav" aria-label="Menu categories">
         <button type="button" class="shop-category-btn active" data-category="all">All</button>
         {{range .Categories}}<button type="button" class="shop-category-btn" data-category="{{.}}">{{.}}</button>{{end}}
-    </nav>
-    {{end}}
-
-    <section class="shop-menu-grid" id="shop-menu-grid">
-        {{range .Dishes}}
-        <article class="food-card shop-food-card" data-category="{{.Category}}" data-search="{{.Name}} {{.Description}} {{.Category}}">
-            <div class="food-image shop-food-image">
-                {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">{{else}}<div class="no-image">🍽️</div>{{end}}
-                {{if .Category}}<span class="food-tag">{{.Category}}</span>{{end}}
-                {{if .ReviewCount}}<span class="food-tag rating-tag">★ {{printf "%.1f" .Rating}}</span>{{end}}
-            </div>
-            <div class="food-content shop-food-content">
-                <div class="shop-food-topline"><span class="shop-food-category">{{if .Category}}{{.Category}}{{else}}Menu item{{end}}</span></div>
-                <h2>{{.Name}}</h2>
-                {{if .Description}}<p class="food-description">{{.Description}}</p>{{else}}<p class="food-description food-description-muted">Freshly prepared by {{$.Name}}.</p>{{end}}
-                <div class="food-bottom shop-food-bottom">
+                </nav>
+            {{end}}
+            <section class="shop-menu-grid" id="shop-menu-grid">
+                {{range .Dishes}}
+                    <article class="food-card shop-food-card" data-category="{{.Category}}" data-search="{{.Name}} {{.Description}} {{.Category}}">
+                        <div class="food-image shop-food-image">
+                            {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" class="zoomable" loading="lazy">{{else}}
+                                <div class="no-image">🍽️</div>
+                            {{end}}
+                            {{if .Category}}<span class="food-tag">{{.Category}}</span>{{end}}
+                            {{if .ReviewCount}}<span class="food-tag rating-tag">★ {{printf "%.1f" .Rating}}</span>{{end}}
+                        </div>
+                        <div class="food-content shop-food-content">
+                            <div class="shop-food-topline"><span class="shop-food-category">{{if .Category}}{{.Category}}{{else}}Menu item{{end}}</span></div>
+                            <h2>{{.Name}}</h2>
+                            {{if .Description}}
+                                <p class="food-description">{{.Description}}</p>
+                            {{else}}
+                                <p class="food-description food-description-muted">Freshly prepared by {{$.Name}}.</p>
+                            {{end}}
+                            <div class="food-bottom shop-food-bottom">
                     <strong class="food-price">₦{{naira .PriceKobo}}</strong>
                     <form action="/cart/add" method="post">
                         <input type="hidden" name="id" value="{{.ID}}">
                         <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">+ Customize & Add</button>
                     </form>
+                            </div>
+                        </div>
+                    </article>
+                {{else}}
+                    <div class="empty-menu shop-empty">
+                        <div class="empty-emoji">🍽️</div>
+                        <p><strong>No dishes yet</strong></p>
+                        <p>This shop hasn't added any dishes yet. Check back soon.</p>
+                    </div>
+                {{end}}
+            </section>
+            <section class="shop-reviews" aria-labelledby="reviews-title">
+                <div class="reviews-heading">
+                    <div><span class="menu-eyebrow">Customer feedback</span><h2 id="reviews-title">What customers say</h2>
+                    </div>
+                    <div class="review-score">
+                        {{if .ReviewCount}}<strong>{{printf "%.1f" .ReviewAverage}}</strong><span>★ average<br>{{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<strong>New</strong><span>No reviews yet</span>{{end}}
+                    </div>
                 </div>
-            </div>
-        </article>
-        {{else}}
-        <div class="empty-menu shop-empty"><div class="empty-emoji">🍽️</div><p><strong>No dishes yet</strong></p><p>This shop hasn't added any dishes yet. Check back soon.</p></div>
-        {{end}}
-    </section>
-
-    <section class="shop-reviews" aria-labelledby="reviews-title">
-        <div class="reviews-heading"><div><span class="menu-eyebrow">Customer feedback</span><h2 id="reviews-title">What customers say</h2></div><div class="review-score">{{if .ReviewCount}}<strong>{{printf "%.1f" .ReviewAverage}}</strong><span>★ average<br>{{.ReviewCount}} review{{if ne .ReviewCount 1}}s{{end}}</span>{{else}}<strong>New</strong><span>No reviews yet</span>{{end}}</div></div>
-        {{if .Reviews}}<div class="review-list">{{range .Reviews}}<article class="review-card"><div class="review-card-top"><strong>{{.Customer}}</strong><span>{{.CreatedAt}}</span></div><div class="review-stars" aria-label="{{.Rating}} out of 5 stars">{{if ge .Rating 1}}★{{end}}{{if ge .Rating 2}}★{{end}}{{if ge .Rating 3}}★{{end}}{{if ge .Rating 4}}★{{end}}{{if ge .Rating 5}}★{{end}}</div><p>{{.Comment}}</p><span class="verified-review">✓ Verified purchase</span></article>{{end}}</div>{{else}}<p class="reviews-note">{{if .ReviewCount}}Customers have rated this shop, but no written reviews have been shared yet.{{else}}Reviews come from customers who completed an order with this shop.{{end}}</p>{{end}}
-    </section>
-
-    <div id="shop-no-results" class="empty-menu shop-no-results" hidden>
-        <div class="empty-emoji">🔎</div>
-        <p><strong>No matching dishes</strong></p>
-        <p>Try another dish name or choose a different category.</p>
+                {{if .Reviews}}
+                    <div class="review-list">
+                        {{range .Reviews}}
+                            <article class="review-card">
+                                <div class="review-card-top"><strong>{{.Customer}}</strong><span>{{.CreatedAt}}</span></div>
+                                <div class="review-stars" aria-label="{{.Rating}} out of 5 stars">
+                                    {{if ge .Rating 1}}★{{end}}
+                                    {{if ge .Rating 2}}★{{end}}
+                                    {{if ge .Rating 3}}★{{end}}
+                                    {{if ge .Rating 4}}★{{end}}
+                                    {{if ge .Rating 5}}★{{end}}
+                                </div>
+                                <p>{{.Comment}}</p><span class="verified-review">✓ Verified purchase</span></article>
+                        {{end}}
+                    </div>
+                {{else}}
+                    <p class="reviews-note">{{if .ReviewCount}}Customers have rated this shop, but no written reviews have been shared yet.{{else}}Reviews come from customers who completed an order with this shop.{{end}}
+                    </p>
+                {{end}}
+            </section>
+            <div id="shop-no-results" class="empty-menu shop-no-results" hidden>
+                <div class="empty-emoji">🔎</div>
+                <p><strong>No matching dishes</strong></p>
+                <p>Try another dish name or choose a different category.</p>
         <button type="button" class="btn-outline" id="shop-clear-search">Clear search</button>
     </div>
-</main>
-
-<div class="mobile-cart-bar"><span>Ready to order?</span><a href="/cart">View cart →</a></div>
-<div id="shop-customization-modal" class="customization-modal" data-customization-modal hidden>
-  <div class="customization-dialog" role="dialog" aria-modal="true" aria-labelledby="shop-custom-title">
-    <div class="customization-head">
-      <div><span class="menu-eyebrow">Make it yours</span><h2 id="shop-custom-title" data-custom-title>Customize your dish</h2></div>
+        </main>
+        <div class="mobile-cart-bar"><span>Ready to order?</span><a href="/cart">View cart →</a></div>
+        <div id="shop-customization-modal" class="customization-modal" data-customization-modal hidden>
+            <div class="customization-dialog" role="dialog" aria-modal="true" aria-labelledby="shop-custom-title">
+                <div class="customization-head">
+                    <div><span class="menu-eyebrow">Make it yours</span><h2 id="shop-custom-title" data-custom-title>Customize your dish</h2>
+                    </div>
       <button type="button" class="customization-close" data-custom-close aria-label="Close customization">✕</button>
     </div>
-    <form data-custom-form action="/cart/add" method="post">
+                <form data-custom-form action="/cart/add" method="post">
       <input type="hidden" name="id" data-custom-item-id>
-      <div class="custom-price-summary"><div><span>Base price</span><strong data-custom-base>₦0</strong></div><div><span>Selected extras</span><strong>Included below</strong></div><div class="custom-total"><span>Total</span><strong data-custom-total>₦0</strong></div></div>
-      <div class="custom-error" data-custom-error role="alert" hidden></div>
-      <div class="custom-groups" data-custom-groups></div>
+      <div class="custom-price-summary">
+                        <div><span>Base price</span><strong data-custom-base>₦0</strong></div>
+                        <div><span>Selected extras</span><strong>Included below</strong></div>
+                        <div class="custom-total"><span>Total</span><strong data-custom-total>₦0</strong></div>
+                    </div>
+                    <div class="custom-error" data-custom-error role="alert" hidden>
+                    </div>
+                    <div class="custom-groups" data-custom-groups>
+                    </div>
       <button type="submit" class="add-cart-btn custom-submit">Add to cart</button>
     </form>
-  </div>
-</div>
-
-<script src="/static/js/lightbox.js"></script>
-<script src="/static/js/bottomnav.js"></script>
-<script src="/static/js/customization.js"></script>
-<script>
-(function () {
-    const search = document.getElementById('shop-dish-search');
-    const cards = Array.from(document.querySelectorAll('.shop-food-card'));
-    const buttons = Array.from(document.querySelectorAll('.shop-category-btn'));
-    const empty = document.getElementById('shop-no-results');
-    const clear = document.getElementById('shop-clear-search');
-    let category = 'all';
-
-    function applyFilters() {
-        const query = (search ? search.value : '').trim().toLowerCase();
-        let visible = 0;
-        cards.forEach(card => {
-            const matchesCategory = category === 'all' || card.dataset.category === category;
-            const matchesSearch = !query || card.dataset.search.toLowerCase().includes(query);
-            const show = matchesCategory && matchesSearch;
-            card.hidden = !show;
-            if (show) visible++;
-        });
-        if (empty) empty.hidden = visible !== 0 || cards.length === 0;
-    }
-
-    buttons.forEach(button => button.addEventListener('click', function () {
-        category = this.dataset.category || 'all';
-        buttons.forEach(btn => btn.classList.toggle('active', btn === this));
-        applyFilters();
-    }));
-    if (search) search.addEventListener('input', applyFilters);
-    if (clear) clear.addEventListener('click', function () { if (search) { search.value = ''; search.focus(); } category = 'all'; buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.category === 'all')); applyFilters(); });
-    applyFilters();
-})();
-</script>
-<script src="/static/js/notification-bell.js"></script>
-<script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
-</body>
+            </div>
+        </div>
+        <script src="/static/js/lightbox.js"></script>
+        <script src="/static/js/bottomnav.js"></script>
+        <script src="/static/js/customization.js"></script>
+        <script src="/static/js/pages/shop.js"></script>
+        <script src="/static/js/notification-bell.js"></script>
+        <script src="/static/js/nav-active.js"></script>
+        {{template "scripts-common"}}
+    </body>
 </html>

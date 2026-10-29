@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 const maxChatMessageRunes = 2000
@@ -517,11 +517,11 @@ func (h *Handlers) SendMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) renderMessages(w http.ResponseWriter, p MessagesPage, status int) {
-	tmpl, err := template.New("messages.html").Funcs(brand.Funcs()).Funcs(template.FuncMap{
+	tmpl, err := render.Page("messages.html", template.FuncMap{
 		"formatChatTime": func(t time.Time) string { return t.Local().Format("02 Jan, 3:04 PM") },
 		"len":            func(v []ChatMessage) int { return len(v) },
 		"sub1":           func(v int) int { return v - 1 },
-	}).ParseFiles("templates/messages.html")
+	})
 	if err != nil {
 		log.Printf("messages template parse failed: %v", err)
 		errors.Render(w, "Could not display messages", http.StatusInternalServerError)

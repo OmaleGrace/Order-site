@@ -1,23 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - {{brandName}}</title>
+    {{template "head-common"}}
+    <title>{{.Title}} - {{brandName}}</title>
+    <meta name="robots" content="noindex">
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/error.css">
 </head>
 
 <body>
     <main>
-        <div class="error-wrapper">
-            <div class="error-code">{{.Code}}</div>
+        <div class="error-wrapper" role="alert">
+            <div class="error-code" aria-hidden="true">{{.Code}}</div>
             <h1>{{.Title}}</h1>
             <p>{{.Message}}</p>
 
-            <a href="/" class="error-home-link">← Back to Home</a>
+            <div class="error-actions">
+                {{if .NeedsLogin}}
+                <a href="/login" class="error-home-link">Log in</a>
+                <a href="/" class="error-secondary-link">Back to Home</a>
+                {{else}}
+                <a href="/" class="error-home-link">← Back to Home</a>
+                {{if .CanRetry}}<button type="button" class="error-secondary-link" data-reload>Try again</button>{{end}}
+                <button type="button" class="error-secondary-link" data-go-back hidden>Go back</button>
+                {{end}}
+            </div>
+            {{if .CanRetry}}<p class="error-help">Still stuck? <a href="/contact">Contact us</a> and mention error {{.Code}}.</p>{{end}}
         </div>
     </main>
+    <script src="/static/js/error-page.js" defer></script>
 </body>
 </html>

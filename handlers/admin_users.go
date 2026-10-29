@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"html/template"
 	"database/sql"
 	"log"
 	"net/http"
@@ -10,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 const mainAdminEmail = "omalegrace2009@gmail.com"
@@ -89,10 +88,7 @@ func (h *Handlers) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	tmpl, err := template.New("admin-dashboard.html").
-		Funcs(template.FuncMap{"money": money}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/admin-dashboard.html")
+	tmpl, err := render.Page("admin-dashboard.html")
 	if err != nil {
 		log.Printf("admin dashboard: template failed: %v", err)
 		errors.Render(w, "Could not display dashboard", http.StatusInternalServerError)
@@ -148,7 +144,7 @@ func (h *Handlers) AdminUsers(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not read users", http.StatusInternalServerError)
 		return
 	}
-	tmpl, err := brand.ParseE("templates/admin-users.html")
+	tmpl, err := render.Page("admin-users.html")
 	if err != nil {
 		log.Printf("admin users: template failed: %v", err)
 		errors.Render(w, "Could not display users", http.StatusInternalServerError)

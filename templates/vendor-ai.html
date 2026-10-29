@@ -1,23 +1,19 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    <meta name="theme-color" content="#174a32">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>AI Writing Assistant - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/vendor-ai.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head>
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body class="ai-page">
 <header class="ai-topbar">
     <a class="ai-brand" href="/">
         <img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo">
         <span class="ai-brand-copy">{{brandName}}<small>Vendor workspace</small></span>
     </a>
-    <nav class="ai-nav" aria-label="Vendor navigation"><a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu">My menu</a><a href="/vendor/delivery">Delivery</a><a href="/messages">Messages</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a><a href="/vendor/statements">Statements</a><a href="/vendor/ai" class="active" aria-current="page">AI writing</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing">Billing</a><a href="/help">Help</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav>
+    {{template "vendor-nav" dict "Class" "ai-nav" "Active" "/vendor/ai"}}
 </header>
 
 <main class="ai-main">
@@ -131,7 +127,7 @@
     </section>
 
     {{if .Result}}
-    <section class="ai-card ai-result" style="margin-top:22px">
+    <section class="ai-card ai-result mt-22">
         <div class="ai-result-head">
             <div>
                 <h2>Your draft is ready</h2>
@@ -148,61 +144,9 @@
     {{end}}
 </main>
 
-<script>
-(function(){
-  var tool=document.getElementById('tool');
-  var dish=document.getElementById('dish_name');
-  var message=document.getElementById('customer_message');
-  var dishField=document.getElementById('dish-field');
-  var messageField=message ? message.closest('.ai-field') : null;
-  var toolButtons=document.querySelectorAll('.ai-tool');
-
-  function syncAIFields(){
-    if(!tool) return;
-    var chat=tool.value==='customer_chat';
-    var brief=tool.value==='business_brief';
-    if(dish) dish.required=!chat && !brief;
-    if(dish) dish.disabled=brief;
-    if(message) message.disabled=brief;
-    if(message) message.required=chat;
-    if(dishField) dishField.classList.toggle('chat-mode',chat);
-    if(messageField) messageField.classList.toggle('chat-mode',!chat);
-    toolButtons.forEach(function(btn){
-      btn.classList.toggle('active',btn.getAttribute('data-tool')===tool.value);
-    });
-  }
-
-  if(tool){
-    tool.addEventListener('change',syncAIFields);
-    toolButtons.forEach(function(btn){
-      btn.addEventListener('click',function(){
-        tool.value=btn.getAttribute('data-tool');
-        tool.dispatchEvent(new Event('change'));
-        if(tool.value==='customer_chat' && message) message.focus();
-        else if(dish) dish.focus();
-      });
-    });
-    syncAIFields();
-  }
-
-  var copy=document.getElementById('copy-result');
-  if(copy){
-    copy.addEventListener('click',function(){
-      var output=document.getElementById('ai-result');
-      var status=document.getElementById('copy-status');
-      if(!output) return;
-      navigator.clipboard.writeText(output.innerText).then(function(){
-        status.textContent='Copied';
-        setTimeout(function(){status.textContent=''},1800);
-      }).catch(function(){
-        status.textContent='Select the draft and copy manually.';
-      });
-    });
-  }
-})();
-</script>
+<script src="/static/js/pages/vendor-ai.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

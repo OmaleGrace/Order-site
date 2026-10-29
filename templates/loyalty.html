@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Loyalty - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
     <link rel="stylesheet" href="/static/css/loyalty.css">
-    <link rel="stylesheet" href="/static/css/mobile-nav.css">
 </head>
 <body>
 <header class="account-header">
@@ -69,6 +67,6 @@
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

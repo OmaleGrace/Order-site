@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	appErrors "Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 	"errors"
 )
 
@@ -105,7 +105,7 @@ func (h *Handlers) VendorCoupons(w http.ResponseWriter, r *http.Request) {
 		appErrors.Render(w, "Could not read coupons", 500)
 		return
 	}
-	tmpl, err := template.New("vendor-coupons.html").Funcs(template.FuncMap{"money": money, "naira": naira}).Funcs(brand.Funcs()).ParseFiles("templates/vendor-coupons.html")
+	tmpl, err := render.Page("vendor-coupons.html", template.FuncMap{"money": money, "naira": naira})
 	if err != nil {
 		log.Printf("vendor coupons template: %v", err)
 		appErrors.Render(w, "Could not display coupons", 500)

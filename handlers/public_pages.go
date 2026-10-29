@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"html/template"
+	"Order-site/errors"
 	"log"
 	"net/http"
 
 	"Order-site/brand"
+	"Order-site/render"
 )
 
 type PublicPageSection struct {
@@ -373,12 +374,10 @@ func (h *Handlers) PublicPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("public-page.html").
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/public-page.html")
+	tmpl, err := render.Page("public-page.html")
 	if err != nil {
 		log.Printf("public page template error: %v", err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		errors.Render(w, "We couldn't load this page right now. Please try again shortly.", http.StatusInternalServerError)
 		return
 	}
 

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type ReviewItem struct {
@@ -219,7 +219,7 @@ func (h *Handlers) reviewForm(w http.ResponseWriter, r *http.Request) {
 		}
 		p.Items = append(p.Items, item)
 	}
-	tmpl, err := template.New("review-order.html").Funcs(brand.Funcs()).Funcs(template.FuncMap{"slice": func(values ...int) []int { return values }}).ParseFiles("templates/review-order.html")
+	tmpl, err := render.Page("review-order.html", template.FuncMap{"slice": func(values ...int) []int { return values }})
 	if err != nil {
 		errors.Render(w, "Could not display review form", http.StatusInternalServerError)
 		return
@@ -252,7 +252,7 @@ func (h *Handlers) reviewError(w http.ResponseWriter, r *http.Request, orderID i
 			}
 		}
 	}
-	tmpl, err := template.New("review-order.html").Funcs(brand.Funcs()).Funcs(template.FuncMap{"slice": func(values ...int) []int { return values }}).ParseFiles("templates/review-order.html")
+	tmpl, err := render.Page("review-order.html", template.FuncMap{"slice": func(values ...int) []int { return values }})
 	if err != nil {
 		errors.Render(w, message, http.StatusBadRequest)
 		return

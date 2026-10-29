@@ -1,94 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Manage Menu - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
-    <style>
-        .admin-header {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            padding: 14px 5vw;
-            background: rgba(253, 248, 240, 0.92);
-            backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--line);
-        }
-        .admin-header h1 { font-size: 1.15rem; margin: 0; flex: 1; color: var(--green); }
-        .admin-header a { text-decoration: none; font-weight: 600; }
-        .admin-header a:hover { color: var(--red); }
-        .admin-header a.active { color: var(--green); border-bottom: 2px solid var(--green); }
-
-        main { max-width: 960px; margin: 0 auto; padding: 24px 5vw 70px; }
-
-        .notice { background: #e6f4ea; border: 1px solid #b7dfc3; color: var(--green); padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-weight: 600; }
-
-        .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 22px; box-shadow: var(--shadow); }
-        .card h2 { margin: 0 0 14px; font-size: 1.1rem; color: var(--green); }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .full { grid-column: 1 / -1; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--muted); }
-        input, textarea {
-            width: 100%;
-            padding: 11px 13px;
-            border: 2px solid var(--line);
-            border-radius: 12px;
-            font: inherit;
-            background: #fff;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 4px rgba(20, 83, 45, 0.12); }
-        textarea { resize: vertical; min-height: 70px; }
-
-        .actions { margin-top: 16px; display: flex; gap: 10px; }
-        button { padding: 10px 20px; border: 0; border-radius: 999px; font: inherit; font-weight: 700; cursor: pointer; background: var(--green); color: #fff; transition: background 0.15s ease, transform 0.15s ease; }
-        button:hover { background: var(--green-dark); transform: translateY(-1px); }
-        button.secondary { background: #efe6d6; color: var(--ink); }
-        button.secondary:hover { background: #e4d8c2; }
-        button.danger { background: #fff; color: var(--red); border: 2px solid #f3c5c1; }
-        button.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
-
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-        th { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-        td.price { font-weight: 700; color: var(--red); white-space: nowrap; }
-
-        .thumb { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; display: block; background: #efe6d6; }
-        .thumb-empty { display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-        .item-cell { display: flex; align-items: center; gap: 12px; }
-        .tag { display: inline-block; padding: 3px 12px; border-radius: 999px; background: #e0f2e9; color: var(--green); font-size: 0.82rem; font-weight: 600; }
-
-        td.row-actions { white-space: nowrap; }
-        td.row-actions form { display: inline; margin: 0; }
-        td.row-actions button { padding: 7px 14px; font-size: 0.85rem; }
-
-        .muted { color: var(--muted); font-size: 0.85rem; }
-        .secondary { background:#efe6d6; color:var(--ink); border:0; }
-        .secondary:hover { background:#e4d8c2; }
-        #menu-filter { min-width:0; }
-        @media (max-width:600px) { table { min-width:780px; } .table-wrap { overflow-x:auto; } }
-
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
-    </style>
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head>
+    <link rel="stylesheet" href="/static/css/pages/admin-menu.css">
+<link rel="stylesheet" href="/static/css/portal-nav.css"></head>
 <body>
         <header class="admin-header">
         <h1>🍴 {{if .IsAdmin}}{{brandName}} · Admin{{else}}{{.VendorName}}{{end}}</h1>
-        {{if .IsAdmin}}<nav class="portal-nav" aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/applications">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu" class="active" aria-current="page">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users">Users</a><a href="/admin/earnings">Earnings</a><a href="/admin/settlements">Settlements</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav>
-{{else}}<nav class="portal-nav" aria-label="Vendor navigation"><a href="/vendor/dashboard">Dashboard</a><a href="/vendor/orders">Orders</a><a href="/vendor/menu" class="active" aria-current="page">My menu</a><a href="/vendor/delivery">Delivery</a><a href="/messages">Messages</a><a href="/vendor/coupons">Coupons</a><a href="/vendor/analytics">Analytics</a><a href="/vendor/statements">Statements</a><a href="/vendor/ai">AI writing</a><a href="/vendor/profile">Shop profile</a><a href="/vendor/billing">Billing</a><a href="/help">Help</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Logout</a></nav>{{end}}
+        {{if .IsAdmin}}{{template "admin-nav" dict "Class" "portal-nav" "Active" "/admin/menu"}}
+{{else}}{{template "vendor-nav" dict "Class" "portal-nav" "Active" "/vendor/menu"}}{{end}}
 </header>
 
     <main>
         {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
-        {{if .Warning}}<div class="notice" style="background:#fff3cd;border-color:#f0d98a;color:#8a6d00;">{{.Warning}}</div>{{end}}
+        {{if .Warning}}<div class="notice notice-warning">{{.Warning}}</div>{{end}}
 
         <div class="card">
             <h2 id="form-title">Add a menu item</h2>
@@ -124,15 +52,15 @@
         </div>
 
         <div class="card">
-            {{if not .IsAdmin}}<form method="get" style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:16px">
+            {{if not .IsAdmin}}<form method="get" class="menu-search-form">
                 <input id="menu-filter" type="search" placeholder="Search your menu by name or category…" aria-label="Search menu">
-                <a href="/vendor/menu" class="secondary" style="display:flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;text-decoration:none">Reset</a>
+                <a href="/vendor/menu" class="secondary link-btn-center">Reset</a>
             </form>{{end}}
             <h2>Menu items ({{len .Items}})</h2>
             {{if .Items}}
             <div class="table-wrap">
             <form action="/vendor/menu/bulk" method="post" id="bulk-form">
-            <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px">
+            <div class="row-end">
                 <div><label for="bulk-category">Set category for selected</label><input id="bulk-category" name="category" placeholder="e.g. Rice"></div>
                 <button type="submit">Apply to selected</button>
             </div>
@@ -158,9 +86,9 @@
                         </td>
                         <td>{{if .Category}}<span class="tag">{{.Category}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
                         <td class="price">₦{{.PriceNaira}}</td>
-                        <td>{{if .Available}}<span class="tag">Available</span>{{else}}<span class="tag" style="background:#fbe7e5;color:#a12a20">Hidden</span>{{end}}</td>
+                        <td>{{if .Available}}<span class="tag">Available</span>{{else}}<span class="tag tag-danger">Hidden</span>{{end}}</td>
                         <td class="row-actions">
-                            {{if not $.IsAdmin}}<a class="secondary" style="text-decoration:none;display:inline-block;padding:10px 12px;border-radius:10px" href="/vendor/menu/customizations?item_id={{.ID}}">Customize</a>{{end}}
+                            {{if not $.IsAdmin}}<a class="secondary link-btn-inline" href="/vendor/menu/customizations?item_id={{.ID}}">Customize</a>{{end}}
                             <button type="button" class="secondary edit-btn"
                                 data-id="{{.ID}}"
                                 data-name="{{.Name}}"
@@ -169,7 +97,7 @@
                                 data-image="{{.ImageURL}}"
                                 data-description="{{.Description}}">Edit</button>
                             <form action="{{$.Base}}/menu/delete" method="post"
-                                  onsubmit="return confirm('Delete {{.Name}}?');">
+                                  data-confirm="Delete {{.Name}}?" data-confirm-title="Delete this dish?" data-confirm-ok="Delete" data-confirm-tone="danger">
                                 <input type="hidden" name="id" value="{{.ID}}">
                                 <button type="submit" class="danger">Delete</button>
                             </form>
@@ -186,53 +114,10 @@
         </div>
     </main>
 
-    <script>
-    (function () {
-        var form = document.getElementById('item-form');
-        var title = document.getElementById('form-title');
-        var saveBtn = document.getElementById('save-btn');
-        var cancelBtn = document.getElementById('cancel-btn');
-        var f = {
-            id: document.getElementById('item-id'),
-            name: document.getElementById('name'),
-            price: document.getElementById('price'),
-            category: document.getElementById('category'),
-            image: document.getElementById('image_url'),
-            description: document.getElementById('description')
-        };
-
-        function resetForm() {
-            form.reset();
-            f.id.value = '';
-            title.textContent = 'Add a menu item';
-            saveBtn.textContent = 'Add item';
-            cancelBtn.style.display = 'none';
-        }
-
-        document.querySelectorAll('.edit-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                f.id.value = btn.dataset.id;
-                f.name.value = btn.dataset.name;
-                f.price.value = btn.dataset.price;
-                f.category.value = btn.dataset.category;
-                f.image.value = btn.dataset.image;
-                f.description.value = btn.dataset.description;
-                title.textContent = 'Edit menu item';
-                saveBtn.textContent = 'Save changes';
-                cancelBtn.style.display = 'inline-block';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                f.name.focus();
-            });
-        });
-
-        cancelBtn.addEventListener('click', resetForm);
-    })();
-    document.getElementById('select-all')?.addEventListener('change', function(){document.querySelectorAll('.item-check').forEach(function(c){c.checked=this.checked},this)});
-        document.getElementById('menu-filter')?.addEventListener('input', function(){var q=this.value.toLowerCase().trim();document.querySelectorAll('.menu-row').forEach(function(row){row.style.display=!q||row.dataset.search.toLowerCase().includes(q)?'':'none'})});
-    </script>
+    <script src="/static/js/pages/admin-menu.js"></script>
     <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/vendor-banner.js"></script>
 <script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

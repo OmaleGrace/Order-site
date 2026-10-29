@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
 <title>Review Order | {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
-<style>
-body{background:#f6f7f3}.review-wrap{max-width:760px;margin:0 auto;padding:48px 5vw 80px}.review-card{background:#fff;border:1px solid #e1e8e1;border-radius:24px;padding:28px;box-shadow:0 12px 35px rgba(20,40,28,.06)}.eyebrow{color:#c8382a;text-transform:uppercase;letter-spacing:.13em;font-size:.72rem;font-weight:850}.review-card h1{color:#174a32;margin:8px 0}.muted{color:#6c776f}.rating{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:5px;margin:12px 0 24px}.rating input{position:absolute;opacity:0}.rating label{font-size:2.25rem;color:#cfd6d0;cursor:pointer}.rating label:hover,.rating label:hover~label,.rating input:checked~label{color:#e0a800}.item{padding:16px 0;border-top:1px solid #e7ece7}.item-title{font-weight:800;color:#26342b}.item .rating{margin:5px 0 0}.item .rating label{font-size:1.6rem}textarea{width:100%;min-height:150px;border:1px solid #d5ded6;border-radius:14px;padding:14px;font:inherit;resize:vertical}button{border:0;border-radius:13px;background:#c8382a;color:#fff;padding:13px 20px;font-weight:850;cursor:pointer}.actions{display:flex;gap:12px;align-items:center;margin-top:20px}.back{color:#174a32;font-weight:800;text-decoration:none}.review-prompt{display:flex;flex-direction:column;gap:5px;margin:26px 0 10px;padding:15px 16px;background:#f4f8f3;border:1px solid #dce8dc;border-radius:14px;color:#174a32}.review-prompt span{font-size:.92rem;color:#66736a}.error{background:#fff0ee;border:1px solid #f2c7c2;color:#9d3027;padding:12px;border-radius:12px;margin:15px 0}@media(max-width:600px){.review-wrap{padding:28px 4vw 60px}.review-card{padding:21px}.rating label{font-size:1.9rem}}
-</style></head><body>
+<link rel="stylesheet" href="/static/css/pages/review-order.css"></head><body>
 <main class="review-wrap"><div class="review-card">
 <p class="eyebrow">Verified purchase review</p><h1>How was your order?</h1><p class="muted">Order {{.Reference}} from <strong>{{.VendorName}}</strong></p>
 {{if .Error}}<div class="error" role="alert">{{.Error}}</div>{{end}}
 <form method="post" action="/orders/{{.OrderID}}/review">
-<label><strong>Overall experience</strong></label>
-<div class="rating" aria-label="Overall rating">{{range $i := (slice 5 4 3 2 1)}}<input id="rating-{{$i}}" type="radio" name="rating" value="{{$i}}" {{if eq $.Rating $i}}checked{{end}}><label for="rating-{{$i}}" title="{{$i}} stars">★</label>{{end}}</div>
+<div class="rating-label" id="overall-rating-label"><strong>Overall experience</strong></div>
+<div class="rating" role="radiogroup" aria-labelledby="overall-rating-label">{{range $i := (slice 5 4 3 2 1)}}<input id="rating-{{$i}}" type="radio" name="rating" value="{{$i}}" {{if eq $.Rating $i}}checked{{end}}><label for="rating-{{$i}}" title="{{$i}} stars">★</label>{{end}}</div>
 {{if .Items}}<h2>Rate your dishes</h2>{{range .Items}}{{$item := .}}<div class="item"><div class="item-title">{{$item.Name}}</div><div class="rating" aria-label="Rating for {{$item.Name}}">{{range $i := (slice 5 4 3 2 1)}}<input id="item-{{$item.MenuItemID}}-{{$i}}" type="radio" name="item_rating_{{$item.MenuItemID}}" value="{{$i}}"><label for="item-{{$item.MenuItemID}}-{{$i}}" title="{{$i}} stars">★</label>{{end}}</div></div>{{end}}{{end}}
 <div class="review-prompt"><strong>Write a review</strong><span>Share a few words about the food, service, delivery, or anything customers should know.</span></div><label for="comment"><strong>Your review</strong></label><textarea id="comment" name="comment" maxlength="1000" placeholder="What did you enjoy? Was anything especially good or disappointing?"></textarea>
 <div class="actions"><button type="submit">Submit review</button><a class="back" href="/orders">Not now</a></div>
-</form></div></main></body></html>
+</form></div></main>{{template "scripts-common"}}
+</body></html>

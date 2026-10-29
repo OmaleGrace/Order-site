@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Favourites - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
     <link rel="stylesheet" href="/static/css/favorites.css">
-    <link rel="stylesheet" href="/static/css/mobile-nav.css">
 </head>
 
 <body>
@@ -68,7 +66,7 @@
         <div class="empty-menu">
             <p>You haven't saved any dishes yet.</p>
             <p>Tap the ♥ on a dish in the menu to save it here.</p>
-            <a href="/menu" class="add-cart-btn" style="display:inline-block;text-decoration:none;">Browse Menu</a>
+            <a href="/menu" class="add-cart-btn link-btn">Browse Menu</a>
         </div>
         {{end}}
 
@@ -81,6 +79,6 @@
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

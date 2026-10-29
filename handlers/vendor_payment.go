@@ -17,6 +17,7 @@ import (
 	"Order-site/brand"
 	"Order-site/email"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 var vendorPayClient = &http.Client{Timeout: 20 * time.Second}
@@ -145,10 +146,7 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, err := template.New("vendor-billing.html").
-		Funcs(template.FuncMap{"naira": naira, "money": money}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/vendor-billing.html")
+	tmpl, err := render.Page("vendor-billing.html", template.FuncMap{"naira": naira, "money": money})
 	if err != nil {
 		log.Printf("vendor billing: template failed: %v", err)
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)

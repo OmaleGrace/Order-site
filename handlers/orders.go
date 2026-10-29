@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -180,15 +180,10 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		Message string
 	}{Orders: orders, Message: r.URL.Query().Get("message")}
 
-	tmpl := template.Must(
-		template.New("orders.html").
-			Funcs(template.FuncMap{
-				"naira": func(kobo int) int { return kobo / 100 },
-				"date":  func(value time.Time) string { return value.Format("02 Jan 2006, 3:04 PM") },
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/orders.html"),
-	)
+	tmpl := render.MustPage("orders.html", template.FuncMap{
+		"naira": func(kobo int) int { return kobo / 100 },
+		"date":  func(value time.Time) string { return value.Format("02 Jan 2006, 3:04 PM") },
+	})
 
 	err = tmpl.Execute(w, data)
 	if err != nil {

@@ -11,3 +11,7 @@ grace_kitchen_backup.sql
 .env.bak
 .env.*.bak
 !.env.example
+
+# any real environment file (only .env.example is tracked)
+.env.*
+!.env.example

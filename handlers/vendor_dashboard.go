@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type VendorDashboardOrder struct {
@@ -143,10 +143,7 @@ func (h *Handlers) VendorDashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("vendor-dashboard.html").
-		Funcs(template.FuncMap{"money": money, "naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/vendor-dashboard.html")
+	tmpl, err := render.Page("vendor-dashboard.html", template.FuncMap{"money": money, "naira": naira})
 	if err != nil {
 		log.Printf("vendor dashboard: template failed: %v", err)
 		errors.Render(w, "Could not display dashboard", http.StatusInternalServerError)

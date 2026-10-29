@@ -1,7 +1,87 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Help & Support | {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css"><style>
-body{background:#f6f8f5}.wrap{max-width:1050px;margin:auto;padding:30px 18px 70px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 5vw;background:#fff;border-bottom:1px solid var(--line)}.top a{text-decoration:none;font-weight:700;color:var(--ink)}.nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{padding:8px 11px;border-radius:10px}.nav a:hover{background:#e8f2ea}.hero{display:grid;grid-template-columns:1.3fr .7fr;gap:18px;margin-bottom:18px}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:var(--shadow)}h1{margin:0 0 8px}.muted{color:var(--muted);line-height:1.55}.faq{display:grid;gap:10px}.faq details{border:1px solid var(--line);border-radius:13px;padding:14px;background:#fff}.faq summary{font-weight:800;cursor:pointer}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}label{display:block;font-weight:700;font-size:.88rem;margin-bottom:6px}input,select,textarea{width:100%;padding:11px 13px;border:1px solid #cbd8ce;border-radius:12px;font:inherit;background:#fff}textarea{min-height:130px;resize:vertical}.full{grid-column:1/-1}.button{display:inline-block;border:0;background:#14532d;color:#fff;padding:11px 17px;border-radius:11px;font-weight:800;cursor:pointer}.notice{padding:12px 14px;border-radius:12px;background:#e7f3e9;color:#14532d;margin-bottom:16px;font-weight:700}.ticket{border:1px solid var(--line);border-radius:14px;padding:15px;margin-top:11px}.ticket-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.badge{padding:4px 9px;border-radius:999px;background:#e7f3e9;color:#14532d;font-size:.78rem;font-weight:800}.reply{margin-top:12px;padding:12px;border-left:4px solid #14532d;background:#f1f7f2;border-radius:8px}@media(max-width:720px){.hero,.form-grid{grid-template-columns:1fr}.full{grid-column:auto}}
-</style>    <link rel="stylesheet" href="/static/css/mobile-nav.css">
-</head><body><header class="top"><a href="/"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}</a><nav class="nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help" class="active active-link" aria-current="page">Help &amp; Support</a><a href="/logout">Logout</a></nav></header><main class="wrap">{{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}<section class="hero"><div class="card"><h1>Help & Support</h1><p class="muted">Need help with an order, payment, delivery, coupon, loyalty points, or your account? Send ENIE a support request and track the response here.</p></div><div class="card"><strong>Quick help</strong><p class="muted">For an order issue, include the order number so support can investigate the exact order.</p><a class="button" href="/orders">View my orders</a></div></section><section class="card"><h2>Frequently asked questions</h2><div class="faq"><details><summary>Why is my coupon not working?</summary><p class="muted">Check that the coupon is active, within its start/expiry window, and that your food subtotal meets its minimum order requirement.</p></details><details><summary>How do loyalty points work?</summary><p class="muted">Completed food spend earns points according to ENIE's loyalty rules. During checkout, eligible points can reduce the food amount; delivery fees are separate.</p></details><details><summary>Can I change a scheduled order?</summary><p class="muted">Open your order and contact support if you need help with a scheduled order.</p></details><details><summary>Can I contact a shop?</summary><p class="muted">Use Messages from a shop page to contact the vendor directly about an order or shop question.</p></details></div></section><section class="card"><h2>Contact support</h2><form action="/help/tickets" method="post"><div class="form-grid"><div><label for="category">Category</label><select id="category" name="category"><option>General</option><option>Order</option><option>Payment</option><option>Delivery</option><option>Coupon</option><option>Loyalty</option><option>Account</option></select></div><div><label for="order_id">Order number (optional)</label><input id="order_id" name="order_id" inputmode="numeric" value="{{.PrefillOrderID}}" placeholder="e.g. 1042"></div><div class="full"><label for="subject">Subject</label><input id="subject" name="subject" maxlength="160" required placeholder="What do you need help with?"></div><div class="full"><label for="message">Message</label><textarea id="message" name="message" maxlength="4000" required placeholder="Tell us what happened and what you need help with."></textarea></div></div><p><button class="button" type="submit">Send support request</button></p></form></section><section class="card"><h2>My support requests</h2>{{if .Tickets}}{{range .Tickets}}<article class="ticket"><div class="ticket-head"><strong>#{{.ID}} · {{.Subject}}</strong><span class="badge">{{.Status}}</span></div><p class="muted">{{.Category}} · {{.CreatedAt}}{{if .OrderID.Valid}} · Order #{{.OrderID.Int64}}{{end}}</p><p>{{.Message}}</p>{{if .AdminReply}}<div class="reply"><strong>ENIE support</strong><p>{{.AdminReply}}</p></div>{{end}}</article>{{end}}{{else}}<p class="muted">No support requests yet.</p>{{end}}</section></main><script src="/static/js/notification-bell.js"></script>
-<script src="/static/js/nav-active.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
-</body></html>
+<!doctype html>
+<html lang="en">
+    <head>
+        {{template "head-common"}}
+        {{template "meta-noindex"}}
+        <title>Help & Support | {{brandName}}</title>
+        <link rel="stylesheet" href="/static/css/base.css">
+        <link rel="stylesheet" href="/static/css/pages/help.css">
+    </head>
+    <body>
+        <header class="top"><a href="/"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}</a><nav class="nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help" class="active active-link" aria-current="page">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+        </header>
+        <main class="wrap">
+            {{if .Notice}}
+                <div class="notice">{{.Notice}}</div>
+            {{end}}
+            <section class="hero">
+                <div class="card">
+                    <h1>Help & Support</h1>
+                    <p class="muted">Need help with an order, payment, delivery, coupon, loyalty points, or your account? Send ENIE a support request and track the response here.</p>
+                </div>
+                <div class="card"><strong>Quick help</strong><p class="muted">For an order issue, include the order number so support can investigate the exact order.</p><a class="button" href="/orders">View my orders</a></div>
+            </section>
+            <section class="card">
+                <h2>Frequently asked questions</h2>
+                <div class="faq">
+                    <details>
+                        <summary>Why is my coupon not working?</summary>
+                        <p class="muted">Check that the coupon is active, within its start/expiry window, and that your food subtotal meets its minimum order requirement.</p>
+                    </details>
+                    <details>
+                        <summary>How do loyalty points work?</summary>
+                        <p class="muted">Completed food spend earns points according to ENIE's loyalty rules. During checkout, eligible points can reduce the food amount; delivery fees are separate.</p>
+                    </details>
+                    <details>
+                        <summary>Can I change a scheduled order?</summary>
+                        <p class="muted">Open your order and contact support if you need help with a scheduled order.</p>
+                    </details>
+                    <details>
+                        <summary>Can I contact a shop?</summary>
+                        <p class="muted">Use Messages from a shop page to contact the vendor directly about an order or shop question.</p>
+                    </details>
+                </div>
+            </section>
+            <section class="card">
+                <h2>Contact support</h2>
+                <form action="/help/tickets" method="post">
+                    <div class="form-grid">
+                        <div><label for="category">Category</label><select id="category" name="category"><option>General</option>
+                            <option>Order</option>
+                            <option>Payment</option>
+                            <option>Delivery</option>
+                            <option>Coupon</option>
+                            <option>Loyalty</option>
+                            <option>Account</option></select></div>
+                        <div><label for="order_id">Order number (optional)</label><input id="order_id" name="order_id" inputmode="numeric" value="{{.PrefillOrderID}}" placeholder="e.g. 1042"></div>
+                        <div class="full"><label for="subject">Subject</label><input id="subject" name="subject" maxlength="160" required placeholder="What do you need help with?"></div>
+                        <div class="full"><label for="message">Message</label><textarea id="message" name="message" maxlength="4000" required placeholder="Tell us what happened and what you need help with."></textarea></div>
+                    </div>
+                    <p><button class="button" type="submit">Send support request</button></p>
+                </form>
+            </section>
+            <section class="card">
+                <h2>My support requests</h2>
+                {{if .Tickets}}
+                    {{range .Tickets}}
+                        <article class="ticket">
+                            <div class="ticket-head"><strong>#{{.ID}} · {{.Subject}}</strong><span class="badge">{{.Status}}</span></div>
+                            <p class="muted">{{.Category}} · {{.CreatedAt}}{{if .OrderID.Valid}} · Order #{{.OrderID.Int64}}{{end}}
+                            </p>
+                            <p>{{.Message}}</p>
+                            {{if .AdminReply}}
+                                <div class="reply"><strong>ENIE support</strong><p>{{.AdminReply}}</p>
+                                </div>
+                            {{end}}
+                        </article>
+                    {{end}}
+                {{else}}
+                    <p class="muted">No support requests yet.</p>
+                {{end}}
+            </section>
+        </main>
+        <script src="/static/js/notification-bell.js"></script>
+        <script src="/static/js/nav-active.js"></script>
+        {{template "scripts-common"}}
+    </body>
+</html>

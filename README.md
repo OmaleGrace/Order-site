@@ -43,7 +43,7 @@ A Go and PostgreSQL food marketplace connecting customers with participating foo
 ### Vendor AI writing assistant
 
 * Optional AI-powered menu descriptions and social media promotional captions
-* Uses `OPENAI_API_KEY` on the server; no key is sent to the browser
+* Uses `OPENAI_API_KEY` on the server (or `GEMINI_API_KEY` as a fallback); no key is sent to the browser
 * Vendors must review and manually publish drafts; generation does not alter live menu content
 * Configure `OPENAI_MODEL` optionally; defaults to `gpt-4o-mini`
 
@@ -209,8 +209,10 @@ The project includes automated tests covering major application areas, including
 The integration tests require a dedicated local PostgreSQL test database (see `TEST_DATABASE_URL` in `testutil/testutil.go`). Never point tests at production data. Run the complete test suite with:
 
 ```bash
-go test ./...
+go test -p 1 ./...
 ```
+
+`-p 1` runs one package at a time, because every database test resets the same test database. Some older cart, menu, checkout and payment tests still build their own partial schemas and need updating to use `testutil.NewDB`; `go test ./render` (which checks that every page template parses) always works without a database.
 
 Run with coverage:
 
@@ -235,9 +237,9 @@ cd Order-site
 
 ### 2. Configure environment variables and PostgreSQL
 
-Copy `.env.example` to `.env`, then set `DATABASE_URL` to a working hosted PostgreSQL connection URL. This lets you develop without installing PostgreSQL or Docker locally. Read [`DATABASE_SETUP.md`](DATABASE_SETUP.md) for the setup steps. Never commit `.env` or share its secrets.
+Copy `.env.example` to `.env`, then set `DATABASE_URL` to a PostgreSQL connection URL (a hosted database works, so you do not need to install PostgreSQL locally). Fill in only the services you need; payments, email, SMS, image upload and AI are all optional while developing.
 
-When `DATABASE_URL` points to a truly empty database, the application bootstraps the schema from `schema.sql` before running additive migrations. Existing databases are not reset or overwritten.
+When `DATABASE_URL` points to a truly empty database, the application bootstraps the schema from `db/schema.sql` (embedded in the binary) before running additive migrations. Existing databases are not reset or overwritten.
 
 ### 3. Run the application
 
@@ -252,6 +254,43 @@ The server runs locally on:
 ```text
 http://localhost:8080
 ```
+
+HTML templates are embedded in the binary, so they are parsed once at start-up and the app runs from any directory. While editing templates, skip the rebuild step by reading them from disk on every request:
+
+```bash
+TEMPLATES_DIR=templates go run .
+```
+
+## Project Structure
+
+```text
+main.go            routes and server start-up
+handlers/          HTTP handlers, one file per feature
+render/            template loader: parses each page once, with shared partials
+templates/         page templates (*.html)
+templates/partials shared pieces: <head>, admin/vendor navigation, common scripts
+static/css/        stylesheets (page-specific ones live in static/css/pages/)
+static/js/         scripts (page-specific ones live in static/js/pages/)
+db/                schema.sql (embedded) and seed data
+middleware/        security headers, rate limiting, sessions, logging
+errors/            the branded error page
+```
+
+### Working with templates
+
+* Every page starts with `{{template "head-common"}}` (charset, viewport, icons, theme colour) and ends with `{{template "scripts-common"}}`.
+* Private pages (accounts, vendor and admin tools) add `{{template "meta-noindex"}}`; public pages add a description with `{{template "meta-desc" "…"}}`.
+* The admin and vendor menus are single partials. To change a menu link, edit `templates/partials/nav.html` once. A page picks its highlighted link with `{{template "admin-nav" dict "Class" "portal-nav" "Active" "/admin/orders"}}`.
+* Keep CSS and JavaScript in `static/`, not inline in templates.
+* Use `data-confirm="Delete this item?"` (optionally with `data-confirm-title`, `data-confirm-ok`, `data-confirm-tone="danger"`) on a form or submit button for a styled confirmation dialog instead of `confirm()`.
+* Forms are protected against double submission automatically. Add `data-allow-resubmit` to a form to opt out.
+* For errors on a normal page, call `errors.Render(w, "friendly message", status)` so visitors see the branded error page. Keep plain `http.Error` / JSON responses for background (fetch) endpoints.
+
+## Security Notes
+
+* Never commit `.env`, and never share it in a zip, chat or screenshot. `.gitignore` and `.dockerignore` exclude it, but a hand-made archive does not respect them: build zips from tracked files only (for example `git archive -o site.zip HEAD`).
+* If a secret is ever exposed, rotate it at the provider (Paystack, Google OAuth, Brevo, Termii, Cloudinary, AI keys, database password) rather than just deleting the file.
+* Use Paystack test keys outside production.
 
 ## Deployment
 

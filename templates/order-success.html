@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    <meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
     <title>Order Confirmed - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/order-success.css">
@@ -25,5 +22,6 @@
         <a href="/" class="back-link">← Back to Home</a>
     </div>
 </main>
-<div style="text-align:center;padding:18px"><a href="/help">Help & Support</a></div></body>
+<div class="success-box"><a href="/help">Help & Support</a></div>{{template "scripts-common"}}
+</body>
 </html>

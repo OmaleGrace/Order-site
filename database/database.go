@@ -1,6 +1,7 @@
 package database
 
 import (
+	dbfiles "Order-site/db"
 	"database/sql"
 	"fmt"
 	"os"
@@ -439,27 +440,6 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Per-area delivery pricing (Stage 23). Kept apart from vendor_delivery_areas
-	// because saving the shop profile rewrites that table. A NULL fee means the
-	// shop's default delivery fee applies.
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS vendor_delivery_rates (
-			id SERIAL PRIMARY KEY,
-			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
-			state TEXT NOT NULL,
-			lga TEXT NOT NULL,
-			fee_kobo INTEGER CHECK (fee_kobo IS NULL OR fee_kobo >= 0),
-			min_order_kobo INTEGER NOT NULL DEFAULT 0 CHECK (min_order_kobo >= 0),
-			free_over_kobo INTEGER NOT NULL DEFAULT 0 CHECK (free_over_kobo >= 0),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			UNIQUE (vendor_id, state, lga)
-		)
-	`)
-	if err != nil {
-		db.Close()
-		return nil, err
-	}
-
 	// Private customer-to-vendor conversations. A customer has one thread per shop;
 	// every read/write handler independently checks that the requester is a participant.
 	_, err = db.Exec(`
@@ -662,11 +642,8 @@ func Connect() (*sql.DB, error) {
 // file is a pg_dump schema export, so psql-only meta commands and session setup
 // statements are removed before sending the SQL through database/sql.
 func bootstrapSchema(db *sql.DB) error {
-	data, err := os.ReadFile("schema.sql")
-	if err != nil {
-		return fmt.Errorf("read schema.sql from the project root: %w", err)
-	}
-	schemaSQL := cleanSchemaDump(string(data))
+	// The schema is embedded in the binary, so this works from any working directory.
+	schemaSQL := cleanSchemaDump(dbfiles.Schema)
 	if schemaSQL == "" {
 		return fmt.Errorf("schema.sql contains no SQL")
 	}

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 	"html/template"
 	"net/http"
 )
@@ -161,17 +161,12 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(
-		template.New("admin-orders.html").
-			Funcs(template.FuncMap{
-				"naira": func(kobo int) int {
-					return kobo / 100
-				},
-				"sub": func(a, b int) int { return a - b },
-			}).
-			Funcs(brand.Funcs()).
-			ParseFiles("templates/admin-orders.html"),
-	)
+	tmpl := render.MustPage("admin-orders.html", template.FuncMap{
+		"naira": func(kobo int) int {
+			return kobo / 100
+		},
+		"sub": func(a, b int) int { return a - b },
+	})
 
 	err = tmpl.Execute(w, struct {
 		Orders []AdminOrder

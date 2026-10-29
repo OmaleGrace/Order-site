@@ -3,13 +3,12 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"net/http"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type LoyaltyTransaction struct {
@@ -105,7 +104,7 @@ func (h *Handlers) Loyalty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl := template.Must(brand.ParseE("templates/loyalty.html"))
+	tmpl := render.MustPage("loyalty.html")
 	if err := tmpl.Execute(w, data); err != nil {
 		errors.Render(w, "Could not render loyalty page", http.StatusInternalServerError)
 	}

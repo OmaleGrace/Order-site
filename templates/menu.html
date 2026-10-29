@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{template "head-common"}}
     <title>Browse the Menu | {{brandName}}</title>
     <meta name="description" content="Explore available meals, food categories, descriptions and prices from participating food shops on {{brandName}}.">
     <meta name="robots" content="index,follow">
@@ -14,7 +12,6 @@
     {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/menu.css">
-    <link rel="stylesheet" href="/static/css/mobile-nav.css">
 </head>
 
 <body>
@@ -141,7 +138,7 @@
             <div class="empty-emoji">🍽️</div>
             <p><strong>No dishes found.</strong></p>
             <p>Try a different search or category.</p>
-            <a href="/menu" class="add-cart-btn" style="display:inline-block;text-decoration:none;">See the full menu</a>
+            <a href="/menu" class="add-cart-btn link-btn">See the full menu</a>
         </div>
         {{end}}
 
@@ -179,6 +176,6 @@
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/customization.js"></script>
-<script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

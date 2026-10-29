@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
@@ -73,7 +73,7 @@ func (h *Handlers) showEditProfile(w http.ResponseWriter, r *http.Request) {
 		Phone:          phoneValue,
 	}
 
-	tmpl, err := brand.ParseE("templates/edit-profile.html")
+	tmpl, err := render.Page("edit-profile.html")
 	if err != nil {
 		errors.Render(w, "Could not load profile page", http.StatusInternalServerError)
 		return

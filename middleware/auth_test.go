@@ -234,9 +234,9 @@ func TestRequireLoginWithExpiredSession(t *testing.T) {
 		)
 	}
 
-	if location := w.Header().Get("Location"); location != "/login" {
+	if location := w.Header().Get("Location"); location != "/login?next=/cart" {
 		t.Fatalf(
-			"expected redirect to /login, got %s",
+			"expected redirect to /login?next=/cart, got %s",
 			location,
 		)
 	}

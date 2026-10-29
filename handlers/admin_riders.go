@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type AdminRider struct {
@@ -55,7 +55,7 @@ func (h *Handlers) AdminRiders(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not read riders", 500)
 		return
 	}
-	tmpl, err := brand.ParseE("templates/admin-riders.html")
+	tmpl, err := render.Page("admin-riders.html")
 	if err != nil {
 		errors.Render(w, "Could not display riders", 500)
 		return

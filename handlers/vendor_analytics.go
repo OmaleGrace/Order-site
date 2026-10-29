@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type VendorAnalyticsDay struct {
@@ -160,7 +160,7 @@ func (h *Handlers) VendorAnalytics(w http.ResponseWriter, r *http.Request) {
 			return a * 100 / b
 		},
 	}
-	tmpl, err := template.New("vendor-analytics.html").Funcs(funcs).Funcs(brand.Funcs()).ParseFiles("templates/vendor-analytics.html")
+	tmpl, err := render.Page("vendor-analytics.html", funcs)
 	if err != nil {
 		log.Printf("vendor analytics template: %v", err)
 		errors.Render(w, "Could not display analytics", http.StatusInternalServerError)

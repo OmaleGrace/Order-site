@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type ShopCard struct {
@@ -115,10 +115,7 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("vendors.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/vendors.html")
+	tmpl, err := render.Page("vendors.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		log.Printf("vendors list: template failed: %v", err)
 		errors.Render(w, "Could not display the shops", http.StatusInternalServerError)

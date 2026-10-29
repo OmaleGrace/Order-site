@@ -9,9 +9,9 @@ import (
 	"strings"
 	"unicode"
 
-	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/render"
 )
 
 type IDTypeOption struct {
@@ -127,10 +127,7 @@ func (h *Handlers) VendorApply(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, err := template.New("become-vendor.html").
-		Funcs(template.FuncMap{"naira": naira}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/become-vendor.html")
+	tmpl, err := render.Page("become-vendor.html", template.FuncMap{"naira": naira})
 	if err != nil {
 		log.Printf("vendor apply: template failed: %v", err)
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)

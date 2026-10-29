@@ -423,3 +423,5 @@
 }
 
 .loyalty-checkout-card .loyalty-checkout-control{padding:16px 18px;border:1px solid var(--border,#e5e7eb);border-radius:16px;background:#f8fbf9}.loyalty-toggle{display:flex;align-items:center;gap:10px;font-weight:700;cursor:pointer}.loyalty-toggle input{width:18px;height:18px}.loyalty-checkout-control #loyalty-input-wrap{margin-top:16px}.loyalty-checkout-control label[for="loyalty_points"]{display:block;font-weight:700;margin-bottom:7px}.loyalty-checkout-control input[type="number"]{width:100%;max-width:260px;padding:11px 12px;border:1px solid var(--border,#d9dfdb);border-radius:10px;font:inherit}.loyalty-checkout-control small{display:block;margin-top:7px;color:#66736d;line-height:1.5}.loyalty-empty{padding:15px 16px;border-radius:14px;background:#f4f7f5;color:#56635c;line-height:1.5}@media(max-width:760px){.loyalty-checkout-control input[type="number"]{max-width:none}}
+
+.cart-meta-note { margin-top:8px; color:var(--muted); font-size:.85rem; }

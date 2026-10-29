@@ -3,7 +3,6 @@ package brand
 import (
 	"html/template"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -45,21 +44,4 @@ func Funcs() template.FuncMap {
 		"adsensePublisherID": AdSensePublisherID,
 		"siteURL":            SiteURL,
 	}
-}
-
-// Parse loads template files with {{brandName}} available.
-// The first file's name becomes the template's name.
-func Parse(files ...string) *template.Template {
-	return template.Must(
-		template.New(filepath.Base(files[0])).
-			Funcs(Funcs()).
-			ParseFiles(files...),
-	)
-}
-
-// ParseE is like Parse but returns the error instead of panicking.
-func ParseE(files ...string) (*template.Template, error) {
-	return template.New(filepath.Base(files[0])).
-		Funcs(Funcs()).
-		ParseFiles(files...)
 }

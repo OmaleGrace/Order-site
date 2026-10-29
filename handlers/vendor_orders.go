@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"Order-site/brand"
 	"Order-site/errors"
+	"Order-site/render"
 )
 
 type VendorOrderItem struct {
@@ -142,15 +142,12 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.New("vendor-orders.html").
-		Funcs(template.FuncMap{"naira": naira, "sub": func(a, b int) int { return a - b }, "commissionPercent": commissionPercent, "dateTime": func(t *time.Time) string {
-			if t == nil {
-				return ""
-			}
-			return t.Format("02 Jan 2006, 3:04 PM")
-		}}).
-		Funcs(brand.Funcs()).
-		ParseFiles("templates/vendor-orders.html")
+	tmpl, err := render.Page("vendor-orders.html", template.FuncMap{"naira": naira, "sub": func(a, b int) int { return a - b }, "commissionPercent": commissionPercent, "dateTime": func(t *time.Time) string {
+		if t == nil {
+			return ""
+		}
+		return t.Format("02 Jan 2006, 3:04 PM")
+	}})
 	if err != nil {
 		log.Printf("vendor orders: template failed: %v", err)
 		errors.Render(w, "Could not display orders", http.StatusInternalServerError)
