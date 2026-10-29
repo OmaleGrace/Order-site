@@ -36,3 +36,10 @@ main button, main .btn, main input[type="submit"] { min-height: 40px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Long vendor menus: tighter spacing so the links fit on one line more often, and a
+   wrapped second line is balanced to the right instead of leaving one orphaned link. */
+@media (min-width: 761px) {
+  .vendor-nav, .site-nav { gap: 8px 15px; justify-content: flex-end; }
+  .vendor-nav a, .site-nav a { font-size: .85rem; }
+}

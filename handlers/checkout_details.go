@@ -32,6 +32,7 @@ type CheckoutPage struct {
 	LoyaltyPoints   int
 	CouponError     string
 	States          []string
+	Rates           []CheckoutRate // per-area delivery pricing set by the shop
 }
 
 func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +124,11 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.States = nigerianStates
+	if rates, ratesErr := loadCheckoutRates(h.DB, userID); ratesErr != nil {
+		log.Printf("checkout details: delivery rates failed: %v", ratesErr)
+	} else {
+		page.Rates = rates
+	}
 	page.DefaultMethod = "pickup"
 	if !page.OffersPickup {
 		page.DefaultMethod = "delivery"

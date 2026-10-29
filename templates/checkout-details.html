@@ -89,6 +89,7 @@
                                 <label for="delivery_lga">Local government area <span>*</span></label>
                                 <input type="text" name="delivery_lga" id="delivery_lga" maxlength="60" placeholder="e.g. Ikeja" autocomplete="address-level2">
                                 <p class="field-error" id="lga-error" aria-live="polite"></p>
+                                <p id="rate-hint" aria-live="polite" style="margin:6px 0 0;font-size:.9rem;color:#5c6b61"></p>
                             </div>
                         </div>
                         <div class="field">
@@ -186,6 +187,7 @@
 (function () {
     var subtotal = {{.SubtotalKobo}};
     var fee = {{.DeliveryFeeKobo}};
+    var rates = {{.Rates}} || [];
     var form = document.getElementById('checkout-form');
     var radios = document.querySelectorAll('input[name="delivery_method"]');
     var stateEl = document.getElementById('delivery_state');
@@ -219,6 +221,33 @@
     var scheduleInput = document.getElementById('scheduled_for');
 
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
+    var rateHint = document.getElementById('rate-hint');
+    function norm(v) { return String(v || '').trim().toLowerCase(); }
+    function areaRate() {
+        for (var i = 0; i < rates.length; i++) {
+            if (norm(rates[i].state) === norm(stateEl.value) && norm(rates[i].lga) === norm(lgaEl.value)) return rates[i];
+        }
+        return null;
+    }
+    // Preview only: the server works out the real fee when the order is placed.
+    function areaFee() {
+        var r = areaRate();
+        var f = (r && r.fee_kobo !== null && r.fee_kobo !== undefined) ? r.fee_kobo : fee;
+        if (r && r.free_over_kobo > 0 && subtotal >= r.free_over_kobo) return 0;
+        return f;
+    }
+    function areaNote() {
+        var r = areaRate();
+        if (!r) return '';
+        if (r.min_order_kobo > 0 && subtotal < r.min_order_kobo) {
+            return 'Minimum order for delivery to ' + r.lga + ' is ' + naira(r.min_order_kobo) + '. Add more items or choose pickup.';
+        }
+        if (r.free_over_kobo > 0) {
+            return subtotal >= r.free_over_kobo ? 'You get free delivery to ' + r.lga + '.'
+                : 'Spend ' + naira(r.free_over_kobo - subtotal) + ' more for free delivery to ' + r.lga + '.';
+        }
+        return '';
+    }
     function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
     function isDelivery() { return method() === 'delivery'; }
     function checkState() { return !isDelivery() || stateEl.value ? '' : 'Choose your state'; }
@@ -249,7 +278,8 @@
         deliveryBox.hidden = !delivery;
         pickupBox.hidden = delivery;
         hint.textContent = delivery ? '(required for delivery)' : '(optional for pickup)';
-        var currentFee = delivery ? fee : 0;
+        var currentFee = delivery ? areaFee() : 0;
+        if (rateHint) rateHint.textContent = delivery ? areaNote() : '';
 
         var points = 0;
         if (useLoyalty && useLoyalty.checked && loyaltyInput) {

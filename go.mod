@@ -12,12 +12,11 @@ require (
 )
 
 require (
-	github.com/creasty/defaults v1.7.0 
-	github.com/google/uuid v1.5.0 
-	github.com/gorilla/schema v1.4.1 
+	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/google/uuid v1.5.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 )
 
-require (
-	cloud.google.com/go/compute/metadata v0.3.0 
-	golang.org/x/oauth2 v0.37.0
-)
+require golang.org/x/oauth2 v0.37.0
+
+require cloud.google.com/go/compute/metadata v0.3.0 // indirect
