@@ -30,3 +30,18 @@ func TestCleanSchemaDumpEmpty(t *testing.T) {
 		t.Fatalf("expected empty cleaned schema, got %q", got)
 	}
 }
+
+func TestPoolerSafe(t *testing.T) {
+	cases := map[string]string{
+		"postgresql://u:p@host:6543/db":                  "postgresql://u:p@host:6543/db?binary_parameters=yes",
+		"postgresql://u:p@host/db?sslmode=require":       "postgresql://u:p@host/db?binary_parameters=yes&sslmode=require",
+		"postgresql://u:p@host/db?binary_parameters=no":  "postgresql://u:p@host/db?binary_parameters=no",
+		"host=localhost user=u dbname=d sslmode=disable": "host=localhost user=u dbname=d sslmode=disable binary_parameters=yes",
+		"host=localhost dbname=d binary_parameters=no":   "host=localhost dbname=d binary_parameters=no",
+	}
+	for in, want := range cases {
+		if got := poolerSafe(in); got != want {
+			t.Errorf("poolerSafe(%q)\n got  %q\n want %q", in, got, want)
+		}
+	}
+}

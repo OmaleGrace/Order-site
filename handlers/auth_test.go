@@ -125,6 +125,9 @@ func TestLoginSuccess(t *testing.T) {
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// In production the site is served over HTTPS (usually behind a proxy that sets this header),
+	// and only then is the session cookie marked Secure.
+	req.Header.Set("X-Forwarded-Proto", "https")
 
 	w := httptest.NewRecorder()
 

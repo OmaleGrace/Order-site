@@ -239,9 +239,24 @@
             }
             bankResultCount.textContent = banks.length ? matches.length + ' bank' + (matches.length === 1 ? '' : 's') + ' found' : '';
         }
+        // These endpoints answer in JSON. If the server answered with an HTML page instead
+        // (an expired login, or a temporary server error), say so in plain words rather than
+        // letting the browser fail with "JSON.parse: unexpected character".
+        function readJSON(r, fallback) {
+            return r.text().then(function (text) {
+                var d;
+                try { d = JSON.parse(text); } catch (e) {
+                    throw new Error(r.status === 401 || r.status === 403 || r.redirected
+                        ? 'Your session may have expired. Please refresh the page and log in again.'
+                        : 'The server had a temporary problem. Please try again in a moment.');
+                }
+                if (!r.ok) throw new Error(d.message || fallback);
+                return d;
+            });
+        }
         function loadBanks() {
             fetch('/vendor/payout-banks', { headers: { 'Accept': 'application/json' } })
-                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Could not load banks.'); return d; }); })
+                .then(function (r) { return readJSON(r, 'Could not load banks.'); })
                 .then(function (data) {
                     banks = data.banks || [];
                     renderBanks('');
@@ -291,7 +306,7 @@
             body.set('payout_bank_name', bankName.value);
             body.set('payout_account_number', number);
             fetch('/vendor/payout-account/verify', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: body.toString() })
-                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Account verification failed.'); return d; }); })
+                .then(function (r) { return readJSON(r, 'Account verification failed.'); })
                 .then(function (data) {
                     token.value = data.verification_token || '';
                     verifiedName.textContent = data.account_name || '';
@@ -310,7 +325,7 @@
             var body = new URLSearchParams();
             body.set('verification_token', token.value);
             fetch('/vendor/payout-account/save', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' }, body: body.toString() })
-                .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Could not save bank details.'); return d; }); })
+                .then(function (r) { return readJSON(r, 'Could not save bank details.'); })
                 .then(function (data) {
                     setMessage(data.message || 'Bank details saved.', 'success');
                     save.textContent = 'Saved ✓';

@@ -243,6 +243,21 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			errors.Render(w, "This shop does not deliver to the selected state and LGA. Choose another area or select pickup.", http.StatusBadRequest)
 			return
 		}
+
+		// Per-area pricing: the shop may charge a different fee for this area, require a
+		// minimum order, or offer free delivery above an amount. The server decides the
+		// fee here; the checkout page only previews it. totalKobo is still the food subtotal.
+		areaFeeKobo, blockedReason, rateErr := resolveDeliveryFee(h.DB, vendorID, state, lga, totalKobo, deliveryFeeKobo)
+		if rateErr != nil {
+			fmt.Println("Delivery rate error:", rateErr)
+			errors.Render(w, "Could not work out the delivery fee for this area", http.StatusInternalServerError)
+			return
+		}
+		if blockedReason != "" {
+			errors.Render(w, blockedReason, http.StatusBadRequest)
+			return
+		}
+		deliveryFeeKobo = areaFeeKobo
 		if deliveryPhone == "" {
 			errors.Render(w, "Enter a phone number the rider can reach you on.", http.StatusBadRequest)
 			return

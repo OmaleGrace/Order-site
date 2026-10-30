@@ -2,21 +2,33 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
+	"regexp"
 	"strings"
 	"testing"
 )
 
-// Functions that individual handlers add to their pages. They are stubs here:
-// the test only checks that every page parses and that its partials resolve.
-var stubFuncs = template.FuncMap{
-	"naira": func(int) int { return 0 }, "money": func(int) string { return "" },
-	"money2": func(int) string { return "" }, "date": func(any) string { return "" },
-	"dateTime": func(any) string { return "" }, "sub": func(a, b int) int { return 0 },
-	"sub1": func(int) int { return 0 }, "multiply": func(a, b int) int { return 0 },
-	"abs": func(int) int { return 0 }, "add": func(a, b int) int { return 0 },
-	"percent": func(a, b int) int { return 0 }, "commissionPercent": func() int { return 0 },
-	"formatChatTime": func(any) string { return "" },
+var missingFunc = regexp.MustCompile(`function "([^"]+)" not defined`)
+
+// parseWithStubs parses a page the way a handler would. Handlers add their own template
+// functions (naira, money, ...); this test only checks that the page parses, so whenever
+// the parser reports a missing function it registers a do-nothing stand-in and retries.
+// That way a new page function never needs a change here.
+func parseWithStubs(name string) error {
+	funcs := template.FuncMap{}
+	for attempt := 0; attempt < 50; attempt++ {
+		_, err := Page(name, funcs)
+		if err == nil {
+			return nil
+		}
+		m := missingFunc.FindStringSubmatch(err.Error())
+		if m == nil {
+			return err
+		}
+		funcs[m[1]] = func(...any) any { return nil }
+	}
+	return fmt.Errorf("%s: too many missing template functions", name)
 }
 
 // Every page template must parse together with the shared partials. This catches
@@ -30,7 +42,7 @@ func TestEveryPageParses(t *testing.T) {
 		t.Fatalf("expected the site's page templates to be embedded, found %d", len(names))
 	}
 	for _, name := range names {
-		if _, err := Page(name, stubFuncs); err != nil {
+		if err := parseWithStubs(name); err != nil {
 			t.Errorf("%s: %v", name, err)
 		}
 	}

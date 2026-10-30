@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"Order-site/brand"
 	appErrors "Order-site/errors"
+	"Order-site/render"
 )
 
 // AdminSettlementRow is one shop's position for a period: what customers paid, what
@@ -132,7 +132,7 @@ func (h *Handlers) AdminSettlements(w http.ResponseWriter, r *http.Request) {
 		Totals:    sumSettlements(rows),
 		Generated: time.Now().In(watZone).Format("2 Jan 2006, 3:04 PM"),
 	}
-	tmpl, err := template.New("admin-settlements.html").Funcs(statementFuncs()).Funcs(brand.Funcs()).ParseFiles("templates/admin-settlements.html")
+	tmpl, err := render.Page("admin-settlements.html", statementFuncs())
 	if err != nil {
 		log.Printf("admin settlements: template failed: %v", err)
 		appErrors.Render(w, "Could not display the settlement report", http.StatusInternalServerError)

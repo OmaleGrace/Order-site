@@ -4,6 +4,7 @@ import (
 	dbfiles "Order-site/db"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -11,11 +12,41 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// poolerSafe adds binary_parameters=yes to a connection string unless it already sets it.
+//
+// By default the PostgreSQL driver prepares a statement on one network round trip and runs it
+// on the next. Hosted databases usually sit behind a connection pooler (PgBouncer, Supabase,
+// Neon), and in its common "transaction" mode the second round trip can land on a different
+// server connection, which fails with "unnamed prepared statement does not exist" (26000).
+// People see that as a page that errors once and then works when refreshed.
+// binary_parameters=yes makes the driver send each statement in a single batch, which is
+// correct both with and without a pooler. Set binary_parameters=no yourself to opt out.
+func poolerSafe(dsn string) string {
+	if strings.Contains(dsn, "://") {
+		u, err := url.Parse(dsn)
+		if err != nil {
+			return dsn
+		}
+		q := u.Query()
+		if q.Get("binary_parameters") != "" {
+			return dsn
+		}
+		q.Set("binary_parameters", "yes")
+		u.RawQuery = q.Encode()
+		return u.String()
+	}
+	if strings.Contains(dsn, "binary_parameters") {
+		return dsn
+	}
+	return strings.TrimSpace(dsn) + " binary_parameters=yes"
+}
+
 func Connect() (*sql.DB, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		return nil, fmt.Errorf("DATABASE_URL is not set")
 	}
+	databaseURL = poolerSafe(databaseURL)
 
 	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
@@ -31,7 +62,11 @@ func Connect() (*sql.DB, error) {
 	// connections instead of repeatedly paying connection setup latency.
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(10)
-	db.SetConnMaxIdleTime(5 * time.Minute)
+	// Hosted PostgreSQL services and poolers often close idle connections after a minute or
+	// two. A connection that was dropped behind our back fails the first query that uses it
+	// (one error page, then it works on refresh), so retire idle ones sooner than that.
+	db.SetConnMaxIdleTime(1 * time.Minute)
+	db.SetConnMaxLifetime(30 * time.Minute)
 
 	// A newly-created hosted PostgreSQL database has no application tables.
 	// Bootstrap the checked-in schema only when the core users table is absent;
@@ -435,6 +470,26 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_vendor_delivery_areas_vendor ON vendor_delivery_areas(vendor_id)`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Per-area delivery pricing (fee, minimum order, free-delivery amount). It has its own
+	// table because saving the shop profile rewrites vendor_delivery_areas, which would
+	// otherwise wipe the prices. A NULL fee means "use the shop's default delivery fee".
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS vendor_delivery_rates (
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			state TEXT NOT NULL,
+			lga TEXT NOT NULL,
+			fee_kobo INTEGER CHECK (fee_kobo IS NULL OR fee_kobo >= 0),
+			min_order_kobo INTEGER NOT NULL DEFAULT 0 CHECK (min_order_kobo >= 0),
+			free_over_kobo INTEGER NOT NULL DEFAULT 0 CHECK (free_over_kobo >= 0),
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (vendor_id, state, lga)
+		)
+	`)
 	if err != nil {
 		db.Close()
 		return nil, err

@@ -442,7 +442,7 @@ Return only the reply draft. Do not send the message.`
 		r.Context(),
 		systemPrompt,
 		userPrompt,
-		250,
+		500,
 	)
 
 	if err != nil {

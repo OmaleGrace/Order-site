@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"Order-site/brand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -27,7 +28,7 @@ func TestHome(t *testing.T) {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
 
-	if !strings.Contains(w.Body.String(), "Grace") {
+	if !strings.Contains(w.Body.String(), brand.Name()) {
 		t.Fatal("expected home page content")
 	}
 }

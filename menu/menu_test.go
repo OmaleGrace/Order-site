@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"Order-site/testutil"
 	"database/sql"
 	"testing"
 
@@ -9,33 +10,8 @@ import (
 
 func setupMenuTestDB(t *testing.T) *sql.DB {
 	t.Helper()
-
-	db, err := sql.Open(
-		"postgres",
-		"postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable",
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-		DROP TABLE IF EXISTS menu_items CASCADE;
-
-		CREATE TABLE menu_items (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			description TEXT NOT NULL,
-			price_kobo INTEGER NOT NULL,
-			image_url TEXT,
-			category TEXT
-		);
-	`)
-	if err != nil {
-		db.Close()
-		t.Fatal(err)
-	}
-
-	return db
+	// The full schema (including migrations), so these tests match the real app.
+	return testutil.NewDB(t)
 }
 func TestGetAll(t *testing.T) {
 	db := setupMenuTestDB(t)

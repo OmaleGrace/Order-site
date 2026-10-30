@@ -1,68 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
 <title>Settlements - {{brandName}}</title>
-<link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg"><link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png"><meta name="theme-color" content="#174a32">
-<style>
-:root { --green:#174a32; --ink:#1f2f26; --muted:#5c6b61; --line:#dfe8e1; --accent:#c2500e; --bg:#fbfaf6; }
-* { box-sizing:border-box; }
-body { margin:0; font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); line-height:1.55; }
-.site-header { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 5vw; background:#fff; border-bottom:1px solid var(--line); }
-.brand { display:flex; align-items:center; gap:10px; font-weight:800; color:var(--green); text-decoration:none; margin-right:auto; }
-.brand img { width:34px; height:34px; }
-.site-nav { display:flex; gap:8px 15px; align-items:center; flex-wrap:wrap; }
-.site-nav a { color:#39463e; text-decoration:none; font-size:.85rem; font-weight:700; padding:7px 0; }
-.site-nav a:hover, .site-nav a.active { color:var(--green); }
-.site-nav a.active { border-bottom:2px solid var(--green); }
-main { max-width:1200px; margin:0 auto; padding:30px 5vw 70px; }
-h1 { margin:0 0 4px; font-size:clamp(1.6rem,4vw,2.1rem); letter-spacing:-.02em; color:var(--green); }
-h2 { margin:0 0 12px; font-size:1.15rem; color:var(--green); }
-.lead { margin:0 0 18px; color:var(--muted); }
-.notice { padding:12px 16px; border-radius:12px; background:#fff4e5; border:1px solid #f0cf9c; color:#7a4a05; font-weight:600; margin-bottom:16px; }
-.chips { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
-.chips a { padding:8px 16px; border-radius:999px; border:1px solid #cbd8ce; background:#fff; color:var(--ink); text-decoration:none; font-weight:700; font-size:.9rem; }
-.chips a.on { background:var(--green); border-color:var(--green); color:#fff; }
-.range { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin:0 0 22px; }
-.range label { display:grid; gap:4px; font-size:.82rem; font-weight:700; color:var(--muted); }
-.range input { min-height:42px; padding:8px 10px; border:1px solid #cbd8ce; border-radius:10px; font:inherit; background:#fff; }
-.btn { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:0 20px; border-radius:999px; border:1px solid var(--green); background:var(--green); color:#fff; font:inherit; font-weight:800; text-decoration:none; cursor:pointer; }
-.btn.ghost { background:#fff; color:var(--green); }
-.btn:focus-visible, .chips a:focus-visible, .range input:focus-visible { outline:3px solid #f26a1b; outline-offset:2px; }
-.actions { display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px; }
-.card { background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px 22px; margin-bottom:20px; }
-.scroll { overflow-x:auto; }
-table { width:100%; border-collapse:collapse; font-size:.92rem; }
-th, td { padding:10px 9px; text-align:left; border-bottom:1px solid var(--line); white-space:nowrap; }
-th { font-size:.8rem; color:var(--muted); font-weight:700; }
-td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
-tfoot td { font-weight:800; border-top:2px solid var(--green); border-bottom:0; }
-.sum td { border:0; padding:7px 0; white-space:normal; }
-.sum tr.total td { font-weight:800; border-top:2px solid var(--green); padding-top:11px; }
-.sum td.num { padding-left:20px; }
-.muted { color:var(--muted); font-size:.88rem; }
-.empty { text-align:center; color:var(--muted); padding:26px 10px; }
-.pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:.78rem; font-weight:700; }
-.pill.ok { background:#e5f3ea; color:#14532d; } .pill.no { background:#fff4e5; color:#7a4a05; }
-.two { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-@media (max-width:760px) { .two { grid-template-columns:1fr; } .site-nav { width:100%; gap:13px; overflow-x:auto; flex-wrap:nowrap; } main { padding-top:22px; } }
-@media print {
-  body { background:#fff; font-size:12px; }
-  .site-header, .chips, .range, .actions, .no-print { display:none !important; }
-  main { max-width:none; padding:0; }
-  .card { border:1px solid #999; border-radius:0; break-inside:avoid; }
-  .scroll { overflow:visible; }
-  th, td { white-space:normal; padding:5px 6px; }
-}
-</style>
+<link rel="stylesheet" href="/static/css/pages/admin-settlements.css">
 <link rel="stylesheet" href="/static/css/portal-nav.css">
     <link rel="stylesheet" href="/static/css/mobile-nav.css">
 </head>
 <body>
 <header class="site-header">
   <a class="brand" href="/admin"><img src="/static/img/enie-mark.svg" alt=""><span>{{brandName}} Admin</span></a>
-  <nav class="site-nav" aria-label="Admin navigation"><a href="/admin">Overview</a><a href="/admin/orders">Orders</a><a href="/admin/applications">Applications</a><a href="/admin/vendors">Vendors</a><a href="/admin/menu">Menu</a><a href="/admin/riders">Riders</a><a href="/admin/support">Help &amp; Support</a><a href="/admin/users">Users</a><a href="/admin/earnings">Earnings</a><a href="/admin/settlements" class="active" aria-current="page">Settlements</a><a href="/" target="_blank" rel="noopener">View site</a><a href="/logout">Log out</a></nav>
+  {{template "admin-nav" dict "Class" "site-nav" "Active" "/admin/settlements"}}
 </header>
 <main>
   <h1>Settlements</h1>
@@ -98,5 +47,6 @@ tfoot td { font-weight:800; border-top:2px solid var(--green); border-bottom:0; 
 <script src="/static/js/nav-active.js"></script>
 <script src="/static/js/print-button.js"></script>
 <script src="/static/js/mobile-nav.js"></script>
+{{template "scripts-common"}}
 </body>
 </html>

@@ -44,8 +44,23 @@ type geminiContent struct {
 	Parts []geminiPart `json:"parts"`
 }
 
+// geminiThinkingConfig: Gemini 2.5 models "think" before answering and that hidden thinking is
+// counted against maxOutputTokens, so a small limit can be used up before any visible answer.
+// ThinkingBudget 0 switches thinking off (it must be sent even though it is zero).
+type geminiThinkingConfig struct {
+	ThinkingBudget int `json:"thinkingBudget"`
+}
+
 type geminiGenerationConfig struct {
-	MaxOutputTokens int `json:"maxOutputTokens,omitempty"`
+	MaxOutputTokens int                   `json:"maxOutputTokens,omitempty"`
+	ThinkingConfig  *geminiThinkingConfig `json:"thinkingConfig,omitempty"`
+}
+
+// geminiCanDisableThinking is true for the 2.5 Flash family. Other models either do not support
+// the setting (2.0) or cannot run without thinking (2.5 Pro), and would reject the request.
+func geminiCanDisableThinking(model string) bool {
+	m := strings.ToLower(strings.TrimSpace(model))
+	return strings.HasPrefix(m, "gemini-2.5") && strings.Contains(m, "flash")
 }
 
 type geminiRequest struct {
@@ -61,6 +76,7 @@ type geminiResponse struct {
 				Text string `json:"text"`
 			} `json:"parts"`
 		} `json:"content"`
+		FinishReason string `json:"finishReason"`
 	} `json:"candidates"`
 
 	Error *struct {
@@ -84,7 +100,8 @@ type openAIMessage struct {
 
 type openAIResponse struct {
 	Choices []struct {
-		Message openAIMessage `json:"message"`
+		Message      openAIMessage `json:"message"`
+		FinishReason string        `json:"finish_reason"`
 	} `json:"choices"`
 	Error *struct {
 		Message string `json:"message"`
@@ -148,7 +165,83 @@ func generateAIDraft(ctx context.Context, systemPrompt, userPrompt string, maxOu
 	return "", fmt.Errorf("AI is not configured: set OPENAI_API_KEY or GEMINI_API_KEY")
 }
 
+// Where the providers are reached. Variables so tests can point them at a local server.
+var (
+	openAIEndpoint = "https://api.openai.com/v1/chat/completions"
+	geminiBaseURL  = "https://generativelanguage.googleapis.com/v1beta/models/"
+)
+
+// maxAIRetryTokens caps the larger budget used when a first answer is cut off.
+const maxAIRetryTokens = 4096
+
+// cutOffAIError is returned when an answer is still unfinished after a retry. It is reported as
+// a temporary (5xx) failure, so the person is simply asked to try again.
+func cutOffAIError(provider string) error {
+	return &aiProviderError{Provider: provider, Status: 503, Message: "the answer was cut off before it finished"}
+}
+
+// trimToLastSentence drops a trailing half-sentence from a cut-off answer. It returns "" when
+// what is left would be too short to be useful (for example only a heading).
+func trimToLastSentence(text string) string {
+	text = strings.TrimSpace(text)
+	cut := strings.LastIndexAny(text, ".!?")
+	if cut < 0 {
+		return ""
+	}
+	end := cut + 1
+	// keep a closing quote or bracket that belongs to the sentence
+	for end < len(text) && strings.ContainsRune(`"')”’*)`, rune(text[end])) {
+		end++
+	}
+	out := strings.TrimSpace(text[:end])
+	if len([]rune(out)) < 60 {
+		return ""
+	}
+	return out
+}
+
+// generateWithRetry runs one provider call. If the provider stopped because it hit the output
+// limit, it asks again once with a larger limit; if the answer is still unfinished it keeps only
+// the complete sentences, and fails (so the person can retry) rather than show half a sentence.
+func generateWithRetry(
+	provider string,
+	maxOutputTokens int,
+	once func(budget int) (text string, truncated bool, err error),
+) (string, error) {
+	budget := maxOutputTokens
+	last := ""
+	for attempt := 0; attempt < 2; attempt++ {
+		text, truncated, err := once(budget)
+		if err != nil {
+			return "", err
+		}
+		if !truncated {
+			return text, nil
+		}
+		last = text
+		if budget = budget * 3; budget > maxAIRetryTokens {
+			budget = maxAIRetryTokens
+		}
+	}
+	if trimmed := trimToLastSentence(last); trimmed != "" {
+		return trimmed, nil
+	}
+	return "", cutOffAIError(provider)
+}
+
 func generateOpenAIDraft(ctx context.Context, apiKey, model, systemPrompt, userPrompt string, maxOutputTokens int) (string, error) {
+	return generateWithRetry("OpenAI", maxOutputTokens, func(budget int) (string, bool, error) {
+		return openAIOnce(ctx, apiKey, model, systemPrompt, userPrompt, budget)
+	})
+}
+
+func generateGeminiDraft(ctx context.Context, apiKey, model, systemPrompt, userPrompt string, maxOutputTokens int) (string, error) {
+	return generateWithRetry("Gemini", maxOutputTokens, func(budget int) (string, bool, error) {
+		return geminiOnce(ctx, apiKey, model, systemPrompt, userPrompt, budget)
+	})
+}
+
+func openAIOnce(ctx context.Context, apiKey, model, systemPrompt, userPrompt string, maxOutputTokens int) (string, bool, error) {
 	payload := openAIRequest{
 		Model: model,
 		Messages: []openAIMessage{
@@ -160,63 +253,64 @@ func generateOpenAIDraft(ctx context.Context, apiKey, model, systemPrompt, userP
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("marshal OpenAI request: %w", err)
+		return "", false, fmt.Errorf("marshal OpenAI request: %w", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.openai.com/v1/chat/completions", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, openAIEndpoint, bytes.NewReader(body))
 	if err != nil {
-		return "", fmt.Errorf("create OpenAI request: %w", err)
+		return "", false, fmt.Errorf("create OpenAI request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(apiKey))
 	resp, err := vendorAIHTTPClient.Do(req)
 	if err != nil {
-		return "", &aiProviderError{Provider: "OpenAI", Cause: err}
+		return "", false, &aiProviderError{Provider: "OpenAI", Cause: err}
 	}
 	defer resp.Body.Close()
 	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", fmt.Errorf("read OpenAI response: %w", err)
+		return "", false, fmt.Errorf("read OpenAI response: %w", err)
 	}
 	var decoded openAIResponse
 	if err := json.Unmarshal(responseBody, &decoded); err != nil {
-		return "", fmt.Errorf("decode OpenAI response: %w", err)
+		return "", false, fmt.Errorf("decode OpenAI response: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if decoded.Error != nil && decoded.Error.Message != "" {
-			return "", &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode, Message: decoded.Error.Message}
+			return "", false, &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode, Message: decoded.Error.Message}
 		}
-		return "", &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode}
+		return "", false, &aiProviderError{Provider: "OpenAI", Status: resp.StatusCode}
 	}
 	if len(decoded.Choices) == 0 {
-		return "", fmt.Errorf("OpenAI returned no choices")
+		return "", false, fmt.Errorf("OpenAI returned no choices")
 	}
 	result := strings.TrimSpace(decoded.Choices[0].Message.Content)
-	if result == "" {
-		return "", fmt.Errorf("OpenAI returned an empty response")
+	truncated := decoded.Choices[0].FinishReason == "length"
+	if result == "" && !truncated {
+		return "", false, fmt.Errorf("OpenAI returned an empty response")
 	}
-	return result, nil
+	return result, truncated, nil
 }
 
-func generateGeminiDraft(
+func geminiOnce(
 	ctx context.Context,
 	apiKey string,
 	model string,
 	systemPrompt string,
 	userPrompt string,
 	maxOutputTokens int,
-) (string, error) {
+) (string, bool, error) {
 	apiKey = strings.TrimSpace(apiKey)
 	model = strings.TrimSpace(model)
 
 	if apiKey == "" {
-		return "", fmt.Errorf("GEMINI_API_KEY is not configured")
+		return "", false, fmt.Errorf("GEMINI_API_KEY is not configured")
 	}
 
 	if model == "" {
 		model = defaultGeminiModel
 	}
 
-	endpoint := "https://generativelanguage.googleapis.com/v1beta/models/" +
+	endpoint := geminiBaseURL +
 		url.PathEscape(model) +
 		":generateContent"
 
@@ -238,10 +332,13 @@ func generateGeminiDraft(
 			MaxOutputTokens: maxOutputTokens,
 		},
 	}
+	if geminiCanDisableThinking(model) {
+		payload.GenerationConfig.ThinkingConfig = &geminiThinkingConfig{ThinkingBudget: 0}
+	}
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return "", fmt.Errorf("marshal Gemini request: %w", err)
+		return "", false, fmt.Errorf("marshal Gemini request: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(
@@ -251,7 +348,7 @@ func generateGeminiDraft(
 		bytes.NewReader(body),
 	)
 	if err != nil {
-		return "", fmt.Errorf("create Gemini request: %w", err)
+		return "", false, fmt.Errorf("create Gemini request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -259,30 +356,30 @@ func generateGeminiDraft(
 
 	resp, err := vendorAIHTTPClient.Do(req)
 	if err != nil {
-		return "", &aiProviderError{Provider: "Gemini", Cause: err}
+		return "", false, &aiProviderError{Provider: "Gemini", Cause: err}
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", fmt.Errorf("read Gemini response: %w", err)
+		return "", false, fmt.Errorf("read Gemini response: %w", err)
 	}
 
 	var decoded geminiResponse
 	if err := json.Unmarshal(responseBody, &decoded); err != nil {
-		return "", fmt.Errorf("decode Gemini response: %w", err)
+		return "", false, fmt.Errorf("decode Gemini response: %w", err)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		if decoded.Error != nil && decoded.Error.Message != "" {
-			return "", &aiProviderError{Provider: "Gemini", Status: resp.StatusCode, Message: decoded.Error.Message}
+			return "", false, &aiProviderError{Provider: "Gemini", Status: resp.StatusCode, Message: decoded.Error.Message}
 		}
 
-		return "", &aiProviderError{Provider: "Gemini", Status: resp.StatusCode}
+		return "", false, &aiProviderError{Provider: "Gemini", Status: resp.StatusCode}
 	}
 
 	if len(decoded.Candidates) == 0 {
-		return "", fmt.Errorf("Gemini returned no candidates")
+		return "", false, fmt.Errorf("Gemini returned no candidates")
 	}
 
 	var parts []string
@@ -295,12 +392,13 @@ func generateGeminiDraft(
 	}
 
 	result := strings.TrimSpace(strings.Join(parts, "\n"))
+	truncated := decoded.Candidates[0].FinishReason == "MAX_TOKENS"
 
-	if result == "" {
-		return "", fmt.Errorf("Gemini returned an empty response")
+	if result == "" && !truncated {
+		return "", false, fmt.Errorf("Gemini returned an empty response")
 	}
 
-	return result, nil
+	return result, truncated, nil
 }
 
 // VendorAI shows the optional AI writing assistant to the owner of a shop.
@@ -453,7 +551,7 @@ Return only the message the vendor can review and send.`
 		r.Context(),
 		systemPrompt,
 		requestPrompt,
-		350,
+		1200,
 	)
 
 	if err != nil {

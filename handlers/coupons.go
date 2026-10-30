@@ -83,7 +83,7 @@ func (h *Handlers) VendorCoupons(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.DB.Query(`
         SELECT id, code, discount_type, discount_value, min_order_kobo, max_discount_kobo,
                usage_limit, used_count, reserved_count, active,
-               TO_CHAR(starts_at, 'YYYY-MM-DD HH24:MI'), TO_CHAR(expires_at, 'YYYY-MM-DD HH24:MI')
+               COALESCE(TO_CHAR(starts_at, 'YYYY-MM-DD HH24:MI'), ''), COALESCE(TO_CHAR(expires_at, 'YYYY-MM-DD HH24:MI'), '')
         FROM coupons WHERE vendor_id = $1 ORDER BY created_at DESC, id DESC`, vendorID)
 	if err != nil {
 		log.Printf("vendor coupons query: %v", err)

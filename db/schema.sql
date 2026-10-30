@@ -894,3 +894,16 @@ ALTER TABLE public.orders
     DROP CONSTRAINT IF EXISTS orders_loyalty_points_redeemed_check;
 ALTER TABLE public.orders
     ADD CONSTRAINT orders_loyalty_points_redeemed_check CHECK (loyalty_points_redeemed >= 0);
+
+-- Per-area delivery pricing. Created last so the vendors primary key already exists.
+-- A NULL fee_kobo means "use the shop's default delivery fee".
+CREATE TABLE IF NOT EXISTS public.vendor_delivery_rates (
+    vendor_id integer NOT NULL REFERENCES public.vendors(id) ON DELETE CASCADE,
+    state text NOT NULL,
+    lga text NOT NULL,
+    fee_kobo integer CHECK (fee_kobo IS NULL OR fee_kobo >= 0),
+    min_order_kobo integer DEFAULT 0 NOT NULL CHECK (min_order_kobo >= 0),
+    free_over_kobo integer DEFAULT 0 NOT NULL CHECK (free_over_kobo >= 0),
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    PRIMARY KEY (vendor_id, state, lga)
+);

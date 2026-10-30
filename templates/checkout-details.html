@@ -80,6 +80,7 @@
                                 <label for="delivery_lga">Local government area <span>*</span></label>
                                 <input type="text" name="delivery_lga" id="delivery_lga" maxlength="60" placeholder="e.g. Ikeja" autocomplete="address-level2">
                                 <p class="field-error" id="lga-error" aria-live="polite"></p>
+                                <p class="field-error" id="rate-error" role="alert" aria-live="polite"></p>
                             </div>
                         </div>
                         <div class="field">
@@ -177,6 +178,7 @@
 (function () {
     var subtotal = {{.SubtotalKobo}};
     var fee = {{.DeliveryFeeKobo}};
+    var rates = {{.Rates}} || []; // per-area pricing set by the shop; the server applies the same rules
     var form = document.getElementById('checkout-form');
     var radios = document.querySelectorAll('input[name="delivery_method"]');
     var stateEl = document.getElementById('delivery_state');
@@ -186,6 +188,7 @@
     var pickupBox = document.getElementById('pickup-box');
     var deliveryBox = document.getElementById('delivery-box');
     var feeLine = document.getElementById('fee-line');
+    var rateError = document.getElementById('rate-error');
     var totalLine = document.getElementById('total-line');
     var hint = document.getElementById('phone-hint');
     var payBtn = document.getElementById('pay-btn');
@@ -212,6 +215,21 @@
     function naira(kobo) { return '₦' + Math.floor(kobo / 100).toLocaleString('en-NG'); }
     function method() { var c = document.querySelector('input[name="delivery_method"]:checked'); return c ? c.value : ''; }
     function isDelivery() { return method() === 'delivery'; }
+    function sameArea(a, b) { return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase(); }
+    // Mirrors the server's delivery pricing: area fee, minimum order, free delivery above an amount.
+    function deliveryQuote() {
+        var rate = null;
+        for (var i = 0; i < rates.length; i++) {
+            if (sameArea(rates[i].state, stateEl.value) && sameArea(rates[i].lga, lgaEl.value)) { rate = rates[i]; break; }
+        }
+        if (!rate) return { fee: fee, blocked: '' };
+        var areaFee = (rate.fee_kobo === null || rate.fee_kobo === undefined) ? fee : rate.fee_kobo;
+        if (rate.min_order_kobo > 0 && subtotal < rate.min_order_kobo) {
+            return { fee: areaFee, blocked: 'The minimum order for delivery to ' + rate.lga + ' is ' + naira(rate.min_order_kobo) + '. Add more items or choose pickup.' };
+        }
+        if (rate.free_over_kobo > 0 && subtotal >= rate.free_over_kobo) areaFee = 0;
+        return { fee: areaFee, blocked: '' };
+    }
     function checkState() { return !isDelivery() || stateEl.value ? '' : 'Choose your state'; }
     function checkLga() { if (!isDelivery()) return ''; var n = [...lgaEl.value.trim()].length; if (!n) return 'Enter your local government area'; if (n < 3) return 'The local government area is too short'; return n > 60 ? 'The local government area must be 60 characters or fewer' : ''; }
     function checkAddress() { if (!isDelivery()) return ''; var n = [...addrEl.value.trim()].length; if (!n) return 'Enter your house address'; if (n < 8) return 'Enter your house number and street (at least 8 characters)'; return n > 250 ? 'The address must be 250 characters or fewer' : ''; }
@@ -240,7 +258,9 @@
         deliveryBox.hidden = !delivery;
         pickupBox.hidden = delivery;
         hint.textContent = delivery ? '(required for delivery)' : '(optional for pickup)';
-        var currentFee = delivery ? fee : 0;
+        var quote = delivery ? deliveryQuote() : { fee: 0, blocked: '' };
+        var currentFee = quote.fee;
+        if (rateError) rateError.textContent = quote.blocked;
 
         var points = 0;
         if (useLoyalty && useLoyalty.checked && loyaltyInput) {
@@ -264,7 +284,7 @@
         feeLine.textContent = delivery ? (currentFee ? naira(currentFee) : 'Free') : '₦0';
         loyaltyDiscountLine.textContent = '-' + naira(discountKobo);
         totalLine.textContent = naira(Math.max(0, subtotal - totalDiscountKobo) + currentFee);
-        var allOk = method() !== '';
+        var allOk = method() !== '' && !quote.blocked;
         fields.forEach(function (fld) {
             var err = fld.check();
             if (err) allOk = false;

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
+
+	"Order-site/database"
 
 	_ "github.com/lib/pq"
 )
@@ -40,52 +41,7 @@ func safeToReset(raw string) error {
 	return nil
 }
 
-func projectRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return dir, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", fmt.Errorf("go.mod not found above the test directory")
-		}
-		dir = parent
-	}
-}
-
-// loadSchema reads db/schema.sql and drops the pg_dump lines that only psql understands.
-func loadSchema() (string, error) {
-	root, err := projectRoot()
-	if err != nil {
-		return "", err
-	}
-	data, err := os.ReadFile(filepath.Join(root, "db", "schema.sql"))
-	if err != nil {
-		return "", err
-	}
-
-	var keep []string
-	for _, line := range strings.Split(string(data), "\n") {
-		t := strings.TrimSpace(line)
-		switch {
-		case strings.HasPrefix(t, `\`),
-			strings.HasPrefix(t, "--"),
-			strings.HasPrefix(t, "SET "),
-			strings.HasPrefix(t, "SELECT pg_catalog.set_config"),
-			strings.HasPrefix(t, "CREATE SCHEMA"),
-			strings.HasPrefix(t, "COMMENT ON SCHEMA"):
-			continue
-		}
-		keep = append(keep, line)
-	}
-	return strings.Join(keep, "\n"), nil
-}
-
-// NewDB gives a test a clean database built from schema.sql, with vendor 1 (an active
+// NewDB gives a test a clean database built the way the app builds it (schema + migrations), with vendor 1 (an active
 // shop) already in place. Only one test uses the database at a time.
 func NewDB(t *testing.T) *sql.DB {
 	t.Helper()
@@ -95,17 +51,13 @@ func NewDB(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 
-	schema, err := loadSchema()
-	if err != nil {
-		t.Fatalf("reading schema.sql: %v", err)
-	}
-
 	db, err := sql.Open("postgres", raw)
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Closed last (cleanups run in reverse order), after the lock below is released.
+	t.Cleanup(func() { db.Close() })
 	if err := db.Ping(); err != nil {
-		db.Close()
 		t.Fatalf("cannot reach the test database (is the food-test-db container running?): %v", err)
 	}
 
@@ -128,9 +80,16 @@ func NewDB(t *testing.T) *sql.DB {
 	if _, err := db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"); err != nil {
 		t.Fatalf("resetting the test database: %v", err)
 	}
-	if _, err := db.Exec(schema); err != nil {
-		t.Fatalf("loading schema.sql: %v", err)
+	// Build the database exactly the way the app does at start-up: schema first, then every
+	// migration. Loading schema.sql alone leaves out tables that only migrations create
+	// (support_tickets, coupons, riders, ...), so tests would not match the real app.
+	t.Setenv("DATABASE_URL", raw)
+	migrated, err := database.Connect()
+	if err != nil {
+		t.Fatalf("building the test database like the app does: %v", err)
 	}
+	t.Cleanup(func() { migrated.Close() })
+	db = migrated
 	if _, err := db.Exec(`
 		INSERT INTO vendors (id, name, slug, status, setup_paid_at, paid_until)
 		VALUES (1, 'Test Kitchen', 'test-kitchen', 'active', NOW(), NOW() + INTERVAL '100 years');

@@ -212,7 +212,7 @@ The integration tests require a dedicated local PostgreSQL test database (see `T
 go test -p 1 ./...
 ```
 
-`-p 1` runs one package at a time, because every database test resets the same test database. Some older cart, menu, checkout and payment tests still build their own partial schemas and need updating to use `testutil.NewDB`; `go test ./render` (which checks that every page template parses) always works without a database.
+`-p 1` runs one package at a time, because every database test resets the same test database. Test databases are built the way the app builds its own at start-up (schema plus every migration), so tests see the real tables. `go test ./render` (which checks that every page template parses) works without a database.
 
 Run with coverage:
 
@@ -261,6 +261,13 @@ HTML templates are embedded in the binary, so they are parsed once at start-up a
 TEMPLATES_DIR=templates go run .
 ```
 
+## Delivery Pricing, Statements and Settlements
+
+* **Delivery pricing (vendors):** `/vendor/delivery` lets a shop set, for each area it serves, its own delivery fee, a minimum food order, and an amount above which delivery is free. A blank fee means "use the shop's default delivery fee". Prices live in `vendor_delivery_rates`, separate from the list of areas, so editing the shop profile never wipes them.
+* **Checkout:** the server applies those rules when an order is placed (`resolveDeliveryFee`); the checkout page previews the same fee and blocks the button when the minimum order is not met.
+* **Statements (vendors):** `/vendor/statements` shows a period statement with a CSV export at `/vendor/statements/export`.
+* **Settlements (main admin only):** `/admin/settlements` is the platform-wide report with a CSV export at `/admin/settlements/export`. Shops with nothing to report in the period are left out.
+
 ## Project Structure
 
 ```text
@@ -285,6 +292,12 @@ errors/            the branded error page
 * Use `data-confirm="Delete this item?"` (optionally with `data-confirm-title`, `data-confirm-ok`, `data-confirm-tone="danger"`) on a form or submit button for a styled confirmation dialog instead of `confirm()`.
 * Forms are protected against double submission automatically. Add `data-allow-resubmit` to a form to opt out.
 * For errors on a normal page, call `errors.Render(w, "friendly message", status)` so visitors see the branded error page. Keep plain `http.Error` / JSON responses for background (fetch) endpoints.
+
+## Troubleshooting
+
+* **A page shows an error once, then works when refreshed.** With a hosted database behind a connection pooler (PgBouncer, Supabase, Neon) the log shows `unnamed prepared statement does not exist (26000)`. The app adds `binary_parameters=yes` to `DATABASE_URL` automatically to avoid this. To opt out, put `binary_parameters=no` in the URL yourself.
+* **Slow pages with a hosted database.** Each page makes several queries, so a database far from the server adds delay to every one of them. Run the app in the same region as the database when you can.
+* **The AI writing studio stops mid-answer.** Gemini 2.5 models count hidden "thinking" against the output limit. The app turns thinking off for the 2.5 Flash models, asks again with a bigger limit if an answer is cut off, and never shows half a sentence. If you set `GEMINI_MODEL` to a Pro model, thinking stays on and the larger limit is used on the retry.
 
 ## Security Notes
 

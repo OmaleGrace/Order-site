@@ -3,6 +3,8 @@ package errors
 import (
 	"log"
 	"net/http"
+	"path/filepath"
+	"runtime"
 
 	"Order-site/render"
 )
@@ -22,6 +24,12 @@ func Render(w http.ResponseWriter, message string, code int) {
 	title, ok := titles[code]
 	if !ok {
 		title = "Something Went Wrong"
+	}
+
+	if code >= http.StatusInternalServerError {
+		// Visitors only see a friendly message; the log says which handler produced it.
+		_, file, line, _ := runtime.Caller(1)
+		log.Printf("error %d from %s:%d: %s", code, filepath.Base(file), line, message)
 	}
 
 	tmpl, err := render.Page("error.html")

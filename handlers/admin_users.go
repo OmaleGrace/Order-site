@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -88,7 +89,7 @@ func (h *Handlers) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	tmpl, err := render.Page("admin-dashboard.html")
+	tmpl, err := render.Page("admin-dashboard.html", template.FuncMap{"money": money})
 	if err != nil {
 		log.Printf("admin dashboard: template failed: %v", err)
 		errors.Render(w, "Could not display dashboard", http.StatusInternalServerError)

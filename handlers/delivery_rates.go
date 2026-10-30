@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log"
 	"math"
 	"net/http"
@@ -11,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"Order-site/brand"
 	appErrors "Order-site/errors"
+	"Order-site/render"
 )
 
 // Delivery pricing per area (Stage 23).
@@ -228,7 +227,7 @@ func (h *Handlers) VendorDeliveryPricing(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tmpl, err := template.New("vendor-delivery.html").Funcs(brand.Funcs()).ParseFiles("templates/vendor-delivery.html")
+	tmpl, err := render.Page("vendor-delivery.html")
 	if err != nil {
 		log.Printf("vendor delivery: template failed: %v", err)
 		appErrors.Render(w, "Could not display delivery pricing", http.StatusInternalServerError)

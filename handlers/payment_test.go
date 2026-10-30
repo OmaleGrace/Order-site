@@ -12,6 +12,8 @@ import (
 )
 
 func TestPaymentCallbackMissingReference(t *testing.T) {
+	t.Setenv("PAYSTACK_SECRET_KEY", "sk_test_not_a_real_key") // without a key the handlers answer 503 before checking the request
+
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -240,6 +242,8 @@ func TestPaymentCallbackAmountMismatch(t *testing.T) {
 }
 
 func TestPaymentWebhookMissingSignature(t *testing.T) {
+	t.Setenv("PAYSTACK_SECRET_KEY", "sk_test_not_a_real_key") // without a key the handlers answer 503 before checking the request
+
 	db := setupTestDB(t)
 	defer db.Close()
 

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"Order-site/brand"
 	appErrors "Order-site/errors"
+	"Order-site/render"
 )
 
 // Vendor statements and settlement reports (Stage 29).
@@ -368,7 +368,7 @@ func (h *Handlers) VendorStatements(w http.ResponseWriter, r *http.Request) {
 		page.Orders = page.Orders[:statementDisplayCap]
 	}
 
-	tmpl, err := template.New("vendor-statements.html").Funcs(statementFuncs()).Funcs(brand.Funcs()).ParseFiles("templates/vendor-statements.html")
+	tmpl, err := render.Page("vendor-statements.html", statementFuncs())
 	if err != nil {
 		log.Printf("vendor statement: template failed: %v", err)
 		appErrors.Render(w, "Could not display your statement", http.StatusInternalServerError)

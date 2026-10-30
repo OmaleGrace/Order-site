@@ -1,6 +1,7 @@
 package cart
 
 import (
+	"Order-site/testutil"
 	"database/sql"
 	"testing"
 
@@ -9,51 +10,8 @@ import (
 
 func setupCartTestDB(t *testing.T) *sql.DB {
 	t.Helper()
-
-	db, err := sql.Open(
-		"postgres",
-		"postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable",
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			email TEXT UNIQUE NOT NULL,
-			password TEXT NOT NULL,
-			is_admin BOOLEAN NOT NULL DEFAULT FALSE
-		);
-
-		CREATE TABLE IF NOT EXISTS menu_items (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			description TEXT NOT NULL,
-			price_kobo INTEGER NOT NULL,
-			image_url TEXT
-		);
-
-		CREATE TABLE IF NOT EXISTS cart_items (
-			id SERIAL PRIMARY KEY,
-			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
-			quantity INTEGER NOT NULL DEFAULT 1,
-			price_kobo_at_addition INTEGER NOT NULL,
-			UNIQUE (user_id, menu_item_id)
-		);
-
-		DELETE FROM cart_items;
-		DELETE FROM menu_items;
-		DELETE FROM users;
-	`)
-	if err != nil {
-		db.Close()
-		t.Fatal(err)
-	}
-
-	return db
+	// The full schema (including migrations), so these tests match the real app.
+	return testutil.NewDB(t)
 }
 
 func createCartUser(t *testing.T, db *sql.DB) int {

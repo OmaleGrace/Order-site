@@ -4,6 +4,7 @@ import (
 	"Order-site/errors"
 	"Order-site/render"
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -68,6 +69,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		ORDER BY o.created_at DESC
 	`)
 	if err != nil {
+		log.Printf("admin orders: query failed: %v", err)
 		errors.Render(w, "Could not load orders", http.StatusInternalServerError)
 		return
 	}
