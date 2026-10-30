@@ -3,7 +3,7 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
 <title>Review Order | {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
-<link rel="stylesheet" href="/static/css/pages/review-order.css"></head><body>
+<link rel="stylesheet" href="/static/css/pages/review-order.css"></head><body data-nm="customer">
 <main class="review-wrap"><div class="review-card">
 <p class="eyebrow">Verified purchase review</p><h1>How was your order?</h1><p class="muted">Order {{.Reference}} from <strong>{{.VendorName}}</strong></p>
 {{if .Error}}<div class="error" role="alert">{{.Error}}</div>{{end}}

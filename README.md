@@ -361,3 +361,6 @@ This project provided hands-on experience with:
 ## Customer-to-vendor messaging
 
 ENIE includes authenticated customer/vendor conversations at `/messages`. Customers can start a conversation from an active shop's public page; shop owners can reply from their message inbox. Messages are stored in PostgreSQL, the conversation page checks that the signed-in user is either the customer or the owner of the shop, and new messages are fetched every five seconds while the conversation is open. Message bodies are plain text and limited to 2,000 characters. Existing databases receive the `message_threads` and `messages` tables automatically during startup. Keep this feature behind HTTPS in production and never ask customers to share passwords, PINs, OTPs, or complete payment credentials in chat.
+
+
+okay now improve the looks. arrangement and UI of all pages i.e u can add features too and remove some things that are unecessary too
