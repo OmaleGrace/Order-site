@@ -7,82 +7,13 @@ import (
 	"os"
 	"testing"
 
-	_ "github.com/lib/pq"
+	"Order-site/testutil"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// setupTestDB gives each test a clean database built exactly like production (schema + migrations).
 func setupTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open(
-		"postgres",
-		"postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable",
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := db.Ping(); err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS users (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			first_name TEXT NOT NULL DEFAULT '',
-			middle_name TEXT NOT NULL DEFAULT '',
-			last_name TEXT NOT NULL DEFAULT '',
-			email TEXT UNIQUE NOT NULL,
-			password TEXT NOT NULL,
-			is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-			phone TEXT,
-			country TEXT NOT NULL DEFAULT 'Nigeria',
-			state TEXT NOT NULL DEFAULT '',
-			terms_accepted_at TIMESTAMPTZ,
-			delivery_area TEXT
-		);
-
-		CREATE TABLE IF NOT EXISTS sessions (
-			token TEXT PRIMARY KEY,
-			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			expires_at TIMESTAMP NOT NULL
-		);
-
-		CREATE TABLE IF NOT EXISTS menu_items (
-			id SERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			description TEXT NOT NULL,
-			price_kobo INTEGER NOT NULL,
-			image_url TEXT
-		);
-
-		CREATE TABLE IF NOT EXISTS orders (
-			id SERIAL PRIMARY KEY,
-			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-			total_kobo INTEGER NOT NULL,
-			status VARCHAR(50) NOT NULL DEFAULT 'pending',
-			payment_reference VARCHAR(100),
-			created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-
-		CREATE TABLE IF NOT EXISTS order_items (
-			id SERIAL PRIMARY KEY,
-			order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-			menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
-			quantity INTEGER NOT NULL,
-			price_kobo INTEGER NOT NULL
-		);
-
-		DELETE FROM order_items;
-		DELETE FROM orders;
-		DELETE FROM sessions;
-		DELETE FROM menu_items;
-		DELETE FROM users;
-	`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db
+	return testutil.NewDB(t)
 }
 
 func TestLoginSuccess(t *testing.T) {

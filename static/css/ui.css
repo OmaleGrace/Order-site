@@ -1,0 +1,112 @@
+/* ENIE shared UI layer (Nov 2026). Loaded on every page through head-common.
+   Page stylesheets load later, so selectors here start with `html body` to win ties
+   without !important. Purpose: one consistent look for headings, cards, tables,
+   status badges, forms and vendor/admin chrome. */
+
+:root {
+  --ui-surface: #f6f8f5;
+  --ui-line: #e3e9e2;
+  --ui-ink: #1c2d24;
+  --ui-muted: #5b6a61;
+  --ui-green: #174a32;
+  --ui-green-soft: #e7f1ea;
+  --ui-pepper: #c2500e;
+  --ui-ring: 0 0 0 3px rgba(23,74,50,.14);
+  --ui-shadow: 0 1px 2px rgba(23,74,50,.06), 0 10px 26px rgba(23,74,50,.07);
+}
+
+/* One font stack everywhere (admin pages used the OS default) */
+html body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ui-ink); }
+
+/* ---------- Vendor and admin chrome ---------- */
+html body .top,
+html body .vendor-header,
+html body .admin-header { background: rgba(255,255,255,.96); border-bottom: 1px solid var(--ui-line); box-shadow: 0 1px 0 rgba(23,74,50,.03); }
+html body .top .brand { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; font-size: 1.1rem; letter-spacing: -.02em; }
+html body .top .brand small { font-weight: 600; letter-spacing: 0; color: var(--ui-muted); }
+html body .vendor-brand span { color: var(--ui-muted); font-size: .85rem; font-weight: 600; }
+html body .wrap, html body main.wrap { max-width: 1200px; margin-inline: auto; }
+
+/* Page headings inside portals: tighter, left aligned, one clear title */
+html body .wrap > .hero, html body .wrap > section.hero { align-items: flex-end; gap: 18px; margin-bottom: 22px; }
+html body .wrap h1 { margin: 2px 0 6px; font-size: clamp(1.7rem, 3.2vw, 2.3rem); letter-spacing: -.04em; color: var(--ui-green); }
+html body .wrap h2 { letter-spacing: -.02em; }
+html body .wrap .muted { color: var(--ui-muted); }
+
+/* ---------- Stat cards: a coloured edge marks them as figures, not links ---------- */
+html body .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+html body .stat { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px 18px 16px 20px; border: 1px solid var(--ui-line);
+  border-radius: 14px; background: #fff; box-shadow: var(--ui-shadow); overflow: hidden; }
+html body .stat::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--ui-green); }
+html body .stat span { color: var(--ui-muted); font-size: .85rem; font-weight: 650; }
+html body .stat strong { color: var(--ui-ink); font-size: clamp(1.4rem, 2.6vw, 1.85rem); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+
+/* Action tiles */
+html body .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+html body .tile { display: flex; flex-direction: column; gap: 4px; padding: 18px; border: 1px solid var(--ui-line); border-radius: 14px; background: #fff;
+  color: inherit; text-decoration: none; box-shadow: var(--ui-shadow); transition: border-color .15s ease, box-shadow .15s ease; }
+html body .tile:hover { border-color: var(--ui-green); box-shadow: 0 2px 4px rgba(23,74,50,.08), 0 14px 30px rgba(23,74,50,.12); }
+html body .tile h3 { margin: 6px 0 2px; font-size: 1.05rem; }
+html body .tile p { margin: 0 0 10px; color: var(--ui-muted); font-size: .9rem; }
+html body .tile .go { margin-top: auto; color: var(--ui-green); font-weight: 750; }
+
+/* Alerts that need action */
+html body .alert { padding: 14px 16px; border-radius: 12px; border: 1px solid #f0d3b6; background: #fff6ec; color: #7a3a07; margin: 0 0 20px; }
+html body .alert a { color: inherit; font-weight: 750; }
+
+/* ---------- Tables: readable rows, sticky header, no layout break on phones ---------- */
+html body main table, html body .wrap table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid var(--ui-line); border-radius: 12px; overflow: hidden; font-size: .93rem; }
+html body main th, html body .wrap th { padding: 11px 14px; background: #f1f5f1; color: var(--ui-muted); font-size: .8rem; font-weight: 750; text-align: left; border-bottom: 1px solid var(--ui-line); white-space: nowrap; }
+html body main td, html body .wrap td { padding: 12px 14px; border-bottom: 1px solid #edf1ec; vertical-align: middle; }
+html body main tr:last-child td, html body .wrap tr:last-child td { border-bottom: 0; }
+html body main tbody tr:hover td, html body .wrap tbody tr:hover td { background: #fafcf9; }
+html body .table, html body .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; }
+
+/* ---------- Status badges: one palette for every status word ---------- */
+html body .status-label, html body .badge, html body .pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: .78rem; font-weight: 750; text-transform: capitalize; white-space: nowrap; }
+html body .status-label::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .85; }
+html body .status-pending { background: #fff3cd; color: #7d5f00; }
+html body .status-paid, html body .status-scheduled { background: #e5efff; color: #1e4fa3; }
+html body .status-preparing { background: #fff0dc; color: #99480a; }
+html body .status-ready { background: #e3f4e9; color: #14532d; }
+html body .status-completed { background: #14532d; color: #fff; }
+html body .status-cancelled, html body .status-failed, html body .status-suspended { background: #f9e2e0; color: #9a3129; }
+html body .status-active, html body .status-approved { background: #e3f4e9; color: #14532d; }
+
+/* ---------- Forms ---------- */
+html body main label { font-weight: 650; color: var(--ui-ink); }
+html body main input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),
+html body main select, html body main textarea { min-height: 44px; border: 1px solid #d5ded4; border-radius: 10px; background: #fff; font: inherit; color: var(--ui-ink); }
+html body main textarea { min-height: 96px; }
+html body main input:focus, html body main select:focus, html body main textarea:focus { border-color: var(--ui-green); box-shadow: var(--ui-ring); outline: none; }
+html body main button[type=submit], html body main .btn-primary { min-height: 44px; border-radius: 10px; font-weight: 750; }
+
+/* ---------- Cards and notices ---------- */
+html body .card, html body .panel { border: 1px solid var(--ui-line); border-radius: 14px; background: #fff; box-shadow: var(--ui-shadow); }
+html body .notice, html body .menu-message { border-radius: 12px; }
+html body .empty, html body .empty-state { border: 1px dashed #d4ddd2; border-radius: 14px; background: #fff; color: var(--ui-muted); }
+
+/* ---------- Footer (shared partial) ---------- */
+.ui-footer { margin-top: 56px; padding: 34px clamp(20px, 5vw, 76px) 26px; background: #123b29; color: #dbe8de; }
+.ui-footer-inner { display: grid; grid-template-columns: 1.3fr repeat(3, minmax(120px, 1fr)); gap: 28px; max-width: 1200px; margin: 0 auto; }
+.ui-footer strong { display: block; margin-bottom: 8px; color: #fff; font-size: .95rem; }
+.ui-footer p { margin: 0; color: #a9c0af; font-size: .88rem; max-width: 34ch; }
+.ui-footer a { display: block; padding: 4px 0; color: #dbe8de; text-decoration: none; font-size: .9rem; }
+.ui-footer a:hover { color: #fff; text-decoration: underline; }
+.ui-footer-base { max-width: 1200px; margin: 24px auto 0; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.12); color: #a9c0af; font-size: .82rem; }
+@media (max-width: 760px) { .ui-footer-inner { grid-template-columns: 1fr 1fr; } .ui-footer-inner > :first-child { grid-column: 1 / -1; } }
+@media print { .ui-footer { display: none; } }
+
+/* ---------- Labels: sentence case everywhere (no tracked all-caps) ---------- */
+html body :is([class*="eyebrow"], [class*="kicker"], .tracking-kicker, .order-vendor-label, .stat-label, .label-caps) {
+  text-transform: none; letter-spacing: 0; font-size: .9rem; font-weight: 700;
+}
+html body :is(th, .summary-kicker, .home-section .row-sub) { text-transform: none; letter-spacing: 0; }
+html body .signup-section-label { text-transform: none; letter-spacing: 0; font-size: .95rem; }
+html body .check-filter { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+
+.shop-offers{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px}
+.shop-offer{display:flex;gap:8px;align-items:center;background:#fff7e0;border:1px dashed #d9a400;border-radius:10px;padding:8px 12px;font-size:.9rem}
+.shop-offers-note{margin:0;font-size:.8rem;color:#667}
+.tag-rating{background:#fff4d6;color:#7a5600}

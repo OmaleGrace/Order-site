@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"context"
+	"database/sql"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
 
 	"Order-site/errors"
-	"Order-site/middleware"
 	"Order-site/render"
 )
 
@@ -37,13 +38,7 @@ type AccountPageData struct {
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
+	userID, err := requestUserID(h, r)
 	if err != nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -52,7 +47,45 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	var data AccountPageData
 	var phone *string
 
-	err = h.DB.QueryRow(`
+	// One round trip for everything the top of the page needs. On a hosted database every
+	// extra query costs a network trip, and this page used to make seven of them in a row.
+	loadedFast := false
+	{
+		ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+		var name, email sql.NullString
+		var vendorCount int
+		qerr := h.DB.QueryRowContext(ctx, `
+			SELECT u.name, u.email,
+			       COALESCE(to_jsonb(u)->>'auth_provider', 'local'),
+			       COALESCE(to_jsonb(u)->>'profile_picture', ''),
+			       NULLIF(to_jsonb(u)->>'phone', ''),
+			       COALESCE(TO_CHAR(u.created_at, 'FMMonth YYYY'), 'ENIE member'),
+			       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
+			       (SELECT COALESCE(SUM(o.total_kobo), 0) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
+			       (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id),
+			       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status IN ('paid', 'preparing', 'ready')),
+			       (SELECT COUNT(*) FROM vendors v WHERE v.owner_user_id = u.id)
+			FROM users u WHERE u.id = $1
+		`, userID).Scan(&name, &email, &data.AuthProvider, &data.ProfilePicture, &phone, &data.MemberSince,
+			&data.OrderCount, &data.TotalSpentKobo, &data.FavoriteCount, &data.ActiveOrders, &vendorCount)
+		cancel()
+		if qerr == nil {
+			data.Name, data.Email = name.String, email.String
+			data.IsVendor = vendorCount > 0
+			data.Updated = r.URL.Query().Get("updated") == "true"
+			if phone != nil {
+				data.Phone = *phone
+			}
+			loadedFast = true
+		} else {
+			log.Printf("account: combined query failed for user %d, using step-by-step load: %v", userID, qerr)
+			phone = nil
+		}
+	}
+
+	if !loadedFast {
+
+		err = h.DB.QueryRow(`
 		SELECT name, email,
 		       COALESCE(to_jsonb(users)->>'auth_provider', 'local'),
 		       COALESCE(to_jsonb(users)->>'profile_picture', ''),
@@ -61,60 +94,62 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 		FROM users
 		WHERE id = $1
 	`, userID).Scan(
-		&data.Name,
-		&data.Email,
-		&data.AuthProvider,
-		&data.ProfilePicture,
-		&phone,
-		&data.MemberSince,
-	)
+			&data.Name,
+			&data.Email,
+			&data.AuthProvider,
+			&data.ProfilePicture,
+			&phone,
+			&data.MemberSince,
+		)
 
-	if err != nil {
-		log.Printf("account: extended profile query failed for user %d: %v", userID, err)
-		// Older deployed databases may not yet have every optional profile column.
-		// Fall back to the stable core fields so the account page remains accessible.
-		if fallbackErr := h.DB.QueryRow(`SELECT name, email FROM users WHERE id = $1`, userID).Scan(&data.Name, &data.Email); fallbackErr != nil {
-			log.Printf("account: fallback profile query failed for user %d: %v", userID, fallbackErr)
-			errors.Render(w, "Could not load account", http.StatusInternalServerError)
-			return
+		if err != nil {
+			log.Printf("account: extended profile query failed for user %d: %v", userID, err)
+			// Older deployed databases may not yet have every optional profile column.
+			// Fall back to the stable core fields so the account page remains accessible.
+			if fallbackErr := h.DB.QueryRow(`SELECT name, email FROM users WHERE id = $1`, userID).Scan(&data.Name, &data.Email); fallbackErr != nil {
+				log.Printf("account: fallback profile query failed for user %d: %v", userID, fallbackErr)
+				errors.Render(w, "Could not load account", http.StatusInternalServerError)
+				return
+			}
+			data.AuthProvider = "local"
+			data.MemberSince = "ENIE member"
+			phone = nil
 		}
-		data.AuthProvider = "local"
-		data.MemberSince = "ENIE member"
-		phone = nil
-	}
 
-	if phone != nil {
-		data.Phone = *phone
-	}
+		if phone != nil {
+			data.Phone = *phone
+		}
 
-	err = h.DB.QueryRow(`
+		err = h.DB.QueryRow(`
 		SELECT COUNT(*), COALESCE(SUM(total_kobo), 0)
 		FROM orders
 		WHERE user_id = $1 AND status != 'pending'
 	`, userID).Scan(&data.OrderCount, &data.TotalSpentKobo)
 
-	if err != nil {
-		log.Printf("account: order summary query failed for user %d: %v", userID, err)
-		// Keep the account usable even if historical order-summary data is unavailable.
-		data.OrderCount = 0
-		data.TotalSpentKobo = 0
-	}
+		if err != nil {
+			log.Printf("account: order summary query failed for user %d: %v", userID, err)
+			// Keep the account usable even if historical order-summary data is unavailable.
+			data.OrderCount = 0
+			data.TotalSpentKobo = 0
+		}
 
-	data.Updated = r.URL.Query().Get("updated") == "true"
+		data.Updated = r.URL.Query().Get("updated") == "true"
 
-	// These dashboard counts are intentionally separate from the main profile query
-	// so older deployments remain usable if optional account data is unavailable.
-	if err := h.DB.QueryRow(`SELECT COUNT(*) FROM favorites WHERE user_id = $1`, userID).Scan(&data.FavoriteCount); err != nil {
-		log.Printf("account: favorites count failed for user %d: %v", userID, err)
-		data.FavoriteCount = 0
-	}
+		// These dashboard counts are intentionally separate from the main profile query
+		// so older deployments remain usable if optional account data is unavailable.
+		if err := h.DB.QueryRow(`SELECT COUNT(*) FROM favorites WHERE user_id = $1`, userID).Scan(&data.FavoriteCount); err != nil {
+			log.Printf("account: favorites count failed for user %d: %v", userID, err)
+			data.FavoriteCount = 0
+		}
 
-	if err := h.DB.QueryRow(`
+		if err := h.DB.QueryRow(`
 		SELECT COUNT(*) FROM orders
 		WHERE user_id = $1 AND status IN ('paid', 'preparing', 'ready')
 	`, userID).Scan(&data.ActiveOrders); err != nil {
-		log.Printf("account: active order count failed for user %d: %v", userID, err)
-		data.ActiveOrders = 0
+			log.Printf("account: active order count failed for user %d: %v", userID, err)
+			data.ActiveOrders = 0
+		}
+
 	}
 
 	recentRows, err := h.DB.Query(`
@@ -147,11 +182,13 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 		log.Printf("account: recent orders query failed for user %d: %v", userID, err)
 	}
 
-	var vendorCount int
-	if err := h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount); err != nil {
-		log.Printf("account: vendor lookup failed for user %d: %v", userID, err)
+	if !loadedFast {
+		var vendorCount int
+		if err := h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount); err != nil {
+			log.Printf("account: vendor lookup failed for user %d: %v", userID, err)
+		}
+		data.IsVendor = vendorCount > 0
 	}
-	data.IsVendor = vendorCount > 0
 
 	tmpl := render.MustPage("account.html", template.FuncMap{
 		"naira": naira,

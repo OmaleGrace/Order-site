@@ -79,7 +79,7 @@ func (h *Handlers) loadSettlements(p statementPeriod) ([]AdminSettlementRow, err
 		LEFT JOIN (
 			SELECT vendor_id, SUM(amount_kobo) AS paid
 			FROM vendor_payouts
-			WHERE paid_at >= $3 AND paid_at < $4
+			WHERE status <> 'failed' AND paid_at >= $3 AND paid_at < $4
 			GROUP BY vendor_id
 		) p ON p.vendor_id = v.id
 		LEFT JOIN (
@@ -88,7 +88,7 @@ func (h *Handlers) loadSettlements(p statementPeriod) ([]AdminSettlementRow, err
 			GROUP BY vendor_id
 		) lo ON lo.vendor_id = v.id
 		LEFT JOIN (
-			SELECT vendor_id, SUM(amount_kobo) AS paid FROM vendor_payouts GROUP BY vendor_id
+			SELECT vendor_id, SUM(amount_kobo) AS paid FROM vendor_payouts WHERE status <> 'failed' GROUP BY vendor_id
 		) lp ON lp.vendor_id = v.id
 		ORDER BY v.name
 	`, naiveUTC(p.Start), naiveUTC(p.End), p.Start.UTC(), p.End.UTC())

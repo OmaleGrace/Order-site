@@ -76,7 +76,7 @@ func (h *Handlers) VendorAnalytics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var paidOut int
-	if err := h.DB.QueryRow(`SELECT COALESCE(SUM(amount_kobo),0) FROM vendor_payouts WHERE vendor_id=$1`, vendorID).Scan(&paidOut); err != nil {
+	if err := h.DB.QueryRow(`SELECT COALESCE(SUM(amount_kobo),0) FROM vendor_payouts WHERE status <> 'failed' AND vendor_id=$1`, vendorID).Scan(&paidOut); err != nil {
 		log.Printf("vendor analytics payout: %v", err)
 		errors.Render(w, "Could not load analytics", http.StatusInternalServerError)
 		return

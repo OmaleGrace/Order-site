@@ -80,14 +80,26 @@ func CreateSessionWithDuration(db *sql.DB, userID int, duration time.Duration) (
 
 func GetUserID(db *sql.DB, token string) (int, error) {
 	var userID int
+	var err error
+	hash := HashToken(token)
 
-	err := db.QueryRow(`
-		SELECT user_id
-		FROM sessions
-		WHERE token = $1
-		AND expires_at > NOW()
-	`, HashToken(token)).Scan(&userID)
-
+	// A hosted database can drop an idle connection or pause for a moment. That is not the same
+	// as "this login is invalid", so retry a failed lookup once before giving up. Only a clean
+	// "no such session" answer (sql.ErrNoRows) means the person really is logged out.
+	for attempt := 0; attempt < 2; attempt++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+		err = db.QueryRowContext(ctx, `
+			SELECT user_id
+			FROM sessions
+			WHERE token = $1
+			AND expires_at > NOW()
+		`, hash).Scan(&userID)
+		cancel()
+		if err == nil || err == sql.ErrNoRows {
+			return userID, err
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
 	return userID, err
 }
 

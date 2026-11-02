@@ -55,6 +55,7 @@ func (h *Handlers) ActivateScheduledOrders() {
 			log.Printf("scheduled orders: activation scan failed: %v", err)
 			continue
 		}
+		go notifyVendorNewOrder(h.DB, orderID)
 		if err := createNotification(h.DB, userID, "order", "Scheduled order is now active", "Your scheduled order is now active and ready for the vendor to prepare.", "/orders"); err != nil {
 			log.Printf("scheduled orders: notification failed for order %d: %v", orderID, err)
 		}

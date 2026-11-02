@@ -281,7 +281,7 @@ func (h *Handlers) loadVendorStatement(vendorID int, p statementPeriod) (VendorS
 		return st, err
 	}
 	if err := h.DB.QueryRow(
-		`SELECT COALESCE(SUM(amount_kobo), 0) FROM vendor_payouts WHERE vendor_id = $1 AND paid_at < $2`,
+		`SELECT COALESCE(SUM(amount_kobo), 0) FROM vendor_payouts WHERE status <> 'failed' AND vendor_id = $1 AND paid_at < $2`,
 		vendorID, p.Start.UTC(),
 	).Scan(&paidBefore); err != nil {
 		return st, err
@@ -290,7 +290,7 @@ func (h *Handlers) loadVendorStatement(vendorID int, p statementPeriod) (VendorS
 	payoutRows, err := h.DB.Query(`
 		SELECT amount_kobo, note, paid_at
 		FROM vendor_payouts
-		WHERE vendor_id = $1 AND paid_at >= $2 AND paid_at < $3
+		WHERE status <> 'failed' AND vendor_id = $1 AND paid_at >= $2 AND paid_at < $3
 		ORDER BY paid_at, id
 	`, vendorID, p.Start.UTC(), p.End.UTC())
 	if err != nil {

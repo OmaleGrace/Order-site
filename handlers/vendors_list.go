@@ -22,6 +22,8 @@ type ShopCard struct {
 	DeliveryFeeKobo int
 	Dishes          int
 	Completed       int
+	Rating          float64
+	ReviewCount     int
 }
 
 type VendorsPage struct {
@@ -59,7 +61,9 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 		SELECT v.name, v.slug, v.description, v.area, v.logo_url, v.verified,
 		       v.offers_pickup, v.offers_delivery, v.delivery_fee_kobo,
 		       (SELECT count(*) FROM menu_items m WHERE m.vendor_id = v.id) AS dishes,
-		       (SELECT count(*) FROM orders o WHERE o.vendor_id = v.id AND o.status = 'completed') AS completed
+		       (SELECT count(*) FROM orders o WHERE o.vendor_id = v.id AND o.status = 'completed') AS completed,
+		       COALESCE((SELECT AVG(r.rating) FROM order_reviews r WHERE r.vendor_id = v.id), 0) AS rating,
+		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count
 		FROM vendors v
 		WHERE v.status = 'active' AND v.paid_until > NOW()
 		  AND EXISTS (SELECT 1 FROM menu_items m WHERE m.vendor_id = v.id)
@@ -101,7 +105,7 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var s ShopCard
 		if err := rows.Scan(&s.Name, &s.Slug, &s.Description, &s.Area, &s.LogoURL, &s.Verified,
-			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed); err != nil {
+			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount); err != nil {
 			log.Printf("vendors list: scan failed: %v", err)
 			errors.Render(w, "Could not read the shops", http.StatusInternalServerError)
 			return

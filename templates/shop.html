@@ -49,6 +49,7 @@
                     <div class="shop-actions">
                         {{if and .OffersPickup .Address}}<span class="shop-location">🏠 {{.Address}}</span>{{end}}
                         {{if .PhoneLink}}<a href="{{.PhoneLink}}" class="shop-action-link">📞 Call shop</a>{{end}}
+                        <a class="shop-action-link" target="_blank" rel="noopener" href="https://wa.me/?text={{urlquery .ShareText}}">🔗 Share on WhatsApp</a>
                         <form action="/messages/start" method="post">
                     <input type="hidden" name="vendor_id" value="{{.VendorID}}">
                     <button type="submit" class="shop-message-btn">💬 Message shop</button>
@@ -56,6 +57,12 @@
                     </div>
                 </div>
             </section>
+            {{if .Offers}}
+            <section class="shop-offers" aria-label="Offers">
+                {{range .Offers}}<div class="shop-offer"><strong>🏷️ {{.Code}}</strong><span>{{.Summary}}</span></div>{{end}}
+                <p class="shop-offers-note">Enter the code at checkout.</p>
+            </section>
+            {{end}}
             <section class="menu-toolbar" aria-label="Menu controls">
                 <div>
             <span class="menu-eyebrow">Today's menu</span>
@@ -166,7 +173,8 @@
     </form>
             </div>
         </div>
-        <script src="/static/js/lightbox.js"></script>
+        {{template "site-footer"}}
+<script src="/static/js/lightbox.js"></script>
         <script src="/static/js/bottomnav.js"></script>
         <script src="/static/js/customization.js"></script>
         <script src="/static/js/pages/shop.js"></script>

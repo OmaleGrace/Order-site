@@ -33,6 +33,8 @@ type AdminApplication struct {
 	Status       string
 	AdminNote    string
 	ReviewMethod string
+	AgreementAt  string // empty when the vendor has not accepted the agreement
+	AgreementVer string
 }
 
 type AdminApplicationsPage struct {
@@ -55,7 +57,8 @@ func (h *Handlers) AdminApplications(w http.ResponseWriter, r *http.Request) {
 		SELECT a.id, a.business_name, a.owner_name, a.phone, a.area, a.address,
 		       a.id_type, a.online_link, a.notes, u.email,
 		       TO_CHAR(a.created_at, 'DD Mon YYYY, HH24:MI'),
-		       a.status, a.admin_note, a.review_method
+		       a.status, a.admin_note, a.review_method,
+		       COALESCE(TO_CHAR(a.agreement_accepted_at, 'DD Mon YYYY, HH24:MI'), ''), a.agreement_version
 		FROM vendor_applications a
 		JOIN users u ON u.id = a.user_id
 		ORDER BY (a.status = 'pending') DESC, a.created_at DESC
@@ -75,7 +78,7 @@ func (h *Handlers) AdminApplications(w http.ResponseWriter, r *http.Request) {
 		var idType string
 		if err := rows.Scan(&a.ID, &a.BusinessName, &a.OwnerName, &a.Phone, &a.Area, &a.Address,
 			&idType, &a.OnlineLink, &a.Notes, &a.Email, &a.CreatedAt,
-			&a.Status, &a.AdminNote, &a.ReviewMethod); err != nil {
+			&a.Status, &a.AdminNote, &a.ReviewMethod, &a.AgreementAt, &a.AgreementVer); err != nil {
 			log.Printf("admin applications: scan failed: %v", err)
 			errors.Render(w, "Could not read applications", http.StatusInternalServerError)
 			return
@@ -190,12 +193,13 @@ func (h *Handlers) AdminApplicationReview(w http.ResponseWriter, r *http.Request
 
 		var userID int
 		var business, area, address, phone string
+		var agreed bool
 		err = tx.QueryRow(`
-			SELECT user_id, business_name, area, address, phone
+			SELECT user_id, business_name, area, address, phone, agreement_accepted_at IS NOT NULL
 			FROM vendor_applications
 			WHERE id = $1 AND status = 'pending'
 			FOR UPDATE
-		`, id).Scan(&userID, &business, &area, &address, &phone)
+		`, id).Scan(&userID, &business, &area, &address, &phone, &agreed)
 		if err == sql.ErrNoRows {
 			back("That application was not found or has already been reviewed.")
 			return
@@ -203,6 +207,11 @@ func (h *Handlers) AdminApplicationReview(w http.ResponseWriter, r *http.Request
 		if err != nil {
 			log.Printf("admin applications: load failed: %v", err)
 			errors.Render(w, "Could not save the decision", http.StatusInternalServerError)
+			return
+		}
+
+		if !agreed {
+			back("This applicant has not accepted the vendor agreement yet. Ask them to open Sell with us and accept it, then approve.")
 			return
 		}
 

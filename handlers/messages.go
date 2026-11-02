@@ -371,13 +371,16 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 	var shopName, area string
 	var offersPickup, offersDelivery bool
 	var deliveryFeeKobo int
-	err = h.DB.QueryRow(`SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(v.area, ''), v.offers_pickup, v.offers_delivery, COALESCE(v.delivery_fee_kobo, 0)
+	err = retryDB(func() error {
+		return h.DB.QueryRowContext(r.Context(), `SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(v.area, ''), COALESCE(v.offers_pickup, false), COALESCE(v.offers_delivery, false), COALESCE(v.delivery_fee_kobo, 0)
 		FROM message_threads t JOIN vendors v ON v.id=t.vendor_id WHERE t.id=$1`, threadID).Scan(&customerID, &ownerID, &shopName, &area, &offersPickup, &offersDelivery, &deliveryFeeKobo)
+	})
 	if err == sql.ErrNoRows {
 		writeChatAIError(w, http.StatusNotFound, "Conversation not found")
 		return
 	}
 	if err != nil {
+		log.Printf("AI chat: failed loading thread %d: %v", threadID, err)
 		writeChatAIError(w, http.StatusInternalServerError, "Could not load conversation")
 		return
 	}
@@ -386,14 +389,16 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var customerMessage string
-	err = h.DB.QueryRow(`SELECT body FROM messages WHERE thread_id=$1 AND sender_user_id=$2 ORDER BY id DESC LIMIT 1`, threadID, customerID).Scan(&customerMessage)
+	err = retryDB(func() error {
+		return h.DB.QueryRowContext(r.Context(), `SELECT body FROM messages WHERE thread_id=$1 AND sender_user_id=$2 ORDER BY id DESC LIMIT 1`, threadID, customerID).Scan(&customerMessage)
+	})
 	if err == sql.ErrNoRows {
 		writeChatAIError(w, http.StatusBadRequest, "The customer has not sent a message yet")
 		return
 	}
 	if err != nil {
 		log.Printf("AI chat: failed loading latest customer message thread=%d customer=%d: %v", threadID, customerID, err)
-		writeChatAIError(w, http.StatusInternalServerError, "Could not load the customer message")
+		writeChatAIError(w, http.StatusInternalServerError, "Could not read the customer's message just now. Please try again.")
 		return
 	}
 	if !aiConfigured() {

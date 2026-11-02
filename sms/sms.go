@@ -130,3 +130,52 @@ func VerifyOTP(pinID, code string) (bool, error) {
 
 	return result.Verified == "True", nil
 }
+
+type sendTextRequest struct {
+	APIKey  string `json:"api_key"`
+	To      string `json:"to"`
+	From    string `json:"from"`
+	SMS     string `json:"sms"`
+	Type    string `json:"type"`
+	Channel string `json:"channel"`
+}
+
+// SendText sends one plain text message through Termii. The phone number may be in local form
+// (08012345678) or international form; it is sent as digits starting with 234.
+func SendText(phone, message string) error {
+	apiKey := os.Getenv("TERMII_API_KEY")
+	if apiKey == "" {
+		return fmt.Errorf("TERMII_API_KEY not set")
+	}
+	digits := make([]rune, 0, len(phone))
+	for _, r := range phone {
+		if r >= '0' && r <= '9' {
+			digits = append(digits, r)
+		}
+	}
+	to := string(digits)
+	if len(to) == 11 && to[0] == '0' {
+		to = "234" + to[1:]
+	}
+	if len(to) < 12 {
+		return fmt.Errorf("invalid phone number")
+	}
+	sender := os.Getenv("TERMII_SENDER_ID")
+	if sender == "" {
+		sender = "N-Alert"
+	}
+	body, err := json.Marshal(sendTextRequest{APIKey: apiKey, To: to, From: sender, SMS: message, Type: "plain", Channel: "generic"})
+	if err != nil {
+		return err
+	}
+	resp, err := client.Post("https://api.ng.termii.com/api/sms/send", "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<16))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("termii returned HTTP %s", resp.Status)
+	}
+	return nil
+}

@@ -106,3 +106,4 @@ body.nm-lock{overflow:hidden}
 
 /* Pages that get a generated top bar: keep full-height layouts from scrolling by the bar's height */
 body[data-nm] > .nm-topbar ~ main{min-height:calc(100vh - 64px)!important}
+.nm-topnav>a.nm-cta[aria-current="page"]{background:var(--green,#174a32);color:#fff}

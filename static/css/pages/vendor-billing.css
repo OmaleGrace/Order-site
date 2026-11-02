@@ -18,3 +18,8 @@ main { max-width: 640px; margin: 0 auto; padding: 24px 5vw 70px; }
 .history h3 { margin: 0 0 10px; font-size: 1rem; color: var(--green); }
 .history-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
 .history-row:last-child { border-bottom: 0; }
+
+.payout-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 14px 0 6px; }
+.payout-split > div { padding: 12px 14px; border: 1px solid #e3e9e2; border-radius: 12px; background: #f7faf6; }
+.payout-split span { display: block; color: #5b6a61; font-size: .84rem; }
+.payout-split strong { display: block; margin-top: 4px; font-size: 1.15rem; color: #174a32; }

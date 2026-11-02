@@ -130,6 +130,31 @@ func RateLimit(l *Limiter, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// RateLimitByUser limits a signed-in person by account instead of by address. Behind a hosting
+// proxy many different people can share one address, so an address-based limit makes strangers
+// use up each other's allowance. Use it behind RequireLogin; it falls back to the address.
+func RateLimitByUser(l *Limiter, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		key := ClientIP(r)
+		if id, err := UserIDFromRequest(r); err == nil {
+			key = "user:" + strconv.Itoa(id)
+		}
+		if !l.Hit(key) {
+			w.Header().Set("Retry-After", "60")
+			message := "You've used the AI helper a lot in the last few minutes. Please wait about a minute, then try again."
+			if strings.Contains(r.Header.Get("Accept"), "application/json") {
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusTooManyRequests)
+				_ = json.NewEncoder(w).Encode(map[string]string{"error": message})
+				return
+			}
+			http.Error(w, message, http.StatusTooManyRequests)
+			return
+		}
+		next(w, r)
+	}
+}
+
 // Shared limiters. Each is a ceiling per visitor address; the login and
 // reset code add stricter per-account limits on top.
 var (
@@ -141,8 +166,8 @@ var (
 	OTPSendIP         = NewLimiter(10, time.Hour)
 	OTPVerifyUser     = NewLimiter(10, time.Hour)
 	ApplyLimiter      = NewLimiter(10, time.Hour)
-	VendorAILimiter   = NewLimiter(20, 15*time.Minute)
-	MessageAILimiter  = NewLimiter(20, 15*time.Minute)
+	VendorAILimiter   = NewLimiter(30, 15*time.Minute)
+	MessageAILimiter  = NewLimiter(30, 15*time.Minute)
 	PayLimiter        = NewLimiter(20, time.Hour)
 	LoginFailsByEmail = NewLimiter(5, 15*time.Minute)
 	ForgotByEmail     = NewLimiter(3, time.Hour)

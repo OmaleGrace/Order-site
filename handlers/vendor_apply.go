@@ -44,6 +44,8 @@ type VendorApplyPage struct {
 	SetupFeeKobo      int
 	CommissionPercent int
 	IDTypes           []IDTypeOption
+	AgreementAccepted bool
+	AgreementVersion  string
 }
 
 func (h *Handlers) sessionUserID(r *http.Request) (int, bool) {
@@ -91,6 +93,7 @@ func (h *Handlers) VendorApply(w http.ResponseWriter, r *http.Request) {
 		SetupFeeKobo:      vendorSetupFeeKobo(),
 		CommissionPercent: commissionPercent(),
 		IDTypes:           idTypeOptions,
+		AgreementVersion:  vendorAgreementVersion,
 	}
 
 	var owned int
@@ -105,11 +108,11 @@ func (h *Handlers) VendorApply(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var status string
 		err := h.DB.QueryRow(`
-			SELECT status, admin_note, business_name, phone
+			SELECT status, admin_note, business_name, phone, agreement_accepted_at IS NOT NULL
 			FROM vendor_applications
 			WHERE user_id = $1
 			ORDER BY id DESC LIMIT 1
-		`, userID).Scan(&status, &page.AdminNote, &page.BusinessName, &page.Phone)
+		`, userID).Scan(&status, &page.AdminNote, &page.BusinessName, &page.Phone, &page.AgreementAccepted)
 
 		switch {
 		case err == sql.ErrNoRows:
@@ -229,11 +232,17 @@ func (h *Handlers) VendorApplySubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.FormValue("agree") != "on" {
+		back("Please read and accept the vendor agreement to apply.")
+		return
+	}
+
 	_, err := h.DB.Exec(`
 		INSERT INTO vendor_applications
-		(user_id, business_name, owner_name, phone, area, address, id_type, online_link, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-	`, userID, business, owner, normalized, area, address, idType, link, notes)
+		(user_id, business_name, owner_name, phone, area, address, id_type, online_link, notes,
+		 agreement_version, agreement_accepted_at, agreement_ip)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
+	`, userID, business, owner, normalized, area, address, idType, link, notes, vendorAgreementVersion, middleware.ClientIP(r))
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			back("You already have an application waiting for review.")

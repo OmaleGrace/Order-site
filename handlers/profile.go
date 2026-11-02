@@ -155,7 +155,8 @@ func (h *Handlers) updateProfile(w http.ResponseWriter, r *http.Request) {
 			r.Context(),
 			file,
 			uploader.UploadParams{
-				Folder: "graces-kitchen/profiles",
+				Folder:         "graces-kitchen/profiles",
+				Transformation: "c_limit,w_600,h_600/q_auto,f_auto", // shrink big phone photos before storing
 			},
 		)
 

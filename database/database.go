@@ -125,6 +125,26 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Older databases may hold payment_reference as a number. References look like
+	// "ORDER-14-1730000000", so the column must be text. Convert it once, and index
+	// the text form the payment lookups use.
+	if _, err = db.Exec(`
+		DO $$
+		BEGIN
+			IF EXISTS (
+				SELECT 1 FROM information_schema.columns
+				WHERE table_name = 'orders' AND column_name = 'payment_reference'
+				  AND data_type NOT IN ('character varying', 'text')
+			) THEN
+				ALTER TABLE orders ALTER COLUMN payment_reference TYPE VARCHAR(100) USING payment_reference::text;
+			END IF;
+		END $$;
+		CREATE INDEX IF NOT EXISTS orders_payment_reference_idx ON orders ((payment_reference::text));
+	`); err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// Create order_items table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS order_items (
@@ -428,6 +448,36 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_name TEXT NOT NULL DEFAULT '';
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified BOOLEAN NOT NULL DEFAULT FALSE;
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified_at TIMESTAMPTZ;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Held payouts and automatic transfers: an order's completion time starts the hold, and each
+	// payout records whether it is still being sent, was paid, or failed.
+	_, err = db.Exec(`
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;
+		UPDATE orders SET completed_at = created_at WHERE status = 'completed' AND completed_at IS NULL;
+		ALTER TABLE vendor_payouts ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'paid';
+		ALTER TABLE vendor_payouts ADD COLUMN IF NOT EXISTS method TEXT NOT NULL DEFAULT 'manual';
+		ALTER TABLE vendor_payouts ADD COLUMN IF NOT EXISTS transfer_reference TEXT;
+		ALTER TABLE vendor_payouts ADD COLUMN IF NOT EXISTS transfer_code TEXT;
+		ALTER TABLE vendor_payouts ADD COLUMN IF NOT EXISTS failure_reason TEXT NOT NULL DEFAULT '';
+		CREATE UNIQUE INDEX IF NOT EXISTS vendor_payouts_transfer_reference_idx ON vendor_payouts (transfer_reference) WHERE transfer_reference IS NOT NULL;
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS paystack_recipient_code TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS paystack_recipient_account TEXT NOT NULL DEFAULT '';
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// The vendor agreement a person accepts when applying; admins cannot approve without it.
+	_, err = db.Exec(`
+		ALTER TABLE vendor_applications ADD COLUMN IF NOT EXISTS agreement_version TEXT NOT NULL DEFAULT '';
+		ALTER TABLE vendor_applications ADD COLUMN IF NOT EXISTS agreement_accepted_at TIMESTAMPTZ;
+		ALTER TABLE vendor_applications ADD COLUMN IF NOT EXISTS agreement_ip TEXT NOT NULL DEFAULT '';
 	`)
 	if err != nil {
 		db.Close()

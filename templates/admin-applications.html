@@ -32,6 +32,7 @@
                 <div><span class="label">Phone (call this number)</span><a href="{{.PhoneLink}}">📞 {{.Phone}}</a></div>
                 <div><span class="label">ID they will show</span><strong>{{.IDTypeLabel}}</strong></div>
                 <div><span class="label">Account email</span><strong>{{.Email}}</strong></div>
+                <div class="full"><span class="label">Vendor agreement</span>{{if .AgreementAt}}<strong>✅ Accepted {{.AgreementAt}} (version {{.AgreementVer}})</strong>{{else}}<strong>⚠️ Not accepted yet. You cannot approve until they accept it.</strong>{{end}}</div>
                 <div><span class="label">Area</span><strong>{{.Area}}</strong></div>
                 <div><span class="label">Shop address</span><strong>{{.Address}}</strong></div>
                 {{if .OnlineLink}}<div class="full"><span class="label">Business page</span><a href="{{.OnlineLink}}" target="_blank" rel="noopener noreferrer">{{.OnlineLink}}</a></div>{{end}}

@@ -44,6 +44,16 @@
             <p class="sub">Thank you, {{.BusinessName}}. We will contact you on <strong>{{.Phone}}</strong> to verify your identity. Please keep your ID ready, and answer calls from unknown numbers over the next few days.</p>
             <p class="sub">You will pay only after you are approved.</p>
         </div>
+        {{if not .AgreementAccepted}}
+        <div class="card">
+            <h2>One more step: accept the vendor agreement</h2>
+            <p class="sub">We cannot approve your shop until you have read and accepted the <a href="/vendor-agreement" target="_blank" rel="noopener">vendor agreement</a>.</p>
+            <form action="/become-a-vendor/agree" method="post">
+                <label class="confirm"><input type="checkbox" name="agree"> <span>I have read and I accept the vendor agreement (version {{.AgreementVersion}}).</span></label>
+                <button type="submit" class="submit-btn">Accept agreement</button>
+            </form>
+        </div>
+        {{end}}
 
     {{else}}
 
@@ -115,6 +125,12 @@
                         <label for="notes">Anything else we should know (optional)</label>
                         <textarea name="notes" id="notes" maxlength="500" placeholder="For example: how long you have been cooking, what you sell"></textarea>
                         <p class="field-error" id="notes-error" aria-live="polite"></p>
+                    </div>
+                    <div class="full">
+                        <label class="confirm">
+                            <input type="checkbox" name="agree" id="agree">
+                            <span>I have read and I accept the <a href="/vendor-agreement" target="_blank" rel="noopener">vendor agreement</a>.</span>
+                        </label>
                     </div>
                     <div class="full">
                         <label class="confirm">

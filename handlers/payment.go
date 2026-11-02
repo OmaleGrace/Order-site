@@ -33,6 +33,12 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// A vendor's setup payment that landed on the customer callback: send it where it belongs.
+	if strings.HasPrefix(reference, "VENDOR-") {
+		http.Redirect(w, r, "/vendor/payment/callback?reference="+url.QueryEscape(reference), http.StatusSeeOther)
+		return
+	}
+
 	req, err := http.NewRequest(
 		http.MethodGet,
 		"https://api.paystack.co/transaction/verify/"+url.PathEscape(reference),
@@ -85,7 +91,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRow(`
     SELECT total_kobo
     FROM orders
-    WHERE payment_reference = $1
+    WHERE payment_reference::text = $1::text
 `, paystackResponse.Data.Reference).Scan(&orderTotal)
 
 	if err != nil {
@@ -107,7 +113,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRow(`
 		SELECT id, user_id, total_kobo, status
 		FROM orders
-		WHERE payment_reference = $1
+		WHERE payment_reference::text = $1::text
 	`, paystackResponse.Data.Reference).Scan(
 		&orderID,
 		&userID,
@@ -218,6 +224,8 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		if err := notifyVendorScheduledOrder(h.DB, orderID); err != nil {
 			fmt.Println("Vendor scheduled-order notification error:", err)
 		}
+	} else {
+		go notifyVendorNewOrder(h.DB, orderID)
 	}
 	if err := createNotification(h.DB, userID, "order", notificationTitle, notificationMessage, "/orders"); err != nil {
 		fmt.Println("Order notification error:", err)
@@ -269,11 +277,18 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 			Status    string `json:"status"`
 			Reference string `json:"reference"`
 			Amount    int    `json:"amount"`
+			Reason    string `json:"reason"`
 		} `json:"data"`
 	}
 
 	if err := json.Unmarshal(body, &event); err != nil {
 		errors.Render(w, "Invalid webhook payload", http.StatusBadRequest)
+		return
+	}
+
+	// Money sent to vendors reports back through transfer.* events.
+	if strings.HasPrefix(event.Event, "transfer.") {
+		h.transferWebhook(w, event.Event, event.Data.Reference, event.Data.Reason)
 		return
 	}
 
@@ -297,7 +312,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRow(`
 		SELECT id, user_id, total_kobo, status
 		FROM orders
-		WHERE payment_reference = $1
+		WHERE payment_reference::text = $1::text
 	`, event.Data.Reference).Scan(
 		&orderID,
 		&userID,
@@ -405,6 +420,8 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		if err := notifyVendorScheduledOrder(h.DB, orderID); err != nil {
 			fmt.Println("Vendor scheduled-order notification error:", err)
 		}
+	} else {
+		go notifyVendorNewOrder(h.DB, orderID)
 	}
 	if err := createNotification(h.DB, userID, "order", notificationTitle, notificationMessage, "/orders"); err != nil {
 		fmt.Println("Order notification error:", err)

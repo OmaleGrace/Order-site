@@ -41,53 +41,56 @@
     <a href="/help">Help & Support</a></nav>
 </header>
 
-<section class="menu-intro">
-    <span class="menu-eyebrow">Fresh from local kitchens</span>
-    <h1>Our Menu</h1>
-    <p>Choose from freshly prepared meals, cooked by shops we have checked.</p>
-</section>
+<section class="mn-top">
+    <div class="mn-bar">
+        <div class="mn-title">
+            <h1>Menu</h1>
+            <p>{{len .Items}} {{if eq (len .Items) 1}}dish{{else}}dishes{{end}}{{if .Search}} for “{{.Search}}”{{end}}{{if .Category}} in {{.Category}}{{end}} from shops we've checked</p>
+        </div>
 
-<section class="menu-filters">
-    <form action="/menu" method="get" class="search-form search-form-main">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="search" name="search" placeholder="Search meals, shops or ingredients..." value="{{.Search}}" aria-label="Search meals or shops" autocomplete="off">
-        {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
-        {{if .Sort}}<input type="hidden" name="sort" value="{{.Sort}}">{{end}}
-        {{if .MinPrice}}<input type="hidden" name="min_price" value="{{.MinPrice}}">{{end}}
-        {{if .MaxPrice}}<input type="hidden" name="max_price" value="{{.MaxPrice}}">{{end}}
-        <button type="submit">Search</button>
-    </form>
-
-    <div class="filter-panel">
-        <div class="filter-heading"><strong>Refine your search</strong><span>Filter and sort results</span></div>
-        <form action="/menu" method="get" class="advanced-filters">
-            {{if .Search}}<input type="hidden" name="search" value="{{.Search}}">{{end}}
+        <form action="/menu" method="get" class="search-form search-form-main" role="search">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="search" name="search" placeholder="Search meals, shops or ingredients" value="{{.Search}}" aria-label="Search meals or shops" autocomplete="off">
             {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
-            <label>Sort
-                <select name="sort">
-                    <option value="relevance" {{if eq .Sort "relevance"}}selected{{end}}>Recommended</option>
-                    <option value="name" {{if eq .Sort "name"}}selected{{end}}>Name A–Z</option>
-                    <option value="price_asc" {{if eq .Sort "price_asc"}}selected{{end}}>Price: low to high</option>
-                    <option value="price_desc" {{if eq .Sort "price_desc"}}selected{{end}}>Price: high to low</option>
-                </select>
-            </label>
-            <label>Min price (₦)
-                <input type="number" name="min_price" min="0" step="100" inputmode="numeric" value="{{.MinPrice}}" placeholder="Any">
-            </label>
-            <label>Max price (₦)
-                <input type="number" name="max_price" min="0" step="100" inputmode="numeric" value="{{.MaxPrice}}" placeholder="Any">
-            </label>
-            <button type="submit" class="filter-apply">Apply filters</button>
-            {{if or .Search .Category .MinPrice .MaxPrice}}<a class="filter-clear" href="/menu">Clear all</a>{{end}}
+            {{if .Sort}}<input type="hidden" name="sort" value="{{.Sort}}">{{end}}
+            {{if .MinPrice}}<input type="hidden" name="min_price" value="{{.MinPrice}}">{{end}}
+            {{if .MaxPrice}}<input type="hidden" name="max_price" value="{{.MaxPrice}}">{{end}}
+            <button type="submit">Search</button>
         </form>
+
+        <details class="mn-filter"{{if or .MinPrice .MaxPrice}} open{{end}}>
+            <summary><span aria-hidden="true">⚙</span> Sort &amp; price{{if or .MinPrice .MaxPrice}}<i class="mn-dot" aria-label="filters applied"></i>{{end}}</summary>
+            <form action="/menu" method="get" class="advanced-filters">
+                {{if .Search}}<input type="hidden" name="search" value="{{.Search}}">{{end}}
+                {{if .Category}}<input type="hidden" name="category" value="{{.Category}}">{{end}}
+                <label>Sort by
+                    <select name="sort">
+                        <option value="relevance" {{if eq .Sort "relevance"}}selected{{end}}>Recommended</option>
+                        <option value="name" {{if eq .Sort "name"}}selected{{end}}>Name A–Z</option>
+                        <option value="price_asc" {{if eq .Sort "price_asc"}}selected{{end}}>Price: low to high</option>
+                        <option value="price_desc" {{if eq .Sort "price_desc"}}selected{{end}}>Price: high to low</option>
+                    </select>
+                </label>
+                <label>Lowest price (₦)
+                    <input type="number" name="min_price" min="0" step="100" inputmode="numeric" value="{{.MinPrice}}" placeholder="0">
+                </label>
+                <label>Highest price (₦)
+                    <input type="number" name="max_price" min="0" step="100" inputmode="numeric" value="{{.MaxPrice}}" placeholder="Any">
+                </label>
+                <div class="mn-filter-actions">
+                    <button type="submit" class="filter-apply">Show dishes</button>
+                    {{if or .Search .Category .MinPrice .MaxPrice}}<a class="filter-clear" href="/menu">Clear all</a>{{end}}
+                </div>
+            </form>
+        </details>
     </div>
 
-    <div class="category-filters">
-        <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}">All</a>
+    <nav class="category-filters" aria-label="Categories">
+        <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}"{{if not .Category}} aria-current="true"{{end}}>All</a>
         {{range .Categories}}
-        <a href="/menu?category={{.}}{{if $.Search}}&search={{$.Search}}{{end}}" class="category-btn {{if eq $.Category .}}active{{end}}">{{.}}</a>
+        <a href="/menu?category={{.}}{{if $.Search}}&search={{$.Search}}{{end}}" class="category-btn {{if eq $.Category .}}active{{end}}"{{if eq $.Category .}} aria-current="true"{{end}}>{{.}}</a>
         {{end}}
-    </div>
+    </nav>
 </section>
 
 <main class="menu-container">
@@ -95,11 +98,6 @@
     {{if .Message}}
         <p class="menu-message">{{.Message}}</p>
     {{end}}
-
-    <div class="results-bar">
-        <p class="results-count"><strong>{{len .Items}}</strong> {{if eq (len .Items) 1}}dish{{else}}dishes{{end}}{{if .Search}} matching “{{.Search}}”{{end}}{{if .Category}} · {{.Category}}{{end}}{{if or .MinPrice .MaxPrice}} · price filter applied{{end}}</p>
-        {{if or .Search .Category}}<a href="/menu" class="clear-link">Clear filters ✕</a>{{end}}
-    </div>
 
     <section class="menu-grid">
 
@@ -127,7 +125,7 @@
 
                     <form action="/cart/add" method="post" class="add-to-cart-form" data-item-id="{{.ID}}">
                         <input type="hidden" name="id" value="{{.ID}}">
-                        <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">{{if .ID}}+ Customize & Add{{end}}</button>
+                        <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">{{if .ID}}+ Add{{end}}</button>
                     </form>
                 </div>
             </div>

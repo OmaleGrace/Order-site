@@ -127,14 +127,16 @@
   });
 
   // ---- polling -----------------------------------------------------------
-  let polling = false;
+  let polling = false, stopped = false, delay = 5000;
   async function poll() {
     if (polling) return;
     polling = true;
     try {
       const visible = document.visibilityState === 'visible' ? 1 : 0;
       const response = await fetch(`/messages/${threadID}/updates?after=${lastID}&visible=${visible}`, {headers: {'Accept':'application/json'}, cache:'no-store'});
-      if (!response.ok) return;
+      if (response.status === 401) { stopped = true; return; }   // logged out: stop asking
+      if (!response.ok) { delay = Math.min(delay * 2, 60000); return; }
+      delay = 5000;
       const data = await response.json();
       const updates = data.messages || [];
       if (updates.length) {
@@ -146,7 +148,12 @@
     finally { polling = false; }
   }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') poll(); });
-  window.setInterval(poll, 5000);
+  // Ask every 5 seconds while the chat is on screen, every 30 seconds in a hidden tab, and back
+  // off after an error, so an open tab never hammers the server (or the database).
+  (function schedule() {
+    if (stopped) return;
+    window.setTimeout(async () => { await poll(); schedule(); }, document.visibilityState === 'visible' ? delay : Math.max(delay, 30000));
+  })();
   const draftButton = document.getElementById('ai-draft-button');
   if (draftButton) {
     draftButton.addEventListener('click', async () => {

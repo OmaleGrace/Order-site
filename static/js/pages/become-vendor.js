@@ -66,9 +66,10 @@
     var touched = {};
     var submitBtn = el('submit-btn');
     var confirmBox = el('confirm');
+    var agreeBox = el('agree');
 
     function refresh() {
-        var allOk = confirmBox.checked;
+        var allOk = confirmBox.checked && agreeBox.checked;
         names.forEach(function (name) {
             var input = el(name);
             var err = checks[name](input.value);
@@ -86,6 +87,7 @@
         });
     });
     confirmBox.addEventListener('change', refresh);
+    agreeBox.addEventListener('change', refresh);
 
     form.addEventListener('submit', function (e) {
         names.forEach(function (name) { touched[name] = true; });

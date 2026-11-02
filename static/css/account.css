@@ -305,3 +305,9 @@
 .account-reorder-form { grid-column:1 / -1; margin-top:4px; }
 .account-reorder-btn { width:100%; border:1px solid rgba(23,74,50,.16); background:#f7fbf8; color:var(--green); min-height:38px; border-radius:10px; font:inherit; font-size:.78rem; font-weight:800; cursor:pointer; }
 .account-reorder-btn:hover { background:#e7f6ed; }
+
+/* Account v2: fewer, clearer blocks */
+html body .account-feature-grid { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+html body .account-welcome { border-radius: 18px; }
+html body .account-stat-card { border-radius: 14px; }
+html body .account-section { border-radius: 18px; }

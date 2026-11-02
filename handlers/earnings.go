@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -22,12 +23,17 @@ type VendorEarnings struct {
 	CommissionKobo int // the platform's cut
 	PaidOutKobo    int // already sent to the vendor
 	BalanceKobo    int // still owed to the vendor
+	AvailableKobo  int // part of the balance that can be sent now
+	HeldKobo       int // completed orders still inside the hold period
+	InProgressKobo int // paid orders that are not completed yet
+	HoldHours      int
 }
 
 type VendorPayoutRow struct {
 	AmountKobo int
 	Note       string
 	PaidAt     string
+	Status     string // paid, processing
 }
 
 func (h *Handlers) vendorEarnings(vendorID int) (VendorEarnings, error) {
@@ -41,19 +47,25 @@ func (h *Handlers) vendorEarnings(vendorID int) (VendorEarnings, error) {
 		return e, err
 	}
 	err = h.DB.QueryRow(
-		"SELECT COALESCE(SUM(amount_kobo), 0) FROM vendor_payouts WHERE vendor_id = $1", vendorID,
+		"SELECT COALESCE(SUM(amount_kobo), 0) FROM vendor_payouts WHERE vendor_id = $1 AND status <> 'failed'", vendorID,
 	).Scan(&e.PaidOutKobo)
 	if err != nil {
 		return e, err
 	}
 	e.BalanceKobo = e.SalesKobo - e.CommissionKobo - e.PaidOutKobo
+	if pos, perr := loadPayoutPosition(context.Background(), h.DB, vendorID); perr == nil {
+		e.AvailableKobo, e.HeldKobo, e.InProgressKobo = pos.AvailableKobo, pos.HeldKobo, pos.InProgressKobo
+	} else {
+		log.Printf("earnings: payout position failed for vendor %d: %v", vendorID, perr)
+	}
+	e.HoldHours = payoutHoldHours()
 	return e, nil
 }
 
 func (h *Handlers) vendorPayouts(vendorID, limit int) []VendorPayoutRow {
 	rows, err := h.DB.Query(`
-		SELECT amount_kobo, note, TO_CHAR(paid_at, 'DD Mon YYYY')
-		FROM vendor_payouts WHERE vendor_id = $1
+		SELECT amount_kobo, note, TO_CHAR(paid_at, 'DD Mon YYYY'), status
+		FROM vendor_payouts WHERE vendor_id = $1 AND status <> 'failed'
 		ORDER BY paid_at DESC, id DESC LIMIT $2
 	`, vendorID, limit)
 	if err != nil {
@@ -64,7 +76,7 @@ func (h *Handlers) vendorPayouts(vendorID, limit int) []VendorPayoutRow {
 	var out []VendorPayoutRow
 	for rows.Next() {
 		var p VendorPayoutRow
-		if err := rows.Scan(&p.AmountKobo, &p.Note, &p.PaidAt); err == nil {
+		if err := rows.Scan(&p.AmountKobo, &p.Note, &p.PaidAt, &p.Status); err == nil {
 			out = append(out, p)
 		}
 	}
@@ -89,6 +101,8 @@ type AdminEarningsPage struct {
 	TotalSalesKobo    int
 	TotalCommission   int
 	TotalOwedKobo     int
+	TotalAvailable    int
+	HoldHours         int
 }
 
 // AdminEarnings shows, per vendor, what was sold, what you keep, and what you still owe them.
@@ -103,7 +117,7 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 			FROM orders WHERE status NOT IN ('pending', 'cancelled') GROUP BY vendor_id
 		) o ON o.vendor_id = v.id
 		LEFT JOIN (
-			SELECT vendor_id, SUM(amount_kobo) AS paid FROM vendor_payouts GROUP BY vendor_id
+			SELECT vendor_id, SUM(amount_kobo) AS paid FROM vendor_payouts WHERE status <> 'failed' GROUP BY vendor_id
 		) p ON p.vendor_id = v.id
 		ORDER BY v.id
 	`)
@@ -114,7 +128,7 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	page := AdminEarningsPage{Notice: r.URL.Query().Get("msg"), CommissionPercent: commissionPercent()}
+	page := AdminEarningsPage{Notice: r.URL.Query().Get("msg"), CommissionPercent: commissionPercent(), HoldHours: payoutHoldHours()}
 	for rows.Next() {
 		var row AdminEarningsRow
 		if err := rows.Scan(&row.VendorID, &row.Name, &row.BankName, &row.BankCode, &row.AccountNumber, &row.AccountName, &row.AccountVerified, &row.Orders, &row.SalesKobo, &row.CommissionKobo, &row.PaidOutKobo); err != nil {
@@ -123,6 +137,10 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		row.BalanceKobo = row.SalesKobo - row.CommissionKobo - row.PaidOutKobo
+		if pos, perr := loadPayoutPosition(r.Context(), h.DB, row.VendorID); perr == nil {
+			row.AvailableKobo, row.HeldKobo, row.InProgressKobo = pos.AvailableKobo, pos.HeldKobo, pos.InProgressKobo
+		}
+		page.TotalAvailable += row.AvailableKobo
 		page.TotalSalesKobo += row.SalesKobo
 		page.TotalCommission += row.CommissionKobo
 		page.TotalOwedKobo += row.BalanceKobo
@@ -227,21 +245,14 @@ func (h *Handlers) AdminRecordPayout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var sales, comm, paid int
-	err = tx.QueryRow(`
-		SELECT COALESCE(SUM(total_kobo), 0), COALESCE(SUM(commission_kobo), 0)
-		FROM orders WHERE vendor_id = $1 AND status NOT IN ('pending', 'cancelled')
-	`, vendorID).Scan(&sales, &comm)
-	if err == nil {
-		err = tx.QueryRow("SELECT COALESCE(SUM(amount_kobo), 0) FROM vendor_payouts WHERE vendor_id = $1", vendorID).Scan(&paid)
-	}
+	pos, err := loadPayoutPosition(r.Context(), tx, vendorID)
 	if err != nil {
 		log.Printf("admin payout: balance failed: %v", err)
 		errors.Render(w, "Could not record the payout", http.StatusInternalServerError)
 		return
 	}
-	if amount > sales-comm-paid {
-		back("That is more than this vendor is owed (₦" + money(sales-comm-paid) + ").")
+	if amount > pos.AvailableKobo {
+		back("Only ₦" + money(pos.AvailableKobo) + " can be paid out now. The rest is on hold for " + strconv.Itoa(payoutHoldHours()) + " hours after each order is completed, or the orders are not completed yet.")
 		return
 	}
 

@@ -1,9 +1,11 @@
 {{define "head-common"}}<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#174a32">
+    <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
     <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    <link rel="stylesheet" href="/static/css/nav-menu.css?v=1">{{end}}
+    <link rel="stylesheet" href="/static/css/nav-menu.css?v=1">
+    <link rel="stylesheet" href="/static/css/ui.css?v=1">{{end}}
 
 {{/* Search-engine description for public pages: {{template "meta-desc" "Short summary"}} */}}
 {{define "meta-desc"}}<meta name="description" content="{{.}}">
@@ -12,3 +14,14 @@
 
 {{/* Keeps private pages (accounts, vendor and admin tools) out of search results. */}}
 {{define "meta-noindex"}}<meta name="robots" content="noindex, nofollow">{{end}}
+
+{{/* Shared footer for customer pages: {{template "site-footer"}} */}}
+{{define "site-footer"}}<footer class="ui-footer">
+    <div class="ui-footer-inner">
+        <div><strong>{{brandName}}</strong><p>Order from local food shops we've checked. Pay securely, pick up or get it delivered.</p></div>
+        <div><strong>Order</strong><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/orders">My orders</a></div>
+        <div><strong>Sell</strong><a href="/become-a-vendor">Open a shop</a><a href="/login">Vendor log in</a></div>
+        <div><strong>Company</strong><a href="/about">About</a><a href="/contact">Contact</a><a href="/help">Help &amp; support</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div>
+    </div>
+    <div class="ui-footer-base">&copy; 2026 {{brandName}}. Payments are processed by Paystack.</div>
+</footer>{{end}}

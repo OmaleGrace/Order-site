@@ -40,7 +40,12 @@
             <div class="history-row"><span>Our {{.CommissionPercent}}% commission</span><strong>−₦{{money .Earnings.CommissionKobo}}</strong></div>
             <div class="history-row"><span>Already sent to you</span><strong>−₦{{money .Earnings.PaidOutKobo}}</strong></div>
             <div class="history-row"><span><strong>Owed to you</strong></span><strong>₦{{money .Earnings.BalanceKobo}}</strong></div>
-            <p class="muted">Customers pay us, and we send you your share. Orders that are still waiting for payment, or were cancelled, are not counted.</p>
+            <div class="payout-split">
+                <div><span>Ready to send</span><strong>₦{{money .Earnings.AvailableKobo}}</strong></div>
+                <div><span>On hold ({{.Earnings.HoldHours}} hours after an order is completed)</span><strong>₦{{money .Earnings.HeldKobo}}</strong></div>
+                <div><span>Orders not completed yet</span><strong>₦{{money .Earnings.InProgressKobo}}</strong></div>
+            </div>
+            <p class="muted">Customers pay us, and we send you your share once an order is marked completed and the hold has passed. Mark orders completed as soon as they are handed over so your money is released sooner. Orders that are still waiting for payment, or were cancelled, are not counted.</p>
         </div>
 
         {{else}}
@@ -55,7 +60,7 @@
             <h3>Money sent to you</h3>
             {{range .Payouts}}
             <div class="history-row">
-                <span>{{.PaidAt}}{{if .Note}} · {{.Note}}{{end}}</span>
+                <span>{{.PaidAt}}{{if .Note}} · {{.Note}}{{end}}{{if eq .Status "processing"}} · on its way{{end}}</span>
                 <strong>₦{{money .AmountKobo}}</strong>
             </div>
             {{end}}

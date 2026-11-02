@@ -20,15 +20,16 @@
             <div class="total-box"><span>Customers paid (all shops)</span><strong>₦{{money .TotalSalesKobo}}</strong></div>
             <div class="total-box"><span>Your {{.CommissionPercent}}% commission</span><strong>₦{{money .TotalCommission}}</strong></div>
             <div class="total-box"><span>You still owe vendors</span><strong>₦{{money .TotalOwedKobo}}</strong></div>
+            <div class="total-box"><span>Ready to send now</span><strong>₦{{money .TotalAvailable}}</strong></div>
         </div>
 
         <div class="card">
             <h2>Money per vendor</h2>
-            <p class="muted">Customers pay into your Paystack account. The commission is yours; the rest belongs to the vendor. After you send a vendor their money, record it here so the balance goes down. Only paid orders are counted, and the commission is on food only, not delivery fees.</p>
+            <p class="muted">Customers pay into your Paystack account. The commission is yours; the rest belongs to the vendor. Money is released {{.HoldHours}} hours after an order is marked completed. Use <strong>Send with Paystack</strong> to pay the vendor's verified account automatically, or <strong>Record</strong> if you sent it yourself. The commission is on food only, not delivery fees.</p>
             <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Vendor / verified bank account</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Record a payout</th></tr>
+                    <tr><th>Vendor / verified bank account</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Ready / on hold</th><th>Pay vendor</th></tr>
                 </thead>
                 <tbody>
                     {{range .Rows}}
@@ -39,19 +40,25 @@
                         <td>₦{{money .CommissionKobo}}</td>
                         <td>₦{{money .PaidOutKobo}}</td>
                         <td class="owed">₦{{money .BalanceKobo}}</td>
+                        <td>₦{{money .AvailableKobo}}<div class="muted">on hold ₦{{money .HeldKobo}}<br>in progress ₦{{money .InProgressKobo}}</div></td>
                         <td>
-                            {{if and (gt .BalanceKobo 0) .AccountVerified}}
+                            {{if and (gt .AvailableKobo 0) .AccountVerified}}
+                            <form action="/admin/earnings/transfer" method="post" class="payout-form" data-confirm="Send this money to the vendor's bank account through Paystack now?">
+                                <input type="hidden" name="vendor_id" value="{{.VendorID}}">
+                                <input type="number" name="amount" min="100" step="0.01" max="{{money2 .AvailableKobo}}" value="{{money2 .AvailableKobo}}" required aria-label="Amount in naira">
+                                <button type="submit">Send with Paystack</button>
+                            </form>
                             <form action="/admin/earnings/payout" method="post" class="payout-form">
                                 <input type="hidden" name="vendor_id" value="{{.VendorID}}">
-                                <input type="number" name="amount" min="1" step="0.01" max="{{money2 .BalanceKobo}}" placeholder="₦ amount" required>
+                                <input type="number" name="amount" min="1" step="0.01" max="{{money2 .AvailableKobo}}" placeholder="₦ amount" required aria-label="Amount already sent">
                                 <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)">
-                                <button type="submit">Record</button>
+                                <button type="submit" class="secondary">Record</button>
                             </form>
-                            {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else}}<span class="muted">nothing owed</span>{{end}}
+                            {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else if gt .BalanceKobo 0}}<span class="muted">Nothing ready yet</span>{{else}}<span class="muted">nothing owed</span>{{end}}
                         </td>
                     </tr>
                     {{else}}
-                    <tr><td colspan="7" class="muted">No vendors yet.</td></tr>
+                    <tr><td colspan="8" class="muted">No vendors yet.</td></tr>
                     {{end}}
                 </tbody>
             </table>

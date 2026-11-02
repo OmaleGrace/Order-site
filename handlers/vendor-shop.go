@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
 
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/render"
 )
@@ -48,6 +50,15 @@ type ShopPage struct {
 	Reviews         []ShopReview
 	Dishes          []ShopDish
 	Categories      []string
+	Offers          []ShopOffer
+	ShareURL        string
+	ShareText       string
+}
+
+// ShopOffer is a public coupon shown on the shop page.
+type ShopOffer struct {
+	Code    string
+	Summary string
 }
 
 func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +99,36 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 				p.Reviews = append(p.Reviews, review)
 			}
 		}
+	}
+
+	p.ShareURL = strings.TrimRight(brand.SiteURL(), "/") + "/v/" + slug
+	p.ShareText = "Order from " + p.Name + " on " + brand.Name() + ": " + p.ShareURL
+	if offerRows, oerr := h.DB.Query(`
+		SELECT code, discount_type, discount_value, min_order_kobo, max_discount_kobo
+		FROM coupons
+		WHERE vendor_id = $1 AND active = TRUE AND starts_at <= NOW()
+		  AND (expires_at IS NULL OR expires_at > NOW())
+		  AND (usage_limit = 0 OR used_count + reserved_count < usage_limit)
+		ORDER BY created_at DESC LIMIT 3`, vendorID); oerr == nil {
+		for offerRows.Next() {
+			var code, kind string
+			var value, minKobo, maxKobo int
+			if offerRows.Scan(&code, &kind, &value, &minKobo, &maxKobo) != nil {
+				continue
+			}
+			text := fmt.Sprintf("₦%s off", nairaText(value))
+			if kind == "percentage" {
+				text = fmt.Sprintf("%d%% off", value)
+				if maxKobo > 0 {
+					text += fmt.Sprintf(" (up to ₦%s)", nairaText(maxKobo))
+				}
+			}
+			if minKobo > 0 {
+				text += fmt.Sprintf(" orders over ₦%s", nairaText(minKobo))
+			}
+			p.Offers = append(p.Offers, ShopOffer{Code: code, Summary: text})
+		}
+		offerRows.Close()
 	}
 
 	rows, err := h.DB.Query(`

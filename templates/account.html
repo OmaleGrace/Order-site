@@ -28,9 +28,8 @@
             <div class="profile-icon" aria-hidden="true">👤</div>
             {{end}}
             <div>
-                <p class="eyebrow">Your ENIE account</p>
                 <h1>Welcome back{{if .Name}}, {{.Name}}{{end}}.</h1>
-                <p>Everything you need to manage your orders, favourites and profile in one place.</p>
+                <p>Track orders, reorder favourites and manage your details.</p>
             </div>
         </div>
         <a href="/account/edit" class="account-button primary account-edit-btn">✏️ Edit profile</a>
@@ -53,22 +52,19 @@
 
     <section class="account-section">
         <div class="section-title-row">
-            <div><p class="eyebrow">Quick access</p><h2>Manage your account</h2></div>
+            <div><h2>Shortcuts</h2></div>
         </div>
         <div class="account-feature-grid">
             <a href="/loyalty" class="account-feature-card"><span class="feature-icon">✨</span><span><strong>Loyalty rewards</strong><small>See your points, tier and rewards progress.</small></span><b>→</b></a>
-            <a href="/orders" class="account-feature-card feature-primary"><span class="feature-icon">📦</span><span><strong>My orders</strong><small>Track current orders and review past purchases.</small></span><b>→</b></a>
             <a href="/favorites" class="account-feature-card"><span class="feature-icon">❤️</span><span><strong>Favourites</strong><small>Quickly find meals you've saved.</small></span><b>→</b></a>
-            <a href="/cart" class="account-feature-card"><span class="feature-icon">🛒</span><span><strong>My cart</strong><small>Review items and continue checkout.</small></span><b>→</b></a>
             <a href="/messages" class="account-feature-card"><span class="feature-icon">💬</span><span><strong>Messages</strong><small>Keep up with shop and support conversations.</small></span><b>→</b></a>
             <a href="/account/edit" class="account-feature-card"><span class="feature-icon">⚙️</span><span><strong>Profile & phone</strong><small>Update your profile details and phone verification.</small></span><b>→</b></a>
-            <a href="/menu" class="account-feature-card"><span class="feature-icon">🍽️</span><span><strong>Order food</strong><small>Discover something new or order a favourite.</small></span><b>→</b></a>
         </div>
     </section>
 
     <section class="account-section recent-section">
         <div class="section-title-row">
-            <div><p class="eyebrow">Your activity</p><h2>Recent orders</h2></div>
+            <div><h2>Recent orders</h2></div>
             {{if .RecentOrders}}<a href="/orders" class="section-link">View all →</a>{{end}}
         </div>
 
@@ -127,6 +123,7 @@
     </div>
 </main>
 
+{{template "site-footer"}}
 <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>

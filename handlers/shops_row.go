@@ -8,7 +8,9 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 		SELECT v.name, v.slug, v.description, v.area, v.logo_url, v.verified,
 		       v.offers_pickup, v.offers_delivery, v.delivery_fee_kobo,
 		       COALESCE(mi.dishes, 0) AS dishes,
-		       COALESCE(oc.completed, 0) AS completed
+		       COALESCE(oc.completed, 0) AS completed,
+		       COALESCE((SELECT AVG(r.rating) FROM order_reviews r WHERE r.vendor_id = v.id), 0) AS rating,
+		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count
 		FROM vendors v
 		JOIN (
 			SELECT vendor_id, COUNT(*) AS dishes
@@ -35,7 +37,7 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 	for rows.Next() {
 		var s ShopCard
 		if err := rows.Scan(&s.Name, &s.Slug, &s.Description, &s.Area, &s.LogoURL, &s.Verified,
-			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed); err != nil {
+			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount); err != nil {
 			log.Printf("home: shops scan failed: %v", err)
 			continue
 		}

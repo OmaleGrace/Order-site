@@ -360,3 +360,69 @@
 .custom-submit{width:100%;margin-top:16px;min-height:48px}
 .custom-loading{text-align:center;padding:28px;color:var(--muted)}
 @media(max-width:620px){.customization-dialog{margin:2vh auto;padding:18px;border-radius:18px}.custom-price-summary{grid-template-columns:1fr 1fr}.custom-price-summary .custom-total{grid-column:1/-1}.custom-option-copy{align-items:flex-start;flex-direction:column;gap:2px}}
+
+/* ==========================================================================
+   Menu page v2: a working toolbar instead of a hero. Search and filters sit
+   at the top so dishes start above the fold.
+   ========================================================================== */
+body .mn-top { max-width: 1200px; margin: 0 auto; padding: 26px var(--page-gutter) 6px; }
+body .mn-bar { display: grid; grid-template-columns: 1fr minmax(260px, 460px) auto; gap: 14px 18px; align-items: center; position: relative; }
+body .mn-title h1 { margin: 0; font-size: clamp(1.7rem, 3.4vw, 2.3rem); color: var(--green-dark); letter-spacing: -.04em; }
+body .mn-title p { margin: 3px 0 0; color: var(--muted); font-size: .92rem; }
+body .mn-top .search-form { max-width: none; margin: 0; box-shadow: 0 1px 2px rgba(23,74,50,.06); }
+body .mn-top .search-form button { padding: 11px 18px; }
+body .mn-filter { position: relative; }
+body .mn-filter summary { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; border: 1.5px solid #dfe5d9; border-radius: 14px;
+  background: #fff; color: var(--green-dark); font-weight: 700; font-size: .92rem; cursor: pointer; list-style: none; user-select: none; }
+body .mn-filter summary::-webkit-details-marker { display: none; }
+body .mn-filter summary:hover, body .mn-filter[open] summary { border-color: var(--green); }
+body .mn-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); }
+body .mn-filter .advanced-filters { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; display: grid; gap: 12px; width: min(320px, 90vw);
+  padding: 16px; border: 1px solid rgba(23,74,50,.12); border-radius: 16px; background: #fff; box-shadow: 0 22px 48px rgba(16,40,28,.18); }
+body .mn-filter .advanced-filters label { display: grid; gap: 5px; font-size: .84rem; font-weight: 700; color: var(--muted); }
+body .mn-filter .advanced-filters select, body .mn-filter .advanced-filters input { width: 100%; min-height: 44px; padding: 0 12px; border-radius: 10px; font: inherit; color: var(--ink); }
+body .mn-filter-actions { display: flex; align-items: center; gap: 14px; }
+body .mn-filter .filter-apply { flex: 1; min-height: 46px; border: 0; border-radius: 12px; background: var(--green); color: #fff; font: inherit; font-weight: 750; cursor: pointer; }
+body .mn-filter .filter-apply:hover { background: var(--green-dark); }
+body .mn-filter .filter-clear { color: var(--terracotta); font-weight: 750; font-size: .9rem; }
+
+body .mn-top .category-filters { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 18px 0 8px; scrollbar-width: none; }
+body .mn-top .category-filters::-webkit-scrollbar { display: none; }
+body .mn-top .category-btn { flex: 0 0 auto; padding: 8px 16px; font-size: .9rem; border-width: 1px; }
+body .mn-top .category-btn:hover { transform: none; background: #f1f6f2; }
+body .mn-top .category-btn.active { background: var(--green); }
+
+/* Dish cards: the dish and its price lead; the shop is a quiet link underneath */
+body .menu-container { padding-top: 14px; }
+body .menu-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
+body .food-card { border-radius: 16px; box-shadow: var(--shadow); }
+body .food-card:hover { transform: none; box-shadow: 0 2px 4px rgba(23,74,50,.08), 0 16px 32px rgba(23,74,50,.13); }
+body .food-content { padding: 14px 16px 16px; }
+body .food-content h2 { font-size: 1.04rem; margin-bottom: 2px; }
+body .food-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 14px; font-size: .88rem; line-height: 1.55; }
+body .food-bottom { padding-top: 12px; border-top: 1px dashed #e3e8df; }
+body .food-price { font-size: 1.15rem; color: var(--green-dark); }
+body .add-cart-btn { padding: 10px 16px; background: #fff; color: var(--green); box-shadow: inset 0 0 0 1.5px var(--green); }
+body .add-cart-btn:hover { background: var(--green); color: #fff; transform: none; }
+body .custom-submit.add-cart-btn { background: var(--green); color: #fff; box-shadow: none; }
+
+@media (max-width: 860px) {
+  body .mn-bar { grid-template-columns: 1fr auto; }
+  body .mn-title { grid-column: 1 / -1; }
+  body .mn-filter .advanced-filters { right: 0; }
+}
+@media (max-width: 700px) {
+  body .mn-top { padding-top: 18px; }
+  body .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  body .mn-top .category-filters { margin-inline: calc(var(--page-gutter) * -1); padding-inline: var(--page-gutter); }
+}
+@media (max-width: 420px) { body .menu-grid { grid-template-columns: 1fr; } }
+body .mn-bar > * { min-width: 0; }
+@media (max-width: 700px) {
+  body .mn-top .search-form input { padding-inline: 4px; }
+  body .mn-filter summary { padding: 0 13px; }
+  body .food-bottom { flex-direction: row; align-items: center; }
+  body .food-bottom form { width: auto; }
+  body .add-cart-btn { width: auto; padding: 9px 16px; }
+}
+@media (max-width: 700px) { body .mn-top .search-form button { display: none; } body .mn-top .search-form { padding: 4px 10px; } }

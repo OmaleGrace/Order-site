@@ -261,6 +261,23 @@ HTML templates are embedded in the binary, so they are parsed once at start-up a
 TEMPLATES_DIR=templates go run .
 ```
 
+## Payouts, Notifications and Install Settings
+
+Optional environment variables added in this release:
+
+| Variable | Purpose |
+| --- | --- |
+| `PAYOUT_HOLD_HOURS` | Hours after an order is completed before its earnings can be paid out (default `24`). |
+| `TRUSTED_PROXY_COUNT` | Number of proxies in front of the app (Render = `1`) so rate limits count real visitor IPs. |
+| `TERMII_API_KEY`, `TERMII_SENDER_ID` | Enables SMS. Vendors also get a text when a paid order arrives. |
+| `VENDOR_ORDER_SMS=off` | Turns off the new-order text but keeps the in-app and email alerts. |
+
+Paystack Transfers (paying vendors from the admin earnings page): enable Transfers in the Paystack dashboard, turn off
+"Confirm transfers before sending" (OTP), and make sure the existing webhook URL receives `transfer.success`,
+`transfer.failed` and `transfer.reversed`. Without this, use the "Record" button to log payouts sent by hand.
+
+Installable app: `/manifest.webmanifest`, `/sw.js` and `/offline` make the site installable on phones.
+
 ## Delivery Pricing, Statements and Settlements
 
 * **Delivery pricing (vendors):** `/vendor/delivery` lets a shop set, for each area it serves, its own delivery fee, a minimum food order, and an amount above which delivery is free. A blank fee means "use the shop's default delivery fee". Prices live in `vendor_delivery_rates`, separate from the list of areas, so editing the shop profile never wipes them.
@@ -361,6 +378,3 @@ This project provided hands-on experience with:
 ## Customer-to-vendor messaging
 
 ENIE includes authenticated customer/vendor conversations at `/messages`. Customers can start a conversation from an active shop's public page; shop owners can reply from their message inbox. Messages are stored in PostgreSQL, the conversation page checks that the signed-in user is either the customer or the owner of the shop, and new messages are fetched every five seconds while the conversation is open. Message bodies are plain text and limited to 2,000 characters. Existing databases receive the `message_threads` and `messages` tables automatically during startup. Keep this feature behind HTTPS in production and never ask customers to share passwords, PINs, OTPs, or complete payment credentials in chat.
-
-
-okay now improve the looks. arrangement and UI of all pages i.e u can add features too and remove some things that are unecessary too

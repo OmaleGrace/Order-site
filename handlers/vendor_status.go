@@ -36,9 +36,10 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 
 	res, err := h.DB.Exec(`
 		UPDATE orders
-		SET status = $1
+		SET status = $1,
+		    completed_at = CASE WHEN $4::text = 'completed' THEN COALESCE(completed_at, NOW()) ELSE NULL END
 		WHERE id = $2 AND vendor_id = $3 AND status NOT IN ('pending', 'scheduled', 'cancelled')
-	`, status, orderID, vendorID)
+	`, status, orderID, vendorID, status)
 	if err != nil {
 		log.Printf("vendor status: update failed: %v", err)
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)

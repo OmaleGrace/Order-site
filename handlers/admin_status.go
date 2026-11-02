@@ -38,9 +38,10 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.DB.Exec(`
 	UPDATE orders
-	SET status = $1
+	SET status = $1,
+	    completed_at = CASE WHEN $3::text = 'completed' THEN COALESCE(completed_at, NOW()) ELSE NULL END
 	WHERE id = $2
-`, status, orderID)
+`, status, orderID, status)
 
 	if err != nil {
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)
