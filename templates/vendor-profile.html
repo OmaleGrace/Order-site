@@ -67,6 +67,21 @@
                 </div>
             </div>
 
+            <div class="card">
+                <h2>Opening hours</h2>
+                <p class="sub">Tick the days you are open and set your times (Nigeria time). Customers will see "Open now" or "Closed" on your shop. Leave every day unticked if you don't want to show opening hours. If you close after midnight, set the closing time earlier than the opening time.</p>
+                <div class="hours-grid">
+                    {{range .Hours}}
+                    <div class="hours-row">
+                        <label class="check"><input type="checkbox" name="open_{{.Weekday}}" {{if .Open}}checked{{end}}> {{.Name}}</label>
+                        <input type="time" name="opens_{{.Weekday}}" value="{{.Opens}}" aria-label="{{.Name}} opening time">
+                        <span aria-hidden="true">to</span>
+                        <input type="time" name="closes_{{.Weekday}}" value="{{.Closes}}" aria-label="{{.Name}} closing time">
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
             <button type="submit" class="save-btn" id="save-btn">Save shop details</button>
         </form>
 

@@ -125,7 +125,7 @@
 
                     <form action="/cart/add" method="post" class="add-to-cart-form" data-item-id="{{.ID}}">
                         <input type="hidden" name="id" value="{{.ID}}">
-                        <button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">{{if .ID}}+ Add{{end}}</button>
+                        {{if .HasOptions}}<button type="submit" class="add-cart-btn" data-customize-item="{{.ID}}" data-item-name="{{.Name}}" data-base-price="{{.PriceKobo}}">+ Customize &amp; Add</button>{{else}}<button type="submit" class="add-cart-btn">+ Add</button>{{end}}
                     </form>
                 </div>
             </div>

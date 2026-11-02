@@ -80,7 +80,7 @@ func TestPagesRenderWithoutMonthlyFee(t *testing.T) {
 	}
 
 	e := renderPage(t, "admin-earnings.html", f, AdminEarningsPage{CommissionPercent: 10, TotalSalesKobo: 500000, TotalCommission: 45000, TotalOwedKobo: 355000,
-		Rows: []AdminEarningsRow{{VendorID: 1, Name: "Mama Put", AccountVerified: true, VendorEarnings: VendorEarnings{Orders: 2, SalesKobo: 500000, CommissionKobo: 45000, BalanceKobo: 455000}}}})
+		Rows: []AdminEarningsRow{{VendorID: 1, Name: "Mama Put", AccountVerified: true, VendorEarnings: VendorEarnings{Orders: 2, SalesKobo: 500000, CommissionKobo: 45000, BalanceKobo: 455000, AvailableKobo: 455000}}}})
 	for _, want := range []string{"Mama Put", "₦4,550.00", `max="4550.00"`, "/admin/earnings/payout"} {
 		if !strings.Contains(e, want) {
 			t.Errorf("admin earnings missing %q", want)

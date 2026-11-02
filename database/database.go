@@ -504,6 +504,23 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Weekly opening hours. One row per open day; a vendor with no rows has not published hours.
+	// Times are "HH:MM" text read in Lagos time; a closing time earlier than the opening time means
+	// the shop closes after midnight.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS vendor_hours (
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			weekday SMALLINT NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+			opens TEXT NOT NULL,
+			closes TEXT NOT NULL,
+			PRIMARY KEY (vendor_id, weekday)
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	// Store the exact Nigerian state/LGA combinations each vendor serves.
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS vendor_delivery_areas (

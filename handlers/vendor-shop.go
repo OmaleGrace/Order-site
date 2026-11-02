@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
+
+	"Order-site/menu"
 
 	"Order-site/brand"
 	"Order-site/errors"
@@ -22,6 +25,7 @@ type ShopDish struct {
 	Category    string
 	Rating      float64
 	ReviewCount int
+	HasOptions  bool
 }
 
 type ShopReview struct {
@@ -53,6 +57,10 @@ type ShopPage struct {
 	Offers          []ShopOffer
 	ShareURL        string
 	ShareText       string
+	OpenKnown       bool
+	OpenNow         bool
+	OpenLabel       string
+	Hours           []ShopHoursRow
 }
 
 // ShopOffer is a public coupon shown on the shop page.
@@ -101,6 +109,13 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if week, herr := h.vendorWeekHours(vendorID); herr != nil {
+		log.Printf("shop: opening hours query failed: %v", herr)
+	} else {
+		p.OpenKnown, p.OpenNow, p.OpenLabel = openStatus(week, time.Now())
+		p.Hours = hoursRows(week)
+	}
+
 	p.ShareURL = strings.TrimRight(brand.SiteURL(), "/") + "/v/" + slug
 	p.ShareText = "Order from " + p.Name + " on " + brand.Name() + ": " + p.ShareURL
 	if offerRows, oerr := h.DB.Query(`
@@ -135,7 +150,8 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 		SELECT id, name, COALESCE(description, ''), price_kobo,
 		       COALESCE(image_url, ''), COALESCE(category, ''),
                COALESCE((SELECT AVG(r.rating) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
-               COALESCE((SELECT COUNT(*) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0)
+               COALESCE((SELECT COUNT(*) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
+               ` + strings.ReplaceAll(menu.HasOptionsSQL, "m.id", "menu_items.id") + `
 		FROM menu_items
 		WHERE vendor_id = $1 AND COALESCE(available, TRUE) = TRUE
 		ORDER BY category, name
@@ -150,7 +166,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 	seenCategories := make(map[string]bool)
 	for rows.Next() {
 		var d ShopDish
-		if err := rows.Scan(&d.ID, &d.Name, &d.Description, &d.PriceKobo, &d.ImageURL, &d.Category, &d.Rating, &d.ReviewCount); err != nil {
+		if err := rows.Scan(&d.ID, &d.Name, &d.Description, &d.PriceKobo, &d.ImageURL, &d.Category, &d.Rating, &d.ReviewCount, &d.HasOptions); err != nil {
 			log.Printf("shop: dishes scan failed: %v", err)
 			errors.Render(w, "Could not read this shop", http.StatusInternalServerError)
 			return

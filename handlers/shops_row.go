@@ -43,5 +43,6 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 		}
 		shops = append(shops, s)
 	}
+	h.attachOpenStatus(shops)
 	return shops
 }

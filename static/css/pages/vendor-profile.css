@@ -59,3 +59,8 @@ select#payout_bank_code:focus { outline:none; border-color:var(--green); box-sha
 .payout-save { width:100%; margin-top:14px; background:var(--green); }
 .payout-save:hover:not(:disabled) { background:#0e5c36; }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .payout-heading { gap:10px; } .payout-shield { width:36px; height:36px; } }
+
+/* Opening hours */
+.hours-grid{display:grid;gap:10px}
+.hours-row{display:grid;grid-template-columns:130px 1fr auto 1fr;gap:8px;align-items:center}
+@media (max-width:520px){.hours-row{grid-template-columns:1fr auto 1fr}.hours-row .check{grid-column:1/-1}}

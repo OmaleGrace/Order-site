@@ -24,6 +24,9 @@ type ShopCard struct {
 	Completed       int
 	Rating          float64
 	ReviewCount     int
+	OpenKnown       bool
+	OpenNow         bool
+	OpenLabel       string
 }
 
 type VendorsPage struct {
@@ -118,6 +121,8 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not read the shops", http.StatusInternalServerError)
 		return
 	}
+
+	h.attachOpenStatus(page.Shops)
 
 	tmpl, err := render.Page("vendors.html", template.FuncMap{"naira": naira})
 	if err != nil {

@@ -90,6 +90,7 @@
                 {{if .Description}}<p class="shop-card-desc">{{.Description}}</p>{{end}}
 
                 <div class="shop-tags">
+                    {{if .OpenKnown}}<span class="tag-pill {{if .OpenNow}}tag-open{{else}}tag-closed{{end}}">{{.OpenLabel}}</span>{{end}}
                     {{if .ReviewCount}}<span class="tag-pill tag-rating">★ {{printf "%.1f" .Rating}} ({{.ReviewCount}})</span>{{end}}
                     {{if .OffersPickup}}<span class="tag-pill">🛍️ Pickup</span>{{end}}
                     {{if .OffersDelivery}}<span class="tag-pill">🛵 Delivery · {{if .DeliveryFeeKobo}}₦{{naira .DeliveryFeeKobo}}{{else}}Free{{end}}</span>{{end}}

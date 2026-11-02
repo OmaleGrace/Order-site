@@ -29,6 +29,7 @@ type VendorProfilePage struct {
 	PayoutAccountNumber string
 	PayoutAccountName   string
 	PayoutVerified      bool
+	Hours               []HoursFormRow
 	Notice              string
 }
 
@@ -99,6 +100,11 @@ func (h *Handlers) VendorProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	areaRows.Close()
+	week, hoursErr := h.vendorWeekHours(vendorID)
+	if hoursErr != nil {
+		log.Printf("vendor profile: opening hours query failed: %v", hoursErr)
+	}
+	p.Hours = hoursFormRows(week)
 	p.Notice = r.URL.Query().Get("msg")
 
 	tmpl, err := render.Page("vendor-profile.html")
@@ -187,6 +193,12 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hours, hoursErr := parseHoursForm(r)
+	if hoursErr != nil {
+		back("Opening hours: " + hoursErr.Error())
+		return
+	}
+
 	feeKobo := 0
 	if delivery {
 		raw := strings.TrimSpace(r.FormValue("delivery_fee"))
@@ -219,6 +231,16 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		for _, deliveryArea := range areas {
 			if _, err = tx.Exec(`INSERT INTO vendor_delivery_areas (vendor_id, state, lga) VALUES ($1, $2, $3)`, vendorID, deliveryArea[0], deliveryArea[1]); err != nil {
+				break
+			}
+		}
+	}
+	if err == nil {
+		_, err = tx.Exec(`DELETE FROM vendor_hours WHERE vendor_id = $1`, vendorID)
+	}
+	if err == nil {
+		for _, e := range hours {
+			if _, err = tx.Exec(`INSERT INTO vendor_hours (vendor_id, weekday, opens, closes) VALUES ($1, $2, $3, $4)`, vendorID, e.Weekday, e.Opens, e.Closes); err != nil {
 				break
 			}
 		}

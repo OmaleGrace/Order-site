@@ -372,8 +372,7 @@ This project provided hands-on experience with:
 - The `/vendor/ai` page and its generation endpoint require a valid login session and an owned vendor shop. The AI assistant includes a customer-chat reply drafter: vendors paste a customer message and confirmed shop facts, then review the generated draft and send it themselves. This is not a live messaging system and does not send messages automatically.
 - Vendor AI supports menu descriptions, social captions, menu idea brainstorming, WhatsApp broadcast drafts, three-post campaign plans, customer-review replies, and pricing worksheets. Configure `OPENAI_API_KEY` and optionally `OPENAI_MODEL` in the private environment to enable generation.
 - Vendors can add a Nigerian bank account from Shop Profile. ENIE checks the bank code/name against Paystack's bank directory and resolves the account name before marking it verified. Configure `PAYSTACK_SECRET_KEY` privately.
-- Only the configured main administrator (`omalegrace2009@gmail.com`) can view full payout account numbers on Admin Earnings. The payout form records a payment after the administrator has sent it; it does **not** automatically transfer money. The administrator must send the transfer through their bank or a supported payout service, then record the amount in ENIE.
-- Never commit `.env` or expose `OPENAI_API_KEY` / `PAYSTACK_SECRET_KEY` in frontend JavaScript or public repositories.
+- Only the configured main administrator can view full payout account numbers on Admin Earnings. The payout form records a payment after the administrator has sent it; it does **not** automatically transfer money. The administrator must send the transfer through their bank or a supported payout service, then record the amount in ENIE.
 
 ## Customer-to-vendor messaging
 
