@@ -29,8 +29,11 @@ main button, main .btn, main input[type="submit"] { min-height: 40px; }
   .vendor-nav, .ai-nav, .custom-nav, header nav.nav { flex-wrap: nowrap !important; overflow-x: auto; max-width: 100%; scrollbar-width: none; padding-right: 28px; }
   .vendor-nav a, .ai-nav a, .custom-nav a, header nav.nav a { flex: 0 0 auto; white-space: nowrap; }
   .admin-header { padding-left: 4vw; padding-right: 4vw; }
-  /* Wide tables scroll sideways inside the page instead of breaking the layout */
-  main table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* Wide tables scroll sideways inside their wrapper (.scroll, .table-wrap or .table).
+     The table itself must stay a real table: making it display:block while ui.css clips it
+     with overflow:hidden is what stopped these cards scrolling in the installed app. */
+  html body main .scroll, html body main .table-wrap, html body main .table { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+  html body main table { display: table; width: max-content; min-width: 100%; max-width: none; overflow: visible; white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {

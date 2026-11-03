@@ -40,11 +40,9 @@
     <label for="body"><strong>Your message</strong></label>
     <textarea id="body" name="body" maxlength="2000" required placeholder="Write a message…" aria-describedby="message-hint"></textarea>
     <div class="composer-row"><span id="message-hint" class="hint">Keep messages respectful. Never share passwords, PINs, OTPs, or full payment credentials. 2,000 characters maximum.</span><div class="row-wrap">
-                                {{if .IsVendor}}<button class="button secondary" type="button" id="ai-draft-button">✨ Draft AI reply</button>{{end}}<button class="button" type="submit">Send message ↗</button></div>
+                                <button class="button secondary" type="button" id="ai-draft-button">{{if .IsVendor}}✨ Draft AI reply{{else}}✨ Help me write{{end}}</button><button class="button" type="submit">Send message ↗</button></div>
                         </div>
-                        {{if .IsVendor}}
-                            <p id="ai-draft-status" class="hint" role="status"></p>
-                        {{end}}
+                        <p id="ai-draft-status" class="hint" role="status"></p>
                     </form>
                 </section>
                 <script src="/static/js/lightbox.js"></script>

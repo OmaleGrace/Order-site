@@ -105,3 +105,4 @@ body {
 .reply.reply-current { background:#f4f8f4; }
 
 form select.status-select { width:100%; padding:10px; border:1px solid #cbd8ce; border-radius:10px; }
+.button.secondary{background:#efe6d6;color:#202820}.ai-reply-btn{margin-left:6px}.ai-reply-status{margin:6px 0 0}

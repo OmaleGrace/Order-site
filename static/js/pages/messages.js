@@ -162,7 +162,7 @@
       draftButton.disabled = true;
       status.textContent = 'Drafting a reply…';
       try {
-        const response = await fetch(`/messages/${threadID}/ai-draft`, {method:'POST', headers:{'Accept':'application/json'}});
+        const response = await fetch(`/messages/${threadID}/ai-draft`, {method:'POST', headers:{'Accept':'application/json','Content-Type':'application/x-www-form-urlencoded'}, body:'note=' + encodeURIComponent(textarea.value.slice(0, 500))});
         if (!response.ok) {
           const contentType = response.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {

@@ -42,6 +42,16 @@
                     </details>
                 </div>
             </section>
+            <section class="card" aria-labelledby="assistant-heading">
+                <h2 id="assistant-heading">✨ Ask the {{brandName}} assistant</h2>
+                <p class="muted">Get a quick answer about orders, delivery, payments or how things work. It can see your latest orders. For refunds or problems with an order, use the support form below.</p>
+                <form id="assistant-form">
+                    <label for="assistant-question">Your question</label>
+                    <textarea id="assistant-question" maxlength="600" placeholder="e.g. Where is my order? How does delivery work?"></textarea>
+                    <p><button class="button" type="submit">Ask</button></p>
+                    <p id="assistant-answer" class="muted" role="status" aria-live="polite" style="white-space:pre-wrap"></p>
+                </form>
+            </section>
             <section class="card">
                 <h2>Contact support</h2>
                 <form action="/help/tickets" method="post">
@@ -81,6 +91,7 @@
             </section>
         </main>
         {{template "site-footer"}}
+<script src="/static/js/pages/help-assistant.js"></script>
 <script src="/static/js/notification-bell.js"></script>
         <script src="/static/js/nav-active.js"></script>
         {{template "scripts-common"}}

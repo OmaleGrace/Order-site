@@ -221,7 +221,7 @@ tbody tr:hover { background:rgba(234,242,235,.45); }
 :where(.empty, .empty-state) { padding:30px 20px; text-align:center; }
 @media(max-width:760px) {
   :where(.card, .panel, .section-card, .content-card, .thread-list, .message-panel) { border-radius:16px; }
-  :where(table) { display:block; max-width:100%; overflow-x:auto; white-space:nowrap; }
+  :where(table) { white-space:nowrap; }
   :where(.page-container, .container) { padding-left:16px; padding-right:16px; }
 }
 

@@ -384,8 +384,13 @@ func (h *Handlers) MessageAIDraft(w http.ResponseWriter, r *http.Request) {
 		writeChatAIError(w, http.StatusInternalServerError, "Could not load conversation")
 		return
 	}
+	if userID == customerID {
+		// The customer gets help writing to the shop instead of a shop-owner reply.
+		h.customerChatDraft(w, r, threadID, userID, shopName, area, offersPickup, offersDelivery)
+		return
+	}
 	if !ownerID.Valid || int(ownerID.Int64) != userID {
-		writeChatAIError(w, http.StatusForbidden, "Only the shop owner can draft an AI reply")
+		writeChatAIError(w, http.StatusForbidden, "Only the shop owner or the customer in this chat can use AI help")
 		return
 	}
 	var customerMessage string

@@ -28,7 +28,7 @@
                         {{end}}
                         <form action="/admin/support/update" method="post"><input type="hidden" name="id" value="{{.ID}}"><div class="grid"><textarea class="reply" id="reply-{{.ID}}" aria-label="Reply to the customer" name="admin_reply" maxlength="4000" placeholder="Reply to the customer…">{{.AdminReply}}</textarea><div><label for="status-{{.ID}}">Status</label><select id="status-{{.ID}}" name="status" class="status-select"><option value="open" {{if eq .Status "open"}}selected{{end}}>Open</option>
                                     <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
-                                    <option value="resolved" {{if eq .Status "resolved"}}selected{{end}}>Resolved</option></select><button class="button mt-10" type="submit">Save reply</button></div>
+                                    <option value="resolved" {{if eq .Status "resolved"}}selected{{end}}>Resolved</option></select><button class="button mt-10" type="submit">Save reply</button><button class="button secondary mt-10 ai-reply-btn" type="button" data-ticket="{{.ID}}">✨ Suggest reply</button><p class="meta ai-reply-status" role="status" aria-live="polite"></p></div>
                             </div>
                         </form>
                     </article>
@@ -39,6 +39,7 @@
                 </section>
             {{end}}
         </main>
+        <script src="/static/js/pages/admin-support.js"></script>
         <script src="/static/js/nav-active.js"></script>
         {{template "scripts-common"}}
     </body>
