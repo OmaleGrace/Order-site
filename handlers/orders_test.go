@@ -99,7 +99,7 @@ func TestMyOrders(t *testing.T) {
 		"Jollof Rice",
 		"paid",
 		"3500",
-		"ENIE-",
+		"LAIKI-",
 		"order-item-placeholder",
 	}
 
@@ -141,8 +141,8 @@ func TestPublicOrderReferenceIsStableAndNotSequentialID(t *testing.T) {
 	if first != second {
 		t.Fatalf("reference should be stable: %q != %q", first, second)
 	}
-	if !strings.HasPrefix(first, "ENIE-") {
-		t.Fatalf("expected ENIE reference, got %q", first)
+	if !strings.HasPrefix(first, "LAIKI-") {
+		t.Fatalf("expected LAIKI reference, got %q", first)
 	}
 	if first == "12345" || strings.Contains(first, "12345") {
 		t.Fatalf("reference should not expose sequential database ID: %q", first)

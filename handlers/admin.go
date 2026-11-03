@@ -48,8 +48,8 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.DB.Query(`
 		SELECT
 			o.id,
-			u.name,
-			u.email,
+			COALESCE(NULLIF(o.guest_name, ''), u.name),
+			COALESCE(NULLIF(o.guest_email, ''), u.email),
 			o.total_kobo,
 			COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) AS food_subtotal_kobo,
 			COALESCE(o.coupon_discount_kobo, 0) AS coupon_discount_kobo,

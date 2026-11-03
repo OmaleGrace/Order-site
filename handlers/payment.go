@@ -129,7 +129,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Don't process an already completed order again
 	if orderStatus == "paid" {
-		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		http.Redirect(w, r, h.afterPaymentPath(orderID), http.StatusSeeOther)
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rowsAffected == 0 {
-		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		http.Redirect(w, r, h.afterPaymentPath(orderID), http.StatusSeeOther)
 		return
 	}
 
@@ -231,7 +231,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Order notification error:", err)
 	}
 
-	http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+	http.Redirect(w, r, h.afterPaymentPath(orderID), http.StatusSeeOther)
 }
 
 func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {

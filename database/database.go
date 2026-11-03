@@ -757,7 +757,34 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Guest checkout. A guest gets a lightweight placeholder row in users (flagged
+	// is_guest, with an unusable email and no password) so the cart, orders and payment
+	// code keep working unchanged. The contact details the guest typed live on the order
+	// itself, so they never collide with a real account's unique email or phone.
+	_, err = db.Exec(`
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS is_guest BOOLEAN NOT NULL DEFAULT FALSE;
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_name TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_email TEXT NOT NULL DEFAULT '';
+		ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_phone TEXT NOT NULL DEFAULT '';
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	return db, nil
+}
+
+// CleanupGuestAccounts removes placeholder guest rows (and their abandoned carts) that
+// never placed an order. Guests who did order are kept, because the order belongs to them.
+func CleanupGuestAccounts(db *sql.DB) error {
+	_, err := db.Exec(`
+		DELETE FROM users u
+		WHERE u.is_guest
+		  AND u.created_at < NOW() - INTERVAL '30 days'
+		  AND NOT EXISTS (SELECT 1 FROM orders o WHERE o.user_id = u.id)
+	`)
+	return err
 }
 
 // bootstrapSchema applies schema.sql to a truly empty database. The checked-in

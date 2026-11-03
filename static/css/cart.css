@@ -147,7 +147,7 @@
     .remove-form { grid-column: 1 / -1; }
     .remove-btn { width: 100%; }
 }
-/* ===== ENIE: Cart Experience Upgrade ===== */
+/* ===== LaikiHub: Cart Experience Upgrade ===== */
 
 .cart-container {
     max-width: 960px;
@@ -318,7 +318,7 @@
     }
 }
 
-/* ===== ENIE Stage 3: Cart + Checkout ===== */
+/* ===== LaikiHub Stage 3: Cart + Checkout ===== */
 .eyebrow { margin:0 0 7px; color:var(--terracotta); text-transform:uppercase; letter-spacing:.1em; font-size:.74rem; font-weight:800; }
 .checkout-steps { display:flex; align-items:center; justify-content:center; gap:10px; margin:8px auto 30px; max-width:560px; color:#78847b; font-size:.82rem; font-weight:700; }
 .step { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }

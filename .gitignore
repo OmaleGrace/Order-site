@@ -5,7 +5,7 @@ grace_kitchen_backup.sql
 *.save
 
 # build output, scratch and backup files
-/enie
+/laikihub
 *.tmp
 .unzip/
 .env.bak

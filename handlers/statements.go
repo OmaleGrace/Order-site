@@ -21,7 +21,7 @@ import (
 // (an order counts once it is paid and not cancelled), so every figure reconciles:
 //
 //	customer paid  = food - coupon - loyalty + delivery
-//	vendor earns   = customer paid - ENIE commission
+//	vendor earns   = customer paid - LaikiHub commission
 //	closing        = opening balance + earnings - payouts
 
 // Nigeria has no daylight saving, so a fixed UTC+1 offset is exact and does not
@@ -398,18 +398,18 @@ func (h *Handlers) VendorStatementExport(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+statementFilename("enie-statement", period)+`"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+statementFilename("laikihub-statement", period)+`"`)
 	w.Header().Set("Cache-Control", "no-store")
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ENIE vendor statement"})
+	cw.Write([]string{"LaikiHub vendor statement"})
 	cw.Write([]string{"Shop", csvCell(vendorName)})
 	cw.Write([]string{"Period", period.Label})
 	cw.Write([]string{"Generated", time.Now().In(watZone).Format("2006-01-02 15:04") + " WAT"})
 	cw.Write([]string{"Amounts are in naira (NGN)"})
 	cw.Write(nil)
 	cw.Write([]string{"Order", "Date (WAT)", "Method", "Status", "Food sales", "Coupon discount",
-		"Loyalty points used", "Delivery fee", "Customer paid", "ENIE commission", "Your earnings"})
+		"Loyalty points used", "Delivery fee", "Customer paid", "LaikiHub commission", "Your earnings"})
 	for _, o := range st.Orders {
 		cw.Write([]string{
 			strconv.Itoa(o.ID), o.CreatedAt.Format("2006-01-02 15:04"), o.Method, o.Status,

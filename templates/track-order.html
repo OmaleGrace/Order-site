@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <meta name="referrer" content="no-referrer">
+    {{if not .Finished}}<meta http-equiv="refresh" content="60">{{end}}
+    <title>Track your order - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/track-order.css">
+</head>
+<body data-nm="public">
+<header class="track-header">
+    <a href="/" class="track-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="36" height="36"> <span>{{brandName}}</span></a>
+    <a href="/menu" class="track-header-link">Order more food</a>
+</header>
+
+<main class="track-page">
+    <section class="track-hero {{if .Cancelled}}is-cancelled{{else if .AwaitingPayment}}is-waiting{{end}}">
+        <p class="track-eyebrow">Order {{.Reference}}</p>
+        <h1>{{.StatusLabel}}</h1>
+        <p class="track-note">{{.StatusNote}}</p>
+        {{if .ScheduledFor}}<p class="track-schedule">Scheduled for <strong>{{.ScheduledFor}}</strong></p>{{end}}
+
+        {{if and (not .Cancelled) (not .AwaitingPayment)}}
+        <ol class="track-steps" aria-label="Order progress">
+            {{range .Steps}}<li class="step-{{.State}}"{{if eq .State "current"}} aria-current="step"{{end}}><span class="dot" aria-hidden="true">{{if eq .State "done"}}✓{{end}}</span><span class="label">{{.Label}}</span></li>{{end}}
+        </ol>
+        {{end}}
+        {{if not .Finished}}<p class="track-refresh">This page updates by itself every minute.</p>{{end}}
+    </section>
+
+    <div class="track-grid">
+        <section class="track-card">
+            <h2>Your order</h2>
+            <p class="track-meta">From <strong>{{.Vendor}}</strong> · placed {{.PlacedAt}}</p>
+            <ul class="track-items">
+                {{range .Items}}
+                <li>
+                    <div><strong>{{.Quantity}} × {{.Name}}</strong>{{if .Options}}<small>{{range $i, $o := .Options}}{{if $i}}, {{end}}{{$o}}{{end}}</small>{{end}}</div>
+                    <span>₦{{naira .LineKobo}}</span>
+                </li>
+                {{end}}
+            </ul>
+            <dl class="track-totals">
+                <div><dt>Food</dt><dd>₦{{naira .FoodKobo}}</dd></div>
+                {{if .IsDelivery}}<div><dt>Delivery</dt><dd>{{if .DeliveryKobo}}₦{{naira .DeliveryKobo}}{{else}}Free{{end}}</dd></div>{{end}}
+                {{if .DiscountKobo}}<div><dt>Discount</dt><dd>-₦{{naira .DiscountKobo}}</dd></div>{{end}}
+                <div class="grand"><dt>Total</dt><dd>₦{{naira .TotalKobo}}</dd></div>
+            </dl>
+        </section>
+
+        <section class="track-card">
+            {{if .IsDelivery}}
+            <h2>Delivery</h2>
+            <p class="track-line"><span>Deliver to</span><strong>{{.Address}}</strong></p>
+            {{if .RiderName}}<p class="track-line"><span>Rider</span><strong>{{.RiderName}}{{if .RiderPhone}} · <a href="tel:{{.RiderPhone}}">{{.RiderPhone}}</a>{{end}}</strong></p>{{end}}
+            {{else}}
+            <h2>Pickup</h2>
+            <p class="track-line"><span>Collect from</span><strong>{{if .VendorAddress}}{{.VendorAddress}}{{else}}{{.Vendor}}{{end}}</strong></p>
+            {{end}}
+            <p class="track-line"><span>Name</span><strong>{{.Customer}}</strong></p>
+            {{if .VendorPhone}}<p class="track-line"><span>Shop phone</span><strong><a href="tel:{{.VendorPhone}}">{{.VendorPhone}}</a></strong></p>{{end}}
+            <p class="track-help">Quote <strong>{{.Reference}}</strong> if you contact the shop or our <a href="/contact">support team</a>.</p>
+        </section>
+    </div>
+
+    <p class="track-signup">Want to see all your orders in one place and earn points? <a href="/signup">Create an account</a>.</p>
+</main>
+{{template "scripts-common"}}
+</body>
+</html>

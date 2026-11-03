@@ -73,7 +73,7 @@ func TestAddToCartSuccess(t *testing.T) {
 	}
 }
 
-func TestAddToCartNoSession(t *testing.T) {
+func TestAddToCartNoSessionUnknownItem(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -86,8 +86,8 @@ func TestAddToCartNoSession(t *testing.T) {
 
 	h.AddToCart(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, w.Code)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, w.Code)
 	}
 }
 
@@ -162,7 +162,7 @@ func TestCartShowsItems(t *testing.T) {
 	}
 }
 
-func TestCartNoSession(t *testing.T) {
+func TestCartNoSessionShowsEmptyCart(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -173,8 +173,8 @@ func TestCartNoSession(t *testing.T) {
 
 	h.Cart(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, w.Code)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, w.Code)
 	}
 }
 
@@ -245,7 +245,7 @@ func TestRemoveFromCartSuccess(t *testing.T) {
 	}
 }
 
-func TestRemoveFromCartNoSession(t *testing.T) {
+func TestRemoveFromCartNoSessionRedirectsToCart(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -256,8 +256,8 @@ func TestRemoveFromCartNoSession(t *testing.T) {
 
 	h.RemoveFromCart(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, w.Code)
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected status %d, got %d", http.StatusSeeOther, w.Code)
 	}
 }
 
@@ -507,7 +507,7 @@ func TestUpdateCartQuantityInvalidAction(t *testing.T) {
 	}
 }
 
-func TestUpdateCartQuantityNoSession(t *testing.T) {
+func TestUpdateCartQuantityNoSessionRedirectsToCart(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
@@ -518,8 +518,8 @@ func TestUpdateCartQuantityNoSession(t *testing.T) {
 
 	h.UpdateCartQuantity(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, w.Code)
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected status %d, got %d", http.StatusSeeOther, w.Code)
 	}
 }
 

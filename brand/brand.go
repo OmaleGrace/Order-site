@@ -12,12 +12,13 @@ func Name() string {
 	if n := strings.TrimSpace(os.Getenv("BUSINESS_NAME")); n != "" {
 		// Keep an old deployment environment value from silently restoring the
 		// previous brand after the codebase has been rebranded.
-		legacy := strings.EqualFold(n, "Grace's Kitchen") || strings.EqualFold(n, "Grace’s Kitchen") || strings.EqualFold(n, "Grace Ordering Site")
+		legacy := strings.EqualFold(n, "Grace's Kitchen") || strings.EqualFold(n, "Grace’s Kitchen") || strings.EqualFold(n, "Grace Ordering Site") ||
+			strings.EqualFold(n, "ENIE")
 		if !legacy {
 			return n
 		}
 	}
-	return "ENIE"
+	return "LaikiHub"
 }
 
 var adsensePublisherPattern = regexp.MustCompile(`^pub-[0-9]{10,20}$`)

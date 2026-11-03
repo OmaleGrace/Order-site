@@ -1,6 +1,6 @@
 // Minimal service worker: lets the site be installed and shows a friendly page when offline.
 // Pages and API calls are never cached, so orders, carts and prices are always live.
-const CACHE = 'enie-shell-v1';
+const CACHE = 'laikihub-shell-v1';
 const OFFLINE = '/offline';
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.add(OFFLINE)).then(() => self.skipWaiting()));

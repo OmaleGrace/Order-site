@@ -5,13 +5,13 @@ import (
 	"testing"
 )
 
-func TestNameUsesENIEForLegacyEnvironmentBrand(t *testing.T) {
+func TestNameUsesLaikiHubForLegacyEnvironmentBrand(t *testing.T) {
 	old, had := lookupEnvForTest("BUSINESS_NAME")
 	t.Cleanup(func() { restoreEnvForTest("BUSINESS_NAME", old, had) })
-	for _, legacy := range []string{"Grace's Kitchen", "Grace’s Kitchen", "Grace Ordering Site"} {
+	for _, legacy := range []string{"Grace's Kitchen", "Grace’s Kitchen", "Grace Ordering Site", "ENIE", "enie"} {
 		t.Setenv("BUSINESS_NAME", legacy)
-		if got := Name(); got != "ENIE" {
-			t.Errorf("Name() with legacy value %q = %q, want ENIE", legacy, got)
+		if got := Name(); got != "LaikiHub" {
+			t.Errorf("Name() with legacy value %q = %q, want LaikiHub", legacy, got)
 		}
 	}
 }
@@ -19,9 +19,9 @@ func TestNameUsesENIEForLegacyEnvironmentBrand(t *testing.T) {
 func TestNameAllowsOtherConfiguredBrand(t *testing.T) {
 	old, had := lookupEnvForTest("BUSINESS_NAME")
 	t.Cleanup(func() { restoreEnvForTest("BUSINESS_NAME", old, had) })
-	t.Setenv("BUSINESS_NAME", "ENIE Market")
-	if got := Name(); got != "ENIE Market" {
-		t.Fatalf("Name() = %q, want ENIE Market", got)
+	t.Setenv("BUSINESS_NAME", "LaikiHub Market")
+	if got := Name(); got != "LaikiHub Market" {
+		t.Fatalf("Name() = %q, want LaikiHub Market", got)
 	}
 }
 

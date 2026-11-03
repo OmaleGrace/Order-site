@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"log"
@@ -8,7 +9,6 @@ import (
 
 	"Order-site/cart"
 	"Order-site/errors"
-	"Order-site/middleware"
 	"Order-site/render"
 )
 
@@ -28,6 +28,7 @@ type CheckoutPage struct {
 	DeliveryFeeKobo int
 	PickupAddress   string
 	Phone           string
+	IsGuest         bool // true when checking out without an account
 	DefaultMethod   string
 	LoyaltyPoints   int
 	CouponError     string
@@ -36,14 +37,15 @@ type CheckoutPage struct {
 }
 
 func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
+	userID, isGuest, err := h.cartUser(w, r, false)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		if err == sql.ErrNoRows {
+			// No customer and no guest cart: there is nothing to check out.
+			http.Redirect(w, r, "/cart", http.StatusSeeOther)
+			return
+		}
+		log.Printf("checkout details: cart owner failed: %v", err)
+		errors.Render(w, "Could not load your cart", http.StatusInternalServerError)
 		return
 	}
 
@@ -112,7 +114,10 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 		page.SubtotalKobo += line
 	}
 
-	h.DB.QueryRow("SELECT COALESCE(phone, '') FROM users WHERE id = $1", userID).Scan(&page.Phone)
+	page.IsGuest = isGuest
+	if !isGuest {
+		h.DB.QueryRow("SELECT COALESCE(phone, '') FROM users WHERE id = $1", userID).Scan(&page.Phone)
+	}
 	if err := h.DB.QueryRow(`
 		SELECT COALESCE(SUM(CASE WHEN type = 'earned' THEN points ELSE -points END), 0)
 		FROM loyalty_transactions

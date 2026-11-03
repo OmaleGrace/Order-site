@@ -469,7 +469,7 @@ func (h *Handlers) VendorAIGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	systemPrompt := `You are ENIE's practical Nigerian food-business copywriting assistant.
+	systemPrompt := `You are LaikiHub's practical Nigerian food-business copywriting assistant.
 
 Write clear, appetising, honest copy.
 

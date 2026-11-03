@@ -148,14 +148,14 @@ img.zoomable { cursor: zoom-in; }
 .vendor-banner a { padding: 7px 18px; border-radius: 999px; background: var(--terracotta); color: #fff; text-decoration: none; font-weight: 700; white-space: nowrap; }
 .vendor-banner.soon a { background: #78652c; }
 
-/* ENIE design-system refinements shared across every page */
+/* LaikiHub design-system refinements shared across every page */
 :root { --orange:#f26a1b; --green-soft:#eaf2eb; --page-width:1180px; }
 ::selection { background:#f6d5a8; color:#163b29; }
 :focus-visible { outline:3px solid rgba(237,152,69,.75); outline-offset:3px; }
 button, input, select, textarea { accent-color:var(--green); }
 button { cursor:pointer; }
-main { animation:enie-enter .24s ease-out both; }
-@keyframes enie-enter { from { opacity:.75; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+main { animation:laikihub-enter .24s ease-out both; }
+@keyframes laikihub-enter { from { opacity:.75; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
 .site-logo { width:40px; height:40px; object-fit:contain; border-radius:0; vertical-align:middle; box-shadow:none; }
 .logo { display:inline-flex; align-items:center; gap:9px; }
 a, button, input, select, textarea { transition-timing-function:ease; }
@@ -226,7 +226,7 @@ tbody tr:hover { background:rgba(234,242,235,.45); }
 }
 
 /* ==========================================================================
-   ENIE refresh (Oct 2026): one accent that matches the new logo, calmer type,
+   LaikiHub refresh (Oct 2026): one accent that matches the new logo, calmer type,
    accessible contrast, left-aligned hero, quieter motion.
    `body` prefixes are deliberate: page stylesheets load after this file.
    ========================================================================== */

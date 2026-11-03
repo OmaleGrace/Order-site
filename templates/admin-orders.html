@@ -11,7 +11,7 @@
     </head>
     <body>
         <header class="admin-header">
-            <div class="brand"><a href="/" class="brand-name"><img src="/static/img/enie-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div>
+            <div class="brand"><a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div>
             {{template "admin-nav" dict "Class" "" "Active" "/admin/orders"}}
         </header>
         <main class="admin-container">
@@ -64,7 +64,7 @@
                                     <div><span>Loyalty points</span><strong>−₦{{naira .LoyaltyDiscountKobo}}</strong></div>
                                 {{end}}
                                 <div><span>Food paid</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
-                                <div><span>ENIE commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div>
+                                <div><span>LaikiHub commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div>
                                 <div class="strong"><span>Vendor earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
                                 <div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>
                                 <div class="strong"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>

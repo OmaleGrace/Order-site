@@ -130,7 +130,7 @@
                     {{if .CouponDiscountKobo}}<div><span>Coupon{{if .CouponCode}} ({{.CouponCode}}){{end}}</span><strong>-₦{{naira .CouponDiscountKobo}}</strong></div>{{end}}
                     {{if .LoyaltyDiscountKobo}}<div><span>Loyalty points</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
                     <div><span>Customer paid for food</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
-                    <div><span>ENIE commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
+                    <div><span>LaikiHub commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
                     <div><span>Vendor food earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
                     {{if .DeliveryFeeKobo}}<div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>{{end}}
                     <div class="settlement-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>

@@ -23,7 +23,7 @@ func (h *Handlers) HeaderCounts(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("session_token")
 	if err != nil || cookie.Value == "" {
-		_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0, "message_count": 0})
+		h.writeGuestHeaderCounts(w, r)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *Handlers) HeaderCounts(w http.ResponseWriter, r *http.Request) {
     `, token).Scan(&userID, &cartCount, &notificationCount, &messageCount)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": 0, "notification_count": 0, "message_count": 0})
+			h.writeGuestHeaderCounts(w, r)
 			return
 		}
 		http.Error(w, `{"error":"Could not load header counts"}`, http.StatusInternalServerError)
@@ -52,4 +52,16 @@ func (h *Handlers) HeaderCounts(w http.ResponseWriter, r *http.Request) {
 		"notification_count": notificationCount,
 		"message_count":      messageCount,
 	})
+}
+
+// writeGuestHeaderCounts answers for a visitor who is not logged in: the only counter
+// that can be non-zero is the cart, for a guest who has already added something.
+func (h *Handlers) writeGuestHeaderCounts(w http.ResponseWriter, r *http.Request) {
+	cartCount := 0
+	if c, err := r.Cookie(middleware.GuestCookieName); err == nil && c.Value != "" {
+		if id, err := middleware.GetGuestUserID(h.DB, c.Value); err == nil {
+			_ = h.DB.QueryRowContext(r.Context(), `SELECT COALESCE(SUM(quantity), 0) FROM cart_items WHERE user_id = $1`, id).Scan(&cartCount)
+		}
+	}
+	_ = json.NewEncoder(w).Encode(map[string]int{"cart_count": cartCount, "notification_count": 0, "message_count": 0})
 }

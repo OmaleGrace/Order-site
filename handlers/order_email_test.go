@@ -16,10 +16,10 @@ func TestOrderEmailTemplateParses(t *testing.T) {
 }
 
 func TestEmailImageURLUsesConfiguredPublicBaseURL(t *testing.T) {
-	t.Setenv("PUBLIC_BASE_URL", "https://enie.example")
+	t.Setenv("PUBLIC_BASE_URL", "https://laikihub.example")
 	t.Setenv("APP_BASE_URL", "http://localhost:8080")
 	got := emailImageURL("/static/dishes/jollof.jpg")
-	if got != "https://enie.example/static/dishes/jollof.jpg" {
+	if got != "https://laikihub.example/static/dishes/jollof.jpg" {
 		t.Fatalf("unexpected absolute image URL: %q", got)
 	}
 	if got := emailImageURL("https://cdn.example/dish.jpg"); !strings.EqualFold(got, "https://cdn.example/dish.jpg") {

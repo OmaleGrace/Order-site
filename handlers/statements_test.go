@@ -174,7 +174,7 @@ func TestCSVCellBlocksFormulas(t *testing.T) {
 func TestStatementFilename(t *testing.T) {
 	q, _ := url.ParseQuery("from=2026-10-05&to=2026-10-07")
 	p, _ := parseStatementPeriod(q, statementTestNow)
-	if got := statementFilename("enie-statement", p); got != "enie-statement-2026-10-05-to-2026-10-07.csv" {
+	if got := statementFilename("laikihub-statement", p); got != "laikihub-statement-2026-10-05-to-2026-10-07.csv" {
 		t.Errorf("filename = %q", got)
 	}
 }

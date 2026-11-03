@@ -9,12 +9,12 @@
 </head>
 <body>
 <header class="site-header">
-  <a class="brand" href="/vendor/dashboard"><img src="/static/img/enie-mark.svg" alt=""><span>{{.VendorName}}</span></a>
+  <a class="brand" href="/vendor/dashboard"><img src="/static/img/laikihub-mark.svg" alt=""><span>{{.VendorName}}</span></a>
   {{template "vendor-nav" dict "Class" "site-nav" "Active" "/vendor/statements"}}
 </header>
 <main>
   <h1>Statements</h1>
-  <p class="lead">What your shop earned, what ENIE kept, and what has been paid to you.</p>
+  <p class="lead">What your shop earned, what LaikiHub kept, and what has been paid to you.</p>
   {{if .Notice}}<div class="notice" role="alert">{{.Notice}}</div>{{end}}
   <div class="chips" role="group" aria-label="Choose a period">{{range .Choices}}<a href="/vendor/statements?period={{.Key}}"{{if .Active}} class="on" aria-current="true"{{end}}>{{.Label}}</a>{{end}}</div>
   <form class="range" method="get" action="/vendor/statements">
@@ -39,7 +39,7 @@
           <tr><td>Less: loyalty points used</td><td class="num">{{naira2 .Totals.LoyaltyKobo}}</td></tr>
           <tr><td>Add: delivery fees collected</td><td class="num">{{naira2 .Totals.DeliveryKobo}}</td></tr>
           <tr><td><strong>Paid by customers</strong></td><td class="num"><strong>{{naira2 .Totals.CollectedKobo}}</strong></td></tr>
-          <tr><td>Less: ENIE commission ({{.CommissionPercent}}% of food after discounts)</td><td class="num">{{naira2 .Totals.CommissionKobo}}</td></tr>
+          <tr><td>Less: LaikiHub commission ({{.CommissionPercent}}% of food after discounts)</td><td class="num">{{naira2 .Totals.CommissionKobo}}</td></tr>
           <tr class="total"><td>Your earnings</td><td class="num">{{naira2 .Totals.NetKobo}}</td></tr>
         </table>
       </div>

@@ -35,6 +35,10 @@ func main() {
 		fmt.Println("Session cleanup failed:", err)
 	}
 
+	if err := database.CleanupGuestAccounts(db); err != nil {
+		fmt.Println("Guest cleanup failed:", err)
+	}
+
 	h := handlers.New(db)
 
 	// Lightweight in-process scheduler for scheduled customer orders. The database
@@ -130,22 +134,20 @@ func main() {
 	mux.HandleFunc("GET /robots.txt", middleware.Logging(h.RobotsTxt))
 	mux.HandleFunc("GET /sitemap.xml", middleware.Logging(h.SitemapXML))
 	mux.HandleFunc("GET /ads.txt", middleware.Logging(h.AdsTxt))
-	mux.HandleFunc("GET /checkout/details", middleware.Logging(middleware.RequireLogin(db, h.CheckoutDetails)))
-	mux.HandleFunc("GET /checkout/coupon", middleware.Logging(middleware.RequireLogin(db, h.CheckoutCoupon)))
+	// Cart and checkout work for guests too: each handler resolves a logged-in customer or a
+	// guest cart session itself. Everything under /account, /orders and so on still needs a login.
+	mux.HandleFunc("GET /checkout/details", middleware.Logging(h.CheckoutDetails))
+	mux.HandleFunc("GET /checkout/coupon", middleware.Logging(h.CheckoutCoupon))
+	mux.HandleFunc("GET /track/{orderID}/{token}", middleware.Logging(h.TrackOrder))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
 		"POST /cart/add",
 		middleware.Logging(
-			middleware.RequireLogin(db, h.AddToCart),
+			h.AddToCart,
 		),
 	)
 	mux.HandleFunc("GET /vendors", middleware.Logging(h.VendorsList))
-	mux.HandleFunc(
-		"GET /cart",
-		middleware.Logging(
-			middleware.RequireLogin(db, h.Cart),
-		),
-	)
+	mux.HandleFunc("GET /cart", middleware.Logging(h.Cart))
 	mux.HandleFunc("GET /admin", middleware.Logging(middleware.Admin(db, h.AdminDashboard)))
 	mux.HandleFunc("GET /admin/support", middleware.Logging(middleware.Admin(db, h.AdminSupport)))
 	mux.HandleFunc("GET /admin/riders", middleware.Logging(middleware.Admin(db, h.AdminRiders)))
@@ -161,27 +163,12 @@ func main() {
 	mux.HandleFunc("POST /become-a-vendor/agree", middleware.Logging(middleware.RequireLogin(db, h.VendorAgreementAccept)))
 	mux.HandleFunc("GET /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, h.VendorApply)))
 	mux.HandleFunc("POST /become-a-vendor", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.ApplyLimiter, h.VendorApplySubmit))))
-	mux.HandleFunc(
-		"POST /cart/remove",
-		middleware.Logging(
-			middleware.RequireLogin(db, h.RemoveFromCart),
-		),
-	)
+	mux.HandleFunc("POST /cart/remove", middleware.Logging(h.RemoveFromCart))
 
-	mux.HandleFunc(
-		"POST /cart/update",
-		middleware.Logging(
-			middleware.RequireLogin(db, h.UpdateCartQuantity),
-		),
-	)
+	mux.HandleFunc("POST /cart/update", middleware.Logging(h.UpdateCartQuantity))
 	mux.HandleFunc("POST /favorites/toggle", middleware.Logging(middleware.RequireLogin(db, h.ToggleFavorite)))
 	mux.HandleFunc("GET /favorites", middleware.Logging(middleware.RequireLogin(db, h.Favorites)))
-	mux.HandleFunc(
-		"POST /checkout",
-		middleware.Logging(
-			middleware.RequireLogin(db, h.Checkout),
-		),
-	)
+	mux.HandleFunc("POST /checkout", middleware.Logging(h.Checkout))
 	mux.HandleFunc(
 		"GET /payment/callback",
 		middleware.Logging(h.PaymentCallback),

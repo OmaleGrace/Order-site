@@ -22,11 +22,11 @@
     document.body.classList.add('has-bottom-nav');
 
     function loadCounts() {
-        if (!window.__enieHeaderCountsPromise) {
-            window.__enieHeaderCountsPromise = fetch('/header/counts', { credentials: 'same-origin' })
+        if (!window.__laikihubHeaderCountsPromise) {
+            window.__laikihubHeaderCountsPromise = fetch('/header/counts', { credentials: 'same-origin' })
                 .then(function (r) { if (!r.ok) throw new Error('header counts unavailable'); return r.json(); });
         }
-        return window.__enieHeaderCountsPromise;
+        return window.__laikihubHeaderCountsPromise;
     }
 
     loadCounts().then(function (d) {

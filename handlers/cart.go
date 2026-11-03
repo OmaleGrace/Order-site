@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -10,25 +11,12 @@ import (
 
 	"Order-site/cart"
 	"Order-site/errors"
-	"Order-site/middleware"
 	"Order-site/render"
 )
 
 func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		errors.Render(w, "Invalid session", http.StatusUnauthorized)
 		return
 	}
 
@@ -45,6 +33,18 @@ func (h *Handlers) AddToCart(w http.ResponseWriter, r *http.Request) {
 	}
 	if !available {
 		errors.Render(w, "This item is currently unavailable", http.StatusBadRequest)
+		return
+	}
+
+	// A logged-in customer's cart, or a guest cart (started now if this is their first item).
+	userID, _, err := h.cartUser(w, r, true)
+	if err != nil {
+		if err == errTooManyGuests {
+			errors.Render(w, "Too many carts have been started from this connection. Please wait a little while and try again, or log in.", http.StatusTooManyRequests)
+			return
+		}
+		fmt.Println("Cart owner error:", err)
+		errors.Render(w, "Could not start your cart. Please refresh the page and try again.", http.StatusInternalServerError)
 		return
 	}
 
@@ -86,21 +86,20 @@ func (h *Handlers) Cart(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	cookie, err := r.Cookie("session_token")
-	if err != nil {
-		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		errors.Render(w, "Invalid session", http.StatusUnauthorized)
-		return
-	}
-
-	items, err := cart.GetItems(h.DB, userID)
-	if err != nil {
-		fmt.Println("Cart load error:", err)
+	// Logged-in customers and guests both have carts. A visitor with no cart yet sees an empty one.
+	userID, isGuest, err := h.cartUser(w, r, false)
+	items := []cart.CartItem{}
+	loggedIn := false
+	if err == nil {
+		loggedIn = !isGuest
+		items, err = cart.GetItems(h.DB, userID)
+		if err != nil {
+			fmt.Println("Cart load error:", err)
+			errors.Render(w, "Could not load cart", http.StatusInternalServerError)
+			return
+		}
+	} else if err != sql.ErrNoRows {
+		fmt.Println("Cart owner error:", err)
 		errors.Render(w, "Could not load cart", http.StatusInternalServerError)
 		return
 	}
@@ -113,13 +112,15 @@ func (h *Handlers) Cart(w http.ResponseWriter, r *http.Request) {
 	message := r.URL.Query().Get("message")
 
 	data := struct {
-		Items   []cart.CartItem
-		Total   int
-		Message string
+		Items    []cart.CartItem
+		Total    int
+		Message  string
+		LoggedIn bool
 	}{
-		Items:   items,
-		Total:   total,
-		Message: message,
+		Items:    items,
+		Total:    total,
+		Message:  message,
+		LoggedIn: loggedIn,
 	}
 
 	err = tmpl.Execute(w, data)
@@ -136,15 +137,10 @@ func (h *Handlers) RemoveFromCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("session_token")
+	userID, _, err := h.cartUser(w, r, false)
 	if err != nil {
-		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		errors.Render(w, "Invalid session", http.StatusUnauthorized)
+		// No cart to change (for example the guest session expired).
+		http.Redirect(w, r, "/cart", http.StatusSeeOther)
 		return
 	}
 
@@ -168,15 +164,10 @@ func (h *Handlers) UpdateCartQuantity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("session_token")
+	userID, _, err := h.cartUser(w, r, false)
 	if err != nil {
-		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
-		return
-	}
-
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		errors.Render(w, "Invalid session", http.StatusUnauthorized)
+		// No cart to change (for example the guest session expired).
+		http.Redirect(w, r, "/cart", http.StatusSeeOther)
 		return
 	}
 

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	appErrors "Order-site/errors"
-	"Order-site/middleware"
 	"Order-site/render"
 	"errors"
 )
@@ -46,14 +45,9 @@ func normalizeCouponCode(code string) string {
 }
 
 func (h *Handlers) CheckoutCoupon(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_token")
+	userID, _, err := h.cartUser(w, r, false)
 	if err != nil {
-		http.Error(w, `{"ok":false,"message":"Please log in"}`, http.StatusUnauthorized)
-		return
-	}
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		http.Error(w, `{"ok":false,"message":"Invalid session"}`, http.StatusUnauthorized)
+		http.Error(w, `{"ok":false,"message":"Could not check your cart"}`, http.StatusBadRequest)
 		return
 	}
 	code := normalizeCouponCode(r.URL.Query().Get("code"))

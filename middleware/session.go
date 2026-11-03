@@ -123,3 +123,58 @@ func CleanupExpiredSessions(db *sql.DB) error {
 
 	return err
 }
+
+// GuestCookieName is the cookie that carries a guest shopper's cart session. It is
+// deliberately separate from session_token, so a guest can never reach account pages.
+const GuestCookieName = "guest_token"
+
+// GuestSessionDuration is how long a guest's cart is remembered.
+const GuestSessionDuration = 30 * 24 * time.Hour
+
+// CreateGuestUser makes the placeholder row a guest's cart and order hang off. The
+// email ends in .invalid, which can never be a real address, so it cannot be used to
+// log in, receive a password reset, or clash with a real customer.
+func CreateGuestUser(db *sql.DB) (int, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return 0, err
+	}
+	placeholder := "guest-" + hex.EncodeToString(b) + "@guest.invalid"
+	var id int
+	err := db.QueryRow(`
+		INSERT INTO users (name, email, auth_provider, is_guest)
+		VALUES ('Guest', $1, 'guest', TRUE)
+		RETURNING id
+	`, placeholder).Scan(&id)
+	return id, err
+}
+
+// GetGuestUserID returns the guest behind a guest_token cookie value. A normal
+// customer's session token is rejected here because the user must be a guest.
+func GetGuestUserID(db *sql.DB, token string) (int, error) {
+	var userID int
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+	err := db.QueryRowContext(ctx, `
+		SELECT s.user_id
+		FROM sessions s
+		JOIN users u ON u.id = s.user_id
+		WHERE s.token = $1
+		  AND s.expires_at > NOW()
+		  AND u.is_guest
+	`, HashToken(token)).Scan(&userID)
+	return userID, err
+}
+
+// SetGuestCookie stores the guest cart token in the browser.
+func SetGuestCookie(w http.ResponseWriter, r *http.Request, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     GuestCookieName,
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   SecureCookie(r),
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   int(GuestSessionDuration / time.Second),
+	})
+}

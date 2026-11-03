@@ -114,12 +114,16 @@ func (h *Handlers) Loyalty(w http.ResponseWriter, r *http.Request) {
 // completed order. The earned-order unique index makes the award idempotent.
 func (h *Handlers) awardLoyaltyForOrder(orderID int) error {
 	var userID, foodTotal int
+	var isGuestOrder bool
 	if err := h.DB.QueryRow(`
-		SELECT user_id, GREATEST(total_kobo - delivery_fee_kobo, 0)
+		SELECT user_id, GREATEST(total_kobo - delivery_fee_kobo, 0), guest_email <> ''
 		FROM orders
 		WHERE id = $1 AND status = 'completed'
-	`, orderID).Scan(&userID, &foodTotal); err != nil {
+	`, orderID).Scan(&userID, &foodTotal, &isGuestOrder); err != nil {
 		return err
+	}
+	if isGuestOrder {
+		return nil // guests have no account to hold points
 	}
 
 	points := foodTotal / 10000 // 10000 kobo = ₦100 = 1 point

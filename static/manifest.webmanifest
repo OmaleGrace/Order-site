@@ -1,6 +1,6 @@
 {
-  "name": "ENIE",
-  "short_name": "ENIE",
+  "name": "LaikiHub",
+  "short_name": "LaikiHub",
   "description": "Order from local food shops. Pick up or get it delivered.",
   "start_url": "/?source=pwa",
   "scope": "/",

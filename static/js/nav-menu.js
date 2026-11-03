@@ -9,7 +9,7 @@
     var MOBILE = window.matchMedia('(max-width: 900px)');
     var HOME_MOBILE = window.matchMedia('(max-width: 820px)');
     var HOVER = window.matchMedia('(hover: hover) and (pointer: fine)');
-    var LOGO = '/static/img/enie-mark.svg';
+    var LOGO = '/static/img/laikihub-mark.svg';
 
     var ICONS = {
         '/': '🏠', '/menu': '🍽️', '/vendors': '🏪', '/favorites': '❤️', '/orders': '📦', '/messages': '💬', '/account': '👤',
@@ -47,7 +47,7 @@
 
     // Pages with no nav of their own get a generated one (set <body data-nm="public|customer">).
     var GENERATED = {
-        public: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/become-a-vendor', 'Sell with us'], ['/about', 'About'], ['/contact', 'Contact'],
+        public: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/cart', 'Cart'], ['/become-a-vendor', 'Sell with us'], ['/about', 'About'], ['/contact', 'Contact'],
                  ['/help', 'Help & Support'], ['/login', 'Log in'], ['/signup', 'Sign up']],
         customer: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/orders', 'My orders'], ['/cart', 'Cart'], ['/account', 'Account'],
                    ['/help', 'Help & Support'], ['/logout', 'Log out']]

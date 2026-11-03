@@ -59,7 +59,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 			       COALESCE(to_jsonb(u)->>'auth_provider', 'local'),
 			       COALESCE(to_jsonb(u)->>'profile_picture', ''),
 			       NULLIF(to_jsonb(u)->>'phone', ''),
-			       COALESCE(TO_CHAR(u.created_at, 'FMMonth YYYY'), 'ENIE member'),
+			       COALESCE(TO_CHAR(u.created_at, 'FMMonth YYYY'), 'LaikiHub member'),
 			       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
 			       (SELECT COALESCE(SUM(o.total_kobo), 0) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
 			       (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id),
@@ -90,7 +90,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(to_jsonb(users)->>'auth_provider', 'local'),
 		       COALESCE(to_jsonb(users)->>'profile_picture', ''),
 		       NULLIF(to_jsonb(users)->>'phone', ''),
-		       COALESCE(TO_CHAR(created_at, 'FMMonth YYYY'), 'ENIE member')
+		       COALESCE(TO_CHAR(created_at, 'FMMonth YYYY'), 'LaikiHub member')
 		FROM users
 		WHERE id = $1
 	`, userID).Scan(
@@ -112,7 +112,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			data.AuthProvider = "local"
-			data.MemberSince = "ENIE member"
+			data.MemberSince = "LaikiHub member"
 			phone = nil
 		}
 

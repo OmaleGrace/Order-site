@@ -13,7 +13,7 @@ import (
 )
 
 // AdminSettlementRow is one shop's position for a period: what customers paid, what
-// ENIE keeps, what the shop earns, and what has been sent to it.
+// LaikiHub keeps, what the shop earns, and what has been sent to it.
 type AdminSettlementRow struct {
 	VendorID        int
 	Name            string
@@ -154,17 +154,17 @@ func (h *Handlers) AdminSettlementsExport(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+statementFilename("enie-settlements", period)+`"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="`+statementFilename("laikihub-settlements", period)+`"`)
 	w.Header().Set("Cache-Control", "no-store")
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ENIE settlement report"})
+	cw.Write([]string{"LaikiHub settlement report"})
 	cw.Write([]string{"Period", period.Label})
 	cw.Write([]string{"Generated", time.Now().In(watZone).Format("2006-01-02 15:04") + " WAT"})
 	cw.Write([]string{"Amounts are in naira (NGN). Outstanding is the balance owed to the shop across all time."})
 	cw.Write(nil)
 	cw.Write([]string{"Shop", "Payout account verified", "Orders", "Customers paid", "of which delivery",
-		"ENIE commission", "Shop earnings", "Paid out in period", "Outstanding"})
+		"LaikiHub commission", "Shop earnings", "Paid out in period", "Outstanding"})
 	for _, row := range rows {
 		verified := "no"
 		if row.PayoutVerified {

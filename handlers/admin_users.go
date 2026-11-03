@@ -67,7 +67,7 @@ func (h *Handlers) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 		query string
 		dest  *int
 	}{
-		{"SELECT COUNT(*) FROM users", &page.Users},
+		{"SELECT COUNT(*) FROM users WHERE NOT is_guest", &page.Users},
 		{"SELECT COUNT(*) FROM vendors", &page.Vendors},
 		{"SELECT COUNT(*) FROM orders", &page.Orders},
 		{"SELECT COUNT(*) FROM menu_items", &page.MenuItems},
@@ -120,7 +120,7 @@ func (h *Handlers) AdminUsers(w http.ResponseWriter, r *http.Request) {
 		SELECT u.id, u.name, u.email, TO_CHAR(u.created_at, 'DD Mon YYYY'), u.is_admin,
 		       (SELECT COUNT(*) FROM vendors v WHERE v.owner_user_id = u.id),
 		       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id)
-		FROM users u ORDER BY u.created_at DESC, u.id DESC
+		FROM users u WHERE NOT u.is_guest ORDER BY u.created_at DESC, u.id DESC
 	`)
 	if err != nil {
 		log.Printf("admin users: query failed: %v", err)

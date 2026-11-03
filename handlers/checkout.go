@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 
 	"Order-site/cart"
 	"Order-site/errors"
-	"Order-site/middleware"
 	"Order-site/render"
 )
 
@@ -24,30 +24,48 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("session_token")
+	// A logged-in customer, or a guest shopper with a cart session.
+	userID, isGuest, err := h.cartUser(w, r, false)
 	if err != nil {
-		errors.Render(w, "You must be logged in", http.StatusUnauthorized)
+		if err == sql.ErrNoRows {
+			errors.Render(w, "Your cart is empty", http.StatusBadRequest)
+			return
+		}
+		fmt.Println("Checkout owner error:", err)
+		errors.Render(w, "Could not load your cart", http.StatusInternalServerError)
 		return
 	}
 
-	userID, err := middleware.GetUserID(h.DB, cookie.Value)
-	if err != nil {
-		errors.Render(w, "Invalid session", http.StatusUnauthorized)
-		return
-	}
-
-	// Get the user's email
+	// The email Paystack sends the receipt to. A guest types theirs on the checkout page.
 	var email string
+	var guestName, guestPhone string
+	if isGuest {
+		guestName = strings.Join(strings.Fields(r.FormValue("guest_name")), " ")
+		email = strings.ToLower(strings.TrimSpace(r.FormValue("guest_email")))
+		guestPhone = normalizeNigerianPhone(strings.TrimSpace(r.FormValue("guest_phone")))
+		if n := len([]rune(guestName)); n < 2 || n > 80 {
+			errors.Render(w, "Enter your name (2 to 80 characters).", http.StatusBadRequest)
+			return
+		}
+		if len(email) > 254 || validateEmail(email) != nil {
+			errors.Render(w, "Enter a valid email address. We send your order tracking link there.", http.StatusBadRequest)
+			return
+		}
+		if guestPhone == "" {
+			errors.Render(w, "Enter a valid Nigerian phone number: 11 digits starting with 0 (for example 08012345678), or starting with +234.", http.StatusBadRequest)
+			return
+		}
+	} else {
+		err = h.DB.QueryRow(
+			"SELECT email FROM users WHERE id = $1",
+			userID,
+		).Scan(&email)
 
-	err = h.DB.QueryRow(
-		"SELECT email FROM users WHERE id = $1",
-		userID,
-	).Scan(&email)
-
-	if err != nil {
-		fmt.Println("Get user email error:", err)
-		errors.Render(w, "Could not get user information", http.StatusInternalServerError)
-		return
+		if err != nil {
+			fmt.Println("Get user email error:", err)
+			errors.Render(w, "Could not get user information", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Get cart items
@@ -140,6 +158,9 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	lga := strings.TrimSpace(r.FormValue("delivery_lga"))
 	address := strings.TrimSpace(r.FormValue("delivery_address"))
 	deliveryPhone := strings.TrimSpace(r.FormValue("delivery_phone"))
+	if isGuest && deliveryPhone == "" {
+		deliveryPhone = guestPhone // the rider can reach a guest on the number they gave
+	}
 	scheduledForText := strings.TrimSpace(r.FormValue("scheduled_for"))
 	var scheduledFor *time.Time
 	if scheduledForText != "" {
@@ -165,8 +186,8 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		scheduledFor = &t
 	}
 	loyaltyPoints, err := strconv.Atoi(strings.TrimSpace(r.FormValue("loyalty_points")))
-	if err != nil {
-		loyaltyPoints = 0
+	if err != nil || isGuest {
+		loyaltyPoints = 0 // guests have no points to spend
 	}
 	if loyaltyPoints < 0 {
 		errors.Render(w, "Invalid loyalty points amount", http.StatusBadRequest)
@@ -298,6 +319,15 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 
 	defer tx.Rollback()
 
+	if isGuest {
+		// Show the guest's name wherever the shop and the admins look at this order.
+		if _, err := tx.Exec(`UPDATE users SET name = $1 WHERE id = $2 AND is_guest`, guestName, userID); err != nil {
+			fmt.Println("Save guest name error:", err)
+			errors.Render(w, "Could not create order", http.StatusInternalServerError)
+			return
+		}
+	}
+
 	if couponID > 0 {
 		if err := h.reserveCoupon(tx, couponID); err != nil {
 			errors.Render(w, "This coupon is no longer available", http.StatusBadRequest)
@@ -319,10 +349,11 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
 	                    delivery_method, delivery_state, delivery_lga, delivery_address,
 	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed,
-	                    coupon_id, coupon_code, coupon_discount_kobo, coupon_reserved, scheduled_for)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+	                    coupon_id, coupon_code, coupon_discount_kobo, coupon_reserved, scheduled_for,
+	                    guest_name, guest_email, guest_phone)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
 	RETURNING id
-`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor).Scan(&orderID)
+`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor, guestName, guestEmailValue(isGuest, email), guestPhone).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)
@@ -453,4 +484,13 @@ func (h *Handlers) OrderSuccess(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
+}
+
+// guestEmailValue is what is stored in orders.guest_email: the guest's address for a guest
+// order, and an empty string for a normal customer's order (whose email lives on their account).
+func guestEmailValue(isGuest bool, email string) string {
+	if isGuest {
+		return email
+	}
+	return ""
 }

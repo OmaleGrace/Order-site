@@ -1,4 +1,4 @@
-/* ENIE shared UI layer (Nov 2026). Loaded on every page through head-common.
+/* LaikiHub shared UI layer (Nov 2026). Loaded on every page through head-common.
    Page stylesheets load later, so selectors here start with `html body` to win ties
    without !important. Purpose: one consistent look for headings, cards, tables,
    status badges, forms and vendor/admin chrome. */

@@ -83,8 +83,8 @@
     }
 
     function loadCounts() {
-        if (!window.__enieHeaderCountsPromise) {
-            window.__enieHeaderCountsPromise = fetch('/header/counts', {
+        if (!window.__laikihubHeaderCountsPromise) {
+            window.__laikihubHeaderCountsPromise = fetch('/header/counts', {
                 credentials: 'same-origin',
                 headers: {'Accept': 'application/json'}
             }).then(function (response) {
@@ -92,7 +92,7 @@
                 return response.json();
             });
         }
-        return window.__enieHeaderCountsPromise;
+        return window.__laikihubHeaderCountsPromise;
     }
 
     function loadCount() {
