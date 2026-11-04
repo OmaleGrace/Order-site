@@ -306,11 +306,26 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	if foodPaidKobo < 0 {
 		foodPaidKobo = 0
 	}
-	commission := commissionKobo(foodPaidKobo)
+	commission := commissionKoboFor(h.DB, vendorID, foodPaidKobo)
 
 	// The delivery fee is part of what the customer pays. Loyalty discounts
 	// apply to food only, never to the delivery fee.
 	totalKobo = foodPaidKobo + deliveryFeeKobo
+	// The service fee is charged on top and kept by the platform; it is not part of total_kobo.
+	orderServiceFeeKobo := 0
+	if totalKobo > 0 {
+		orderServiceFeeKobo = serviceFeeKobo()
+	}
+	// Members with an active pass pay no service fee.
+	if orderServiceFeeKobo > 0 && !isGuest && h.hasPass(userID) {
+		orderServiceFeeKobo = 0
+	}
+	// Paying from the wallet only works when the balance covers the whole order.
+	useWallet := !isGuest && r.FormValue("use_wallet") == "1"
+	if useWallet && walletBalance(h.DB, userID) < totalKobo+orderServiceFeeKobo {
+		errors.Render(w, "Your wallet balance is too low for this order. Top up your wallet, or pay by card.", http.StatusBadRequest)
+		return
+	}
 	tx, err := h.DB.Begin()
 	if err != nil {
 		errors.Render(w, "Could not start order", http.StatusInternalServerError)
@@ -350,10 +365,10 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 	                    delivery_method, delivery_state, delivery_lga, delivery_address,
 	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed,
 	                    coupon_id, coupon_code, coupon_discount_kobo, coupon_reserved, scheduled_for,
-	                    guest_name, guest_email, guest_phone)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+	                    guest_name, guest_email, guest_phone, service_fee_kobo)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
 	RETURNING id
-`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor, guestName, guestEmailValue(isGuest, email), guestPhone).Scan(&orderID)
+`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor, guestName, guestEmailValue(isGuest, email), guestPhone, orderServiceFeeKobo).Scan(&orderID)
 
 	if err != nil {
 		fmt.Println("Create order error:", err)
@@ -393,10 +408,24 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if useWallet {
+		if err := h.payOrderWithWallet(orderID, userID); err != nil {
+			if err == errWalletInsufficient {
+				errors.Render(w, "Your wallet balance is too low for this order. Top up your wallet, or pay by card.", http.StatusBadRequest)
+				return
+			}
+			fmt.Println("Wallet payment error:", err)
+			errors.Render(w, "Could not pay from your wallet", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		return
+	}
+
 	// Paystack request
 	paystackData := map[string]interface{}{
 		"email":        email,
-		"amount":       totalKobo,
+		"amount":       totalKobo + orderServiceFeeKobo,
 		"reference":    fmt.Sprintf("ORDER-%d-%d", orderID, time.Now().UnixNano()),
 		"callback_url": os.Getenv("PAYSTACK_CALLBACK_URL"),
 	}

@@ -78,6 +78,12 @@ type VendorBillingPage struct {
 	Reason            string
 	SetupFeeKobo      int
 	CommissionPercent int
+	CanBuyExtras      bool   // an open shop can buy the Pro plan and promotion
+	ProPriceKobo      int    // Pro plan, 30 days
+	ProPercent        int    // commission on Pro
+	PromoWeekKobo     int    // promotion, per 7 days
+	PlanText          string // "Free" or "Pro until <date>"
+	PromotedText      string // empty when not promoted
 	Notice            string
 	History           []VendorPaymentRow
 	Earnings          VendorEarnings
@@ -100,7 +106,10 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 	page := VendorBillingPage{
 		Name:              b.Name,
 		SetupFeeKobo:      vendorSetupFeeKobo(),
-		CommissionPercent: commissionPercent(),
+		CommissionPercent: effectiveCommissionPercent(h.DB, vendorID),
+		ProPriceKobo:      proPlanPriceKobo(),
+		ProPercent:        proCommissionPercent(),
+		PromoWeekKobo:     promotionWeekPriceKobo(),
 		Notice:            r.URL.Query().Get("msg"),
 	}
 
@@ -111,6 +120,11 @@ func (h *Handlers) VendorBilling(w http.ResponseWriter, r *http.Request) {
 		page.State = "setup"
 	default:
 		page.State = "active"
+		page.CanBuyExtras = b.Status == "active"
+		_ = h.DB.QueryRow(`
+			SELECT CASE WHEN plan = 'pro' AND plan_until > NOW() THEN 'Pro until ' || TO_CHAR(plan_until, 'DD Mon YYYY') ELSE 'Free' END,
+			       CASE WHEN promoted_until > NOW() THEN TO_CHAR(promoted_until, 'DD Mon YYYY') ELSE '' END
+			FROM vendors WHERE id = $1`, vendorID).Scan(&page.PlanText, &page.PromotedText)
 	}
 
 	if e, err := h.vendorEarnings(vendorID); err != nil {
@@ -291,14 +305,14 @@ func (h *Handlers) activateVendorPayment(reference string, amountKobo int) (bool
 	}
 	defer tx.Rollback()
 
-	var paymentID, vendorID, expected int
+	var paymentID, vendorID, expected, days int
 	var kind, status string
 	err = tx.QueryRow(`
-		SELECT id, vendor_id, kind, amount_kobo, status
+		SELECT id, vendor_id, kind, amount_kobo, status, days
 		FROM vendor_payments
 		WHERE reference = $1
 		FOR UPDATE
-	`, reference).Scan(&paymentID, &vendorID, &kind, &expected, &status)
+	`, reference).Scan(&paymentID, &vendorID, &kind, &expected, &status, &days)
 	if err == sql.ErrNoRows {
 		return false, errVendorPaymentUnknown
 	}
@@ -319,21 +333,57 @@ func (h *Handlers) activateVendorPayment(reference string, amountKobo int) (bool
 		return false, err
 	}
 
-	// There is no monthly fee any more. Paying the setup fee opens the shop for good.
-	// A shop you suspended stays suspended: only a waiting shop is opened.
-	_, err = tx.Exec(`
-		UPDATE vendors
-		SET status = CASE WHEN status = 'pending' THEN 'active' ELSE status END,
-		    setup_paid_at = COALESCE(setup_paid_at, NOW()),
-		    paid_until = NOW() + INTERVAL '100 years'
-		WHERE id = $1
-	`, vendorID)
-	if err != nil {
-		return false, err
+	switch kind {
+	case "pro", "promote":
+		// Paid extras add days on top of whatever time is left, so paying early loses nothing.
+		// A suspended shop gets nothing until you reinstate it, so its payment is refused.
+		column := "promoted_until"
+		if kind == "pro" {
+			column = "plan_until"
+		}
+		extra := ""
+		if kind == "pro" {
+			extra = ", plan = 'pro'"
+		}
+		res, err := tx.Exec(`UPDATE vendors SET `+column+` = GREATEST(COALESCE(`+column+`, NOW()), NOW()) + make_interval(days => $2)`+extra+`
+			WHERE id = $1 AND status = 'active'`, vendorID, days)
+		if err != nil {
+			return false, err
+		}
+		if n, _ := res.RowsAffected(); n == 0 {
+			log.Printf("vendor payment %s: shop %d is not active, payment recorded but extra not applied", reference, vendorID)
+		}
+	default:
+		// There is no monthly fee any more. Paying the setup fee opens the shop for good.
+		// A shop you suspended stays suspended: only a waiting shop is opened.
+		_, err = tx.Exec(`
+			UPDATE vendors
+			SET status = CASE WHEN status = 'pending' THEN 'active' ELSE status END,
+			    setup_paid_at = COALESCE(setup_paid_at, NOW()),
+			    paid_until = NOW() + INTERVAL '100 years'
+			WHERE id = $1
+		`, vendorID)
+		if err != nil {
+			return false, err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
 		return false, err
+	}
+
+	if kind == "pro" || kind == "promote" {
+		var ownerEmail, shopName string
+		h.DB.QueryRow(`SELECT u.email, v.name FROM vendors v JOIN users u ON u.id = v.owner_user_id WHERE v.id = $1`, vendorID).Scan(&ownerEmail, &shopName)
+		if ownerEmail != "" {
+			what := "promotion"
+			if kind == "pro" {
+				what = "Pro plan"
+			}
+			go email.Send(ownerEmail, "Your "+what+" is active on "+brand.Name(),
+				fmt.Sprintf("<h1>Payment received</h1><p>Your %s for <strong>%s</strong> is active for %d days.</p>", what, template.HTMLEscapeString(shopName), days))
+		}
+		return true, nil
 	}
 
 	var ownerEmail, shopName string
@@ -402,4 +452,111 @@ func (h *Handlers) vendorWebhook(w http.ResponseWriter, reference string, amount
 		log.Printf("webhook vendor payment: activate failed: %v", err)
 		errors.Render(w, "Could not record the payment", http.StatusInternalServerError)
 	}
+}
+
+// VendorBuyExtra starts a payment for the Pro plan (30 days) or for a promotion (1 or 2 weeks).
+// The server decides the price and the length; the form only says which one was chosen.
+func (h *Handlers) VendorBuyExtra(w http.ResponseWriter, r *http.Request) {
+	vendorID, _, ok := h.ownedVendor(w, r)
+	if !ok {
+		return
+	}
+	userID, ok := h.sessionUserID(r)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	back := func(msg string) {
+		http.Redirect(w, r, "/vendor/billing?msg="+url.QueryEscape(msg), http.StatusSeeOther)
+	}
+	if err := r.ParseForm(); err != nil {
+		back("Something went wrong. Please try again.")
+		return
+	}
+
+	b, err := h.loadVendorBilling(vendorID)
+	if err != nil {
+		log.Printf("vendor buy: load failed: %v", err)
+		errors.Render(w, "Could not start the payment", http.StatusInternalServerError)
+		return
+	}
+	if b.Status != "active" || !b.SetupPaid {
+		back("Your shop must be open before you can buy this.")
+		return
+	}
+
+	var kind string
+	var amount, days int
+	switch r.FormValue("kind") {
+	case "pro":
+		kind, amount, days = "pro", proPlanPriceKobo(), 30
+	case "promote":
+		weeks := 1
+		if r.FormValue("weeks") == "2" {
+			weeks = 2
+		}
+		kind, amount, days = "promote", promotionWeekPriceKobo()*weeks, 7*weeks
+	default:
+		back("Choose what you want to buy.")
+		return
+	}
+
+	base := strings.TrimRight(os.Getenv("APP_BASE_URL"), "/")
+	if base == "" {
+		log.Printf("vendor buy: APP_BASE_URL is not set")
+		errors.Render(w, "Payments are not set up on this site yet.", http.StatusInternalServerError)
+		return
+	}
+	var userEmail string
+	if err := h.DB.QueryRow("SELECT email FROM users WHERE id = $1", userID).Scan(&userEmail); err != nil {
+		log.Printf("vendor buy: email lookup failed: %v", err)
+		errors.Render(w, "Could not start the payment", http.StatusInternalServerError)
+		return
+	}
+
+	reference := fmt.Sprintf("VENDOR-%d-%d", vendorID, time.Now().UnixNano())
+	if _, err := h.DB.Exec(`
+		INSERT INTO vendor_payments (vendor_id, kind, amount_kobo, reference, days)
+		VALUES ($1, $2, $3, $4, $5)
+	`, vendorID, kind, amount, reference, days); err != nil {
+		log.Printf("vendor buy: insert failed: %v", err)
+		errors.Render(w, "Could not start the payment", http.StatusInternalServerError)
+		return
+	}
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"email":        userEmail,
+		"amount":       amount,
+		"reference":    reference,
+		"callback_url": base + "/vendor/payment/callback",
+	})
+	req, err := http.NewRequest(http.MethodPost, "https://api.paystack.co/transaction/initialize", bytes.NewBuffer(body))
+	if err != nil {
+		errors.Render(w, "Could not start the payment", http.StatusInternalServerError)
+		return
+	}
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("PAYSTACK_SECRET_KEY"))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := vendorPayClient.Do(req)
+	if err != nil {
+		log.Printf("vendor buy: paystack request failed: %v", err)
+		h.DB.Exec("DELETE FROM vendor_payments WHERE reference = $1", reference)
+		errors.Render(w, "Could not connect to the payment service", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Status  bool   `json:"status"`
+		Message string `json:"message"`
+		Data    struct {
+			AuthorizationURL string `json:"authorization_url"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil || !out.Status || out.Data.AuthorizationURL == "" {
+		log.Printf("vendor buy: paystack refused: %v %s", err, out.Message)
+		h.DB.Exec("DELETE FROM vendor_payments WHERE reference = $1", reference)
+		errors.Render(w, "Could not start the payment", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, out.Data.AuthorizationURL, http.StatusSeeOther)
 }

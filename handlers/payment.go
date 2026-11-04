@@ -39,6 +39,11 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.HasPrefix(reference, "WALLET-") {
+		http.Redirect(w, r, "/wallet/callback?reference="+url.QueryEscape(reference), http.StatusSeeOther)
+		return
+	}
+
 	req, err := http.NewRequest(
 		http.MethodGet,
 		"https://api.paystack.co/transaction/verify/"+url.PathEscape(reference),
@@ -89,7 +94,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	var orderTotal int
 
 	err = h.DB.QueryRow(`
-    SELECT total_kobo
+    SELECT total_kobo + service_fee_kobo
     FROM orders
     WHERE payment_reference::text = $1::text
 `, paystackResponse.Data.Reference).Scan(&orderTotal)
@@ -111,7 +116,7 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 	var orderStatus string
 
 	err = h.DB.QueryRow(`
-		SELECT id, user_id, total_kobo, status
+		SELECT id, user_id, total_kobo + service_fee_kobo, status
 		FROM orders
 		WHERE payment_reference::text = $1::text
 	`, paystackResponse.Data.Reference).Scan(
@@ -303,6 +308,11 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		h.vendorWebhook(w, event.Data.Reference, event.Data.Amount)
 		return
 	}
+	// Wallet top-ups, gift cards and the pass
+	if strings.HasPrefix(event.Data.Reference, "WALLET-") {
+		h.walletWebhook(w, event.Data.Reference, event.Data.Amount)
+		return
+	}
 
 	var orderID int
 	var userID int
@@ -310,7 +320,7 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 	var orderStatus string
 
 	err = h.DB.QueryRow(`
-		SELECT id, user_id, total_kobo, status
+		SELECT id, user_id, total_kobo + service_fee_kobo, status
 		FROM orders
 		WHERE payment_reference::text = $1::text
 	`, event.Data.Reference).Scan(

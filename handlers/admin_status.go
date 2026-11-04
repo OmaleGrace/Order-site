@@ -39,13 +39,18 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	_, err = h.DB.Exec(`
 	UPDATE orders
 	SET status = $1,
-	    completed_at = CASE WHEN $3::text = 'completed' THEN COALESCE(completed_at, NOW()) ELSE NULL END
+	    completed_at = CASE WHEN $3::text = 'completed' THEN COALESCE(completed_at, NOW()) ELSE NULL END,
+        rider_status_updated_at = CASE WHEN delivery_method='delivery' THEN NOW() ELSE rider_status_updated_at END
 	WHERE id = $2
 `, status, orderID, status)
 
 	if err != nil {
 		errors.Render(w, "Could not update order", http.StatusInternalServerError)
 		return
+	}
+
+	if status == "cancelled" {
+		h.refundWalletOrder(orderID) // money paid from the wallet goes back to the wallet
 	}
 
 	if status == "completed" {

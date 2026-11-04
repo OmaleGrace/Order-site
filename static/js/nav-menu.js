@@ -48,9 +48,9 @@
     // Pages with no nav of their own get a generated one (set <body data-nm="public|customer">).
     var GENERATED = {
         public: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/cart', 'Cart'], ['/become-a-vendor', 'Sell with us'], ['/about', 'About'], ['/contact', 'Contact'],
-                 ['/help', 'Help & Support'], ['/login', 'Log in'], ['/signup', 'Sign up']],
-        customer: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/orders', 'My orders'], ['/cart', 'Cart'], ['/account', 'Account'],
-                   ['/help', 'Help & Support'], ['/logout', 'Log out']]
+                 ['/help', 'Help & Support'], ['/feedback', 'Feedback'], ['/login', 'Log in'], ['/signup', 'Sign up']],
+        customer: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/orders', 'My orders'], ['/cart', 'Cart'], ['/wallet', 'Wallet'], ['/group-order', 'Group order'], ['/account', 'Account'],
+                   ['/help', 'Help & Support'], ['/feedback', 'Feedback'], ['/logout', 'Log out']]
     };
 
     function norm(href) {

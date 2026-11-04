@@ -39,6 +39,10 @@ func main() {
 		fmt.Println("Guest cleanup failed:", err)
 	}
 
+	if err := database.CleanupUnusedImages(db); err != nil {
+		fmt.Println("Image cleanup failed:", err)
+	}
+
 	h := handlers.New(db)
 
 	// Lightweight in-process scheduler for scheduled customer orders. The database
@@ -88,6 +92,7 @@ func main() {
 	mux.HandleFunc("GET /vendor/profile", middleware.Logging(h.VendorProfile))
 	mux.HandleFunc("GET /vendor/ai", middleware.Logging(middleware.RequireLogin(db, h.VendorAI)))
 	mux.HandleFunc("GET /messages", middleware.Logging(middleware.RequireLogin(db, h.MessagesInbox)))
+	mux.HandleFunc("POST /account/presence", middleware.Logging(middleware.RequireLogin(db, h.SaveActiveStatus)))
 	mux.HandleFunc("GET /help", middleware.Logging(middleware.RequireLogin(db, h.Help)))
 	mux.HandleFunc("POST /help/ask", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimitByUser(middleware.MessageAILimiter, h.HelpAssistant))))
 	mux.HandleFunc("POST /help/tickets", middleware.Logging(middleware.RequireLogin(db, h.CreateSupportTicket)))
@@ -110,6 +115,12 @@ func main() {
 	mux.HandleFunc("POST /signup", middleware.Logging(middleware.RateLimit(middleware.SignupIPLimiter, h.Signup)))
 	mux.HandleFunc("GET /vendor/orders", middleware.Logging(h.VendorOrders))
 	mux.HandleFunc("POST /vendor/orders/status", middleware.Logging(h.VendorUpdateOrderStatus))
+	mux.HandleFunc("POST /vendor/orders/rider", middleware.Logging(middleware.RequireLogin(db, h.VendorAssignRider)))
+	// Rider URLs are bearer credentials; do not write their tokens into application request logs.
+	mux.HandleFunc("GET /rider/{token}", h.RiderPortal)
+	mux.HandleFunc("POST /rider/{token}/status", h.RiderUpdateStatus)
+	mux.HandleFunc("POST /rider/{token}/location", h.RiderLocation)
+	mux.HandleFunc("POST /rider/{token}/stop-location", h.RiderStopLocation)
 	mux.HandleFunc("GET /logout", middleware.Logging(h.Logout))
 	mux.HandleFunc("GET /vendor/menu", middleware.Logging(h.VendorMenu))
 	mux.HandleFunc("GET /vendor/menu/customizations", middleware.Logging(middleware.RequireLogin(db, h.VendorCustomizationPage)))
@@ -139,7 +150,25 @@ func main() {
 	// guest cart session itself. Everything under /account, /orders and so on still needs a login.
 	mux.HandleFunc("GET /checkout/details", middleware.Logging(h.CheckoutDetails))
 	mux.HandleFunc("GET /checkout/coupon", middleware.Logging(h.CheckoutCoupon))
+	mux.HandleFunc("GET /media/{id}", h.ServeUploadedImage)
+	mux.HandleFunc("GET /wallet", middleware.Logging(middleware.RequireLogin(db, h.Wallet)))
+	mux.HandleFunc("POST /wallet/pay", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.PayLimiter, h.WalletPay))))
+	mux.HandleFunc("POST /wallet/redeem", middleware.Logging(middleware.RequireLogin(db, h.WalletRedeem)))
+	mux.HandleFunc("GET /wallet/callback", middleware.Logging(h.WalletCallback))
+	mux.HandleFunc("GET /group-order", middleware.Logging(middleware.RequireLogin(db, h.GroupOrderForm)))
+	mux.HandleFunc("POST /group-order", middleware.Logging(middleware.RequireLogin(db, h.GroupOrderSubmit)))
+	mux.HandleFunc("GET /group-orders", middleware.Logging(middleware.RequireLogin(db, h.GroupOrders)))
+	mux.HandleFunc("POST /group-orders/pay", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.PayLimiter, h.GroupOrderPay))))
+	mux.HandleFunc("POST /group-orders/cancel", middleware.Logging(middleware.RequireLogin(db, h.GroupOrderCancel)))
+	mux.HandleFunc("GET /vendor/group-orders", middleware.Logging(h.VendorGroupOrders))
+	mux.HandleFunc("POST /vendor/group-orders/quote", middleware.Logging(h.VendorGroupOrderQuote))
+	mux.HandleFunc("GET /referrals", middleware.Logging(middleware.RequireLogin(db, h.Referrals)))
+	mux.HandleFunc("GET /feedback", middleware.Logging(h.Feedback))
+	mux.HandleFunc("POST /feedback", middleware.Logging(h.SubmitFeedback))
+	mux.HandleFunc("GET /admin/feedback", middleware.Logging(middleware.Admin(db, h.AdminFeedback)))
+	mux.HandleFunc("POST /admin/feedback/update", middleware.Logging(middleware.Admin(db, h.AdminFeedbackUpdate)))
 	mux.HandleFunc("GET /track/{orderID}/{token}", middleware.Logging(h.TrackOrder))
+	mux.HandleFunc("GET /track/{orderID}/{token}/status", middleware.Logging(h.TrackOrderStatus))
 	mux.HandleFunc("GET /v/{slug}", middleware.Logging(h.VendorShop))
 	mux.HandleFunc(
 		"POST /cart/add",
@@ -186,7 +215,9 @@ func main() {
 	)
 	mux.HandleFunc("GET /vendor/billing", middleware.Logging(h.VendorBilling))
 	mux.HandleFunc("POST /vendor/pay", middleware.Logging(middleware.RateLimit(middleware.PayLimiter, h.VendorPay)))
+	mux.HandleFunc("POST /vendor/buy", middleware.Logging(middleware.RateLimit(middleware.PayLimiter, h.VendorBuyExtra)))
 	mux.HandleFunc("GET /vendor/payment/callback", middleware.Logging(h.VendorPaymentCallback))
+	mux.HandleFunc("GET /orders/{orderID}/rider-location", middleware.Logging(middleware.RequireLogin(db, h.CustomerRiderLocation)))
 	mux.HandleFunc(
 		"GET /orders",
 		middleware.Logging(
@@ -216,6 +247,7 @@ func main() {
 	mux.HandleFunc("GET /admin/settlements/export", middleware.Logging(middleware.SuperAdmin(db, handlers.MainAdminEmail(), h.AdminSettlementsExport)))
 	mux.HandleFunc("GET /admin/vendors", middleware.Logging(middleware.Admin(db, h.AdminVendors)))
 	mux.HandleFunc("POST /admin/vendors/save", middleware.Logging(middleware.Admin(db, h.AdminVendorSave)))
+	mux.HandleFunc("POST /admin/vendors/growth", middleware.Logging(middleware.Admin(db, h.AdminVendorGrowth)))
 	mux.HandleFunc("POST /admin/vendors/status", middleware.Logging(middleware.Admin(db, h.AdminVendorStatus)))
 	mux.HandleFunc("GET /cart/count", middleware.Logging(h.CartCount))
 	mux.HandleFunc("GET /admin/menu", middleware.Logging(middleware.Admin(db, h.AdminMenu)))

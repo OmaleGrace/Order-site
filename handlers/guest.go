@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -152,30 +153,38 @@ type TrackStep struct {
 }
 
 type TrackPage struct {
-	Reference       string
-	Customer        string
-	Vendor          string
-	VendorAddress   string
-	VendorPhone     string
-	Status          string
-	StatusLabel     string
-	StatusNote      string
-	Cancelled       bool
-	AwaitingPayment bool
-	Finished        bool
-	Steps           []TrackStep
-	Items           []TrackItem
-	IsDelivery      bool
-	Address         string
-	DeliveryPhone   string
-	RiderName       string
-	RiderPhone      string
-	FoodKobo        int
-	DeliveryKobo    int
-	DiscountKobo    int
-	TotalKobo       int
-	PlacedAt        string
-	ScheduledFor    string
+	Reference              string
+	Customer               string
+	Vendor                 string
+	VendorAddress          string
+	VendorPhone            string
+	Status                 string
+	StatusLabel            string
+	StatusNote             string
+	Cancelled              bool
+	AwaitingPayment        bool
+	Finished               bool
+	Steps                  []TrackStep
+	Items                  []TrackItem
+	IsDelivery             bool
+	Address                string
+	DeliveryPhone          string
+	RiderName              string
+	RiderPhone             string
+	RiderLatitude          float64
+	RiderLongitude         float64
+	RiderLocationAvailable bool
+	RiderLocationUpdated   string
+	RiderMapURL            string
+	RiderMapEmbedURL       string
+	FoodKobo               int
+	DeliveryKobo           int
+	DiscountKobo           int
+	ServiceFeeKobo         int
+	TotalKobo              int
+	TotalPaidKobo          int // what the customer was charged: the total plus any service fee
+	PlacedAt               string
+	ScheduledFor           string
 }
 
 // TrackOrder shows one guest order's progress. The link is the only credential, so the
@@ -198,18 +207,21 @@ func (h *Handlers) TrackOrder(w http.ResponseWriter, r *http.Request) {
 	err = h.DB.QueryRow(`
 		SELECT o.guest_name, o.status, o.created_at, o.scheduled_for,
 		       o.delivery_method, o.delivery_address, o.delivery_lga, o.delivery_state, o.delivery_phone,
-		       o.delivery_fee_kobo, o.total_kobo,
+		       o.delivery_fee_kobo, o.total_kobo, o.service_fee_kobo,
 		       COALESCE(v.name, ''), COALESCE(v.address, ''), COALESCE(v.phone, ''),
-		       COALESCE(r.name, ''), COALESCE(r.phone, '')
+		       COALESCE(r.name, ''), COALESCE(r.phone, ''),
+           CASE WHEN COALESCE(o.rider_sharing_location,FALSE) THEN COALESCE(o.rider_latitude,0) ELSE 0 END,
+           CASE WHEN COALESCE(o.rider_sharing_location,FALSE) THEN COALESCE(o.rider_longitude,0) ELSE 0 END,
+           COALESCE(o.rider_sharing_location,FALSE), COALESCE(TO_CHAR(o.rider_location_updated_at,'DD Mon YYYY, HH24:MI'),'')
 		FROM orders o
 		LEFT JOIN vendors v ON v.id = o.vendor_id
 		LEFT JOIN riders r ON r.id = o.rider_id
 		WHERE o.id = $1 AND o.guest_email <> ''
 	`, orderID).Scan(&page.Customer, &page.Status, &createdAt, &scheduled,
 		&method, &deliveryAddress, &lga, &state, &page.DeliveryPhone,
-		&page.DeliveryKobo, &page.TotalKobo,
+		&page.DeliveryKobo, &page.TotalKobo, &page.ServiceFeeKobo,
 		&page.Vendor, &page.VendorAddress, &page.VendorPhone,
-		&page.RiderName, &page.RiderPhone)
+		&page.RiderName, &page.RiderPhone, &page.RiderLatitude, &page.RiderLongitude, &page.RiderLocationAvailable, &page.RiderLocationUpdated)
 	if err == sql.ErrNoRows {
 		errors.Render(w, "We couldn't find that order. Please use the tracking link from your confirmation email.", http.StatusNotFound)
 		return
@@ -220,6 +232,10 @@ func (h *Handlers) TrackOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if page.RiderLocationAvailable && page.RiderLatitude != 0 && page.RiderLongitude != 0 {
+		page.RiderMapURL = fmt.Sprintf("https://www.openstreetmap.org/?mlat=%.6f&mlon=%.6f#map=16/%.6f/%.6f", page.RiderLatitude, page.RiderLongitude, page.RiderLatitude, page.RiderLongitude)
+		page.RiderMapEmbedURL = fmt.Sprintf("https://www.openstreetmap.org/export/embed.html?bbox=%.6f%%2C%.6f%%2C%.6f%%2C%.6f&layer=mapnik&marker=%.6f%%2C%.6f", page.RiderLongitude-.01, page.RiderLatitude-.01, page.RiderLongitude+.01, page.RiderLatitude+.01, page.RiderLatitude, page.RiderLongitude)
+	}
 	page.Reference = publicOrderReference(orderID, createdAt)
 	page.PlacedAt = createdAt.Format("2 Jan 2006, 15:04")
 	if scheduled.Valid {
@@ -290,6 +306,7 @@ func (h *Handlers) TrackOrder(w http.ResponseWriter, r *http.Request) {
 		page.DiscountKobo = d
 	}
 
+	page.TotalPaidKobo = page.TotalKobo + page.ServiceFeeKobo
 	describeTrackStatus(&page)
 
 	tmpl, err := render.Page("track-order.html", template.FuncMap{"naira": naira})
@@ -372,4 +389,37 @@ func describeTrackStatus(p *TrackPage) {
 		}
 		p.Steps = append(p.Steps, TrackStep{Label: label, State: state})
 	}
+}
+
+// TrackOrderStatus returns the latest public delivery state for a guest tracking link.
+// It deliberately exposes no customer address, email, or internal order identifiers.
+func (h *Handlers) TrackOrderStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store, private")
+	w.Header().Set("X-Robots-Tag", "noindex, nofollow")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	orderID, err := strconv.Atoi(r.PathValue("orderID"))
+	if err != nil || orderID <= 0 || !validTrackingToken(orderID, r.PathValue("token")) {
+		http.Error(w, `{"error":"not_found"}`, http.StatusNotFound)
+		return
+	}
+	var result struct {
+		Status            string  `json:"status"`
+		DeliveryStatus    string  `json:"delivery_status"`
+		RiderName         string  `json:"rider_name"`
+		Latitude          float64 `json:"latitude"`
+		Longitude         float64 `json:"longitude"`
+		LocationAvailable bool    `json:"location_available"`
+		UpdatedAt         string  `json:"updated_at"`
+	}
+	err = h.DB.QueryRow(`
+		SELECT o.status, COALESCE(o.delivery_status,'unassigned'),
+		       COALESCE(r.name,''), COALESCE(o.rider_latitude,0), COALESCE(o.rider_longitude,0), COALESCE(o.rider_sharing_location,FALSE), TO_CHAR(GREATEST(COALESCE(o.rider_status_updated_at,o.created_at),COALESCE(o.rider_location_updated_at,o.created_at)), 'YYYY-MM-DD"T"HH24:MI:SS')
+		FROM orders o LEFT JOIN riders r ON r.id=o.rider_id
+		WHERE o.id=$1 AND o.guest_email <> ''
+	`, orderID).Scan(&result.Status, &result.DeliveryStatus, &result.RiderName, &result.Latitude, &result.Longitude, &result.LocationAvailable, &result.UpdatedAt)
+	if err != nil {
+		http.Error(w, `{"error":"not_found"}`, http.StatusNotFound)
+		return
+	}
+	_ = json.NewEncoder(w).Encode(result)
 }

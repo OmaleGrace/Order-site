@@ -102,6 +102,8 @@
                     <p>{{.DeliveryAddress}}</p>
                     <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
                     {{if .DeliveryFeeKobo}}<p class="delivery-fee">Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>{{end}}
+                    <p><strong>Rider:</strong> {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}} · {{.DeliveryStatus}}{{else}}Not assigned{{end}}</p>
+                    {{if ne .Status "cancelled"}}<form action="/vendor/orders/rider" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider <select name="rider_id"><option value="0">Unassigned</option>{{range $.Riders}}<option value="{{.ID}}">{{.Name}} · {{.Phone}}</option>{{end}}</select></label><button type="submit">Save rider</button></form>{{end}}
                 </div>
                 {{else}}
                 <div class="delivery-box pickup">

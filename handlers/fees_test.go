@@ -106,3 +106,25 @@ func TestPagesRenderWithoutMonthlyFee(t *testing.T) {
 		t.Error("become-vendor page copy wrong")
 	}
 }
+
+func TestServiceFeeKoboReadsEnvironment(t *testing.T) {
+	t.Setenv("SERVICE_FEE_KOBO", "")
+	if serviceFeeKobo() != 0 {
+		t.Fatal("no fee should be charged unless SERVICE_FEE_KOBO is set")
+	}
+	t.Setenv("SERVICE_FEE_KOBO", "10000")
+	if serviceFeeKobo() != 10000 {
+		t.Fatalf("expected 10000, got %d", serviceFeeKobo())
+	}
+	t.Setenv("SERVICE_FEE_KOBO", "99999999")
+	if serviceFeeKobo() != 0 {
+		t.Fatal("an unreasonably large fee must be ignored")
+	}
+}
+
+func TestProCommissionPercentDefaultsToFive(t *testing.T) {
+	t.Setenv("PRO_COMMISSION_PERCENT", "")
+	if proCommissionPercent() != 5 {
+		t.Fatalf("expected 5, got %d", proCommissionPercent())
+	}
+}

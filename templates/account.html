@@ -11,7 +11,7 @@
 <header class="account-header">
     <div class="header-inner">
         <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
-        <nav aria-label="Account navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+        <nav aria-label="Account navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/wallet">Wallet</a><a href="/group-orders">Group orders</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/feedback">Feedback</a><a href="/logout">Logout</a></nav>
     </div>
 </header>
 
@@ -48,6 +48,14 @@
         <div class="account-stat-card"><span class="account-stat-icon">❤️</span><div><strong>{{.FavoriteCount}}</strong><small>Favourites</small></div></div>
         <div class="account-stat-card"><span class="account-stat-icon">₦</span><div><strong>₦{{naira .TotalSpentKobo}}</strong><small>Total spent</small></div></div>
         <div class="account-stat-card"><span class="account-stat-icon">🌱</span><div><strong>{{.MemberSince}}</strong><small>Member since</small></div></div>
+    </section>
+
+    <section class="account-section">
+        <div class="section-title-row"><div><h2>Privacy &amp; messaging</h2><p>Choose whether other people can see when you are active.</p></div></div>
+        <form method="post" action="/account/presence" class="account-presence-setting">
+            <label><input type="checkbox" name="active_status" value="on" {{if .ActiveStatusEnabled}}checked{{end}}> Show my active status in messages</label>
+            <button type="submit" class="account-button">Save setting</button>
+        </form>
     </section>
 
     <section class="account-section">

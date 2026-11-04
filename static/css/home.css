@@ -517,3 +517,13 @@ body:has(.home-sidebar) .site-header { display:none; }
     .home-sidebar-account a { flex:1; }
     body:has(.home-sidebar) { padding-left:0; }
 }
+
+/* Reliable touch/trackpad scrolling for horizontally browsable home cards. */
+.shop-row, .cat-row, .h-row, .banner-track {
+    max-width: 100%; min-width: 0; overflow-x: auto !important; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain; scrollbar-width: thin;
+    scroll-behavior: smooth;
+}
+.shop-card-compact, .cat-tile, .h-card { flex-shrink: 0; }
+.home-section { min-width: 0; }

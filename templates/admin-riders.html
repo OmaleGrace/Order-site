@@ -34,6 +34,7 @@
                                 <div><strong>{{.Name}}</strong> <span class="pill {{if not .Active}}off{{end}}">{{if .Active}}Active{{else}}Inactive{{end}}</span><div class="stats">{{.Phone}}{{if .Vehicle}} · {{.Vehicle}}{{end}} · {{.Assigned}} active · {{.Completed}} completed</div>
                                 </div>
                                 <div class="actions">
+                                    <form method="post" action="/admin/riders/save" class="rider-edit-form"><input type="hidden" name="id" value="{{.ID}}"><label>Name <input name="name" value="{{.Name}}" required></label><label>Phone <input name="phone" value="{{.Phone}}" required></label><label>Vehicle <input name="vehicle" value="{{.Vehicle}}"></label><label><input type="checkbox" name="active" {{if .Active}}checked{{end}}> Active</label><button type="submit">Save changes</button></form>
                                     <form method="post" action="/admin/riders/toggle"><input type="hidden" name="id" value="{{.ID}}"><button class="secondary" type="submit">{{if .Active}}Deactivate{{else}}Activate{{end}}</button></form>
                                 </div>
                             </article>

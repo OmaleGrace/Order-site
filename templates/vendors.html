@@ -84,7 +84,7 @@
             </div>
 
             <div class="shop-card-body">
-                <h2>{{.Name}} {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}</h2>
+                <h2>{{.Name}} {{if .Promoted}}<span class="promoted-badge">Promoted</span>{{end}} {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}</h2>
 
                 {{if .Area}}<p class="shop-card-area">📍 {{.Area}}</p>{{end}}
                 {{if .Description}}<p class="shop-card-desc">{{.Description}}</p>{{end}}

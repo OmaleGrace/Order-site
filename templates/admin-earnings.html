@@ -18,7 +18,9 @@
 
         <div class="totals">
             <div class="total-box"><span>Customers paid (all shops)</span><strong>₦{{money .TotalSalesKobo}}</strong></div>
-            <div class="total-box"><span>Your {{.CommissionPercent}}% commission</span><strong>₦{{money .TotalCommission}}</strong></div>
+            <div class="total-box"><span>Your commission</span><strong>₦{{money .TotalCommission}}</strong></div>
+            <div class="total-box"><span>Service fees you keep</span><strong>₦{{money .TotalServiceFees}}</strong></div>
+            <div class="total-box"><span>Customer wallets (owed to customers)</span><strong>₦{{money .WalletHeldKobo}}</strong></div>
             <div class="total-box"><span>You still owe vendors</span><strong>₦{{money .TotalOwedKobo}}</strong></div>
             <div class="total-box"><span>Ready to send now</span><strong>₦{{money .TotalAvailable}}</strong></div>
         </div>

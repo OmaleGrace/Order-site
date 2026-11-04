@@ -126,9 +126,15 @@ func (h *Handlers) awardLoyaltyForOrder(orderID int) error {
 		return nil // guests have no account to hold points
 	}
 
+	// A referred friend's first qualifying order also pays the referral bonus (once).
+	h.awardReferral(userID, orderID, foodTotal)
+
 	points := foodTotal / 10000 // 10000 kobo = ₦100 = 1 point
 	if points <= 0 {
 		return nil
+	}
+	if h.hasPass(userID) {
+		points *= 2 // pass holders earn double
 	}
 
 	_, err := h.DB.Exec(`

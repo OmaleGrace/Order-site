@@ -45,6 +45,7 @@ type VendorOrdersPage struct {
 	VendorName      string
 	ScheduledOrders []VendorOrder
 	Orders          []VendorOrder
+	Riders          []AdminRider
 }
 
 func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +156,18 @@ func (h *Handlers) VendorOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := VendorOrdersPage{VendorName: vendorName, ScheduledOrders: scheduledOrders, Orders: orders}
+	riderRows, riderErr := h.DB.Query(`SELECT id,name,phone,vehicle,active,0,0 FROM riders WHERE active=TRUE ORDER BY name`)
+	if riderErr == nil {
+		defer riderRows.Close()
+		for riderRows.Next() {
+			var rider AdminRider
+			if riderRows.Scan(&rider.ID, &rider.Name, &rider.Phone, &rider.Vehicle, &rider.Active, &rider.Assigned, &rider.Completed) == nil {
+				page.Riders = append(page.Riders, rider)
+			}
+		}
+	} else {
+		log.Printf("vendor orders: rider list failed: %v", riderErr)
+	}
 	if err := tmpl.Execute(w, page); err != nil {
 		log.Printf("vendor orders: execute failed: %v", err)
 	}

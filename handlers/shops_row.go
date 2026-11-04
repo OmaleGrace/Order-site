@@ -10,7 +10,8 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 		       COALESCE(mi.dishes, 0) AS dishes,
 		       COALESCE(oc.completed, 0) AS completed,
 		       COALESCE((SELECT AVG(r.rating) FROM order_reviews r WHERE r.vendor_id = v.id), 0) AS rating,
-		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count
+		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count,
+		       COALESCE(v.promoted_until > NOW(), FALSE) AS promoted
 		FROM vendors v
 		JOIN (
 			SELECT vendor_id, COUNT(*) AS dishes
@@ -24,7 +25,7 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 			GROUP BY vendor_id
 		) oc ON oc.vendor_id = v.id
 		WHERE v.status = 'active' AND v.paid_until > NOW()
-		ORDER BY v.verified DESC, COALESCE(oc.completed, 0) DESC, v.name
+		ORDER BY promoted DESC, v.verified DESC, COALESCE(oc.completed, 0) DESC, v.name
 		LIMIT $1
 	`, limit)
 	if err != nil {
@@ -37,7 +38,7 @@ func (h *Handlers) topShops(limit int) []ShopCard {
 	for rows.Next() {
 		var s ShopCard
 		if err := rows.Scan(&s.Name, &s.Slug, &s.Description, &s.Area, &s.LogoURL, &s.Verified,
-			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount); err != nil {
+			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount, &s.Promoted); err != nil {
 			log.Printf("home: shops scan failed: %v", err)
 			continue
 		}

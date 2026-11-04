@@ -3,6 +3,7 @@ package handlers
 import (
 	"Order-site/errors"
 	"Order-site/render"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -28,6 +29,9 @@ type AdminOrder struct {
 	RiderID                int
 	RiderName              string
 	RiderPhone             string
+	RiderMapURL            string
+	RiderLocationAvailable bool
+	RiderLocationUpdated   string
 	DeliveryStatus         string
 	VendorName             string
 	Status                 string
@@ -57,7 +61,10 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 			COALESCE(o.loyalty_points_redeemed, 0) * 100 AS loyalty_discount_kobo,
 			o.commission_kobo,
 			GREATEST(COALESCE((SELECT SUM(oi.quantity * oi.price_kobo) FROM order_items oi WHERE oi.order_id = o.id), 0) - COALESCE(o.coupon_discount_kobo, 0) - COALESCE(o.loyalty_points_redeemed, 0) * 100 - o.commission_kobo, 0) AS vendor_food_earnings_kobo,
-			COALESCE(o.rider_id, 0), COALESCE(r.name, ''), COALESCE(r.phone, ''), COALESCE(o.delivery_status, 'unassigned'),
+			COALESCE(o.rider_id, 0), COALESCE(r.name, ''), COALESCE(r.phone, ''),
+            CASE WHEN COALESCE(o.rider_sharing_location,FALSE) THEN COALESCE(o.rider_latitude,0) ELSE 0 END,
+            CASE WHEN COALESCE(o.rider_sharing_location,FALSE) THEN COALESCE(o.rider_longitude,0) ELSE 0 END,
+            COALESCE(o.rider_sharing_location,FALSE), COALESCE(TO_CHAR(o.rider_location_updated_at,'DD Mon YYYY, HH24:MI'),''), COALESCE(o.delivery_status, 'unassigned'),
 			COALESCE(v.name, '') AS vendor_name,
 			o.status,
 			o.created_at,
@@ -90,6 +97,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var order AdminOrder
+		var riderLat, riderLon float64
 
 		err := rows.Scan(
 			&order.ID,
@@ -105,6 +113,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 			&order.RiderID,
 			&order.RiderName,
 			&order.RiderPhone,
+			&riderLat, &riderLon, &order.RiderLocationAvailable, &order.RiderLocationUpdated,
 			&order.DeliveryStatus,
 			&order.VendorName,
 			&order.Status,
@@ -118,6 +127,9 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 			return
+		}
+		if order.RiderLocationAvailable && (riderLat != 0 || riderLon != 0) {
+			order.RiderMapURL = fmt.Sprintf("https://www.openstreetmap.org/?mlat=%.6f&mlon=%.6f#map=16/%.6f/%.6f", riderLat, riderLon, riderLat, riderLon)
 		}
 
 		itemRows, err := h.DB.Query(`

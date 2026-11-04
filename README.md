@@ -101,3 +101,16 @@ Use code with caution.
 • Database PgBouncer Errors: If you see unnamed prepared statement does not exist, append ?binary_parameters=yes to your connection string.
 • App Branding: Identifiers start with LAIKI- instead of old project variables.
 • Secret Rules: Do not archive or commit your .env configuration. Generate distribution zips safely using: git archive -o release.zip HEAD.
+
+
+
+Paid insight reports.
+Reminders and win-back messages, recurring orders, WhatsApp and push alerts, daily summaries: these need a scheduler and a messaging provider (for example WhatsApp Business), which don't exist in the site yet.
+Photo reviews and live tracking: photo reviews are doable next, since photo upload now exists. Live tracking depends on how your riders work.
+
+
+## Rider tracking and project archive note
+
+The rider workflow uses a one-time, high-entropy tracking link for each assignment. Riders open it in a mobile browser, explicitly grant browser geolocation permission to share their location, and can stop sharing at any time. The rider token is stored as a SHA-256 hash and is revoked when the rider is deactivated or the assignment is removed.
+
+The uploaded project archive used for this update did not include the original `db/schema.sql` dump even though `db/embed.go` embeds it. A placeholder file is present only so the embedded source path exists. Existing installations with an initialized database can use the incremental migrations in `database.Connect`; restore the real schema dump before using this archive to initialize a brand-new database.

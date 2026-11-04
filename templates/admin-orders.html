@@ -37,6 +37,7 @@
                                     <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
                                     <p>Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>
                                     <div class="rider-state">Rider: {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}}{{else}}Unassigned{{end}} · {{.DeliveryStatus}}</div>
+                                    {{if .RiderLocationAvailable}}<p>GPS updated {{.RiderLocationUpdated}} · <a href="{{.RiderMapURL}}" target="_blank" rel="noopener noreferrer">View rider location</a></p>{{end}}
                                     <div class="rider-box">
                                         <form action="/admin/orders/rider" method="post"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider<br><select name="rider_id"><option value="0">Unassigned</option>
                                             {{range $.Riders}}

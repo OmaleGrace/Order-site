@@ -24,25 +24,30 @@ type CustomerOrderItem struct {
 }
 
 type CustomerOrder struct {
-	ID                  int
-	Reference           string
-	VendorID            int
-	VendorName          string
-	VendorSlug          string
-	TotalKobo           int
-	FoodSubtotalKobo    int
-	LoyaltyDiscountKobo int
-	DeliveryFeeKobo     int
-	Status              string
-	CreatedAt           time.Time
-	DeliveryMethod      string
-	DeliveryAddress     string
-	Reviewed            bool
-	ScheduledFor        *time.Time
-	RiderName           string
-	RiderPhone          string
-	DeliveryStatus      string
-	Items               []CustomerOrderItem
+	ID                     int
+	Reference              string
+	VendorID               int
+	VendorName             string
+	VendorSlug             string
+	TotalKobo              int
+	FoodSubtotalKobo       int
+	LoyaltyDiscountKobo    int
+	DeliveryFeeKobo        int
+	Status                 string
+	CreatedAt              time.Time
+	DeliveryMethod         string
+	DeliveryAddress        string
+	Reviewed               bool
+	ScheduledFor           *time.Time
+	RiderName              string
+	RiderPhone             string
+	DeliveryStatus         string
+	RiderLatitude          float64
+	RiderLongitude         float64
+	RiderLocationAvailable bool
+	RiderLocationUpdated   string
+	RiderMapEmbedURL       string
+	Items                  []CustomerOrderItem
 }
 
 func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +74,10 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(orders.loyalty_points_redeemed, 0) * 100, orders.delivery_fee_kobo, orders.status, orders.created_at, orders.delivery_method,
 		       TRIM(BOTH ', ' FROM CONCAT_WS(', ', delivery_address, delivery_lga, delivery_state)),
                EXISTS(SELECT 1 FROM order_reviews r WHERE r.order_id = orders.id),
-               orders.scheduled_for, COALESCE(r.name,''), COALESCE(r.phone,''), COALESCE(orders.delivery_status,'unassigned')
+               orders.scheduled_for, COALESCE(r.name,''), COALESCE(r.phone,''), COALESCE(orders.delivery_status,'unassigned'),
+               CASE WHEN COALESCE(orders.rider_sharing_location,FALSE) THEN COALESCE(orders.rider_latitude,0) ELSE 0 END,
+               CASE WHEN COALESCE(orders.rider_sharing_location,FALSE) THEN COALESCE(orders.rider_longitude,0) ELSE 0 END,
+               COALESCE(orders.rider_sharing_location,FALSE), COALESCE(TO_CHAR(orders.rider_location_updated_at,'DD Mon YYYY, HH24:MI'),'')
 		FROM orders
 		JOIN vendors v ON v.id = orders.vendor_id
         LEFT JOIN riders r ON r.id = orders.rider_id
@@ -105,11 +113,14 @@ func (h *Handlers) MyOrders(w http.ResponseWriter, r *http.Request) {
 			&order.ScheduledFor,
 			&order.RiderName,
 			&order.RiderPhone,
-			&order.DeliveryStatus,
+			&order.DeliveryStatus, &order.RiderLatitude, &order.RiderLongitude, &order.RiderLocationAvailable, &order.RiderLocationUpdated,
 		)
 		if err != nil {
 			errors.Render(w, "Could not read orders", http.StatusInternalServerError)
 			return
+		}
+		if order.RiderLocationAvailable && (order.RiderLatitude != 0 || order.RiderLongitude != 0) {
+			order.RiderMapEmbedURL = fmt.Sprintf("https://www.openstreetmap.org/export/embed.html?bbox=%.6f%%2C%.6f%%2C%.6f%%2C%.6f&layer=mapnik&marker=%.6f%%2C%.6f", order.RiderLongitude-.01, order.RiderLatitude-.01, order.RiderLongitude+.01, order.RiderLatitude+.01, order.RiderLatitude, order.RiderLongitude)
 		}
 		order.Reference = publicOrderReference(order.ID, order.CreatedAt)
 

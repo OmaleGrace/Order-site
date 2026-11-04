@@ -60,6 +60,12 @@
     article.className = 'bubble' + (m.mine ? ' mine' : '');
     article.dataset.id = m.id;
     const sender = senderLabel(m);
+    const av = document.createElement('span'); av.className = 'avatar'; av.setAttribute('aria-hidden', 'true');
+    if (m.avatar) {
+      const pic = document.createElement('img'); pic.src = m.avatar; pic.alt = ''; pic.width = 26; pic.height = 26; pic.loading = 'lazy';
+      av.appendChild(pic);
+    } else { av.textContent = m.initial || '?'; }
+    sender.insertBefore(av, sender.firstChild);
     const body = document.createElement('div'); body.className = 'body'; body.textContent = m.body;
     const meta = document.createElement('div'); meta.className = 'meta';
     const time = document.createElement('time'); time.textContent = m.created_at;
@@ -144,6 +150,8 @@
         list.scrollTop = list.scrollHeight;
       }
       applyReceipts(data.delivered_up_to || 0, data.read_up_to || 0);
+      const presence = document.querySelector('.presence-pill');
+      if (presence) { presence.classList.toggle('online', !!data.other_online); presence.textContent = data.other_online ? 'Active now' : 'Not active'; }
     } catch (_) { /* Keep the chat usable; retry on the next interval. */ }
     finally { polling = false; }
   }
@@ -185,4 +193,13 @@
       finally { draftButton.disabled = false; }
     });
   }
+})();
+
+// Keep the message box small: one line to start, growing a little as the person types.
+(function () {
+  var box = document.getElementById('body');
+  if (!box) return;
+  var fit = function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 76) + 'px'; };
+  box.addEventListener('input', fit);
+  fit();
 })();

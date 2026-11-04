@@ -16,7 +16,18 @@
     <main>
         {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
 
-        <form action="/vendor/profile/save" method="post" id="profile-form" novalidate>
+        <div class="card" id="share-card">
+            <h2>Share your shop</h2>
+            <p class="sub">Put this link in your WhatsApp status, Instagram bio or on a flyer. Customers can order straight away, without creating an account.</p>
+            <p><input type="text" id="share-link" readonly value="" data-path="/v/{{.Slug}}" aria-label="Your shop link" style="width:100%"></p>
+            <p>
+                <button type="button" id="share-copy" class="button secondary">Copy link</button>
+                <a id="share-whatsapp" class="button secondary" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+                <span id="share-status" class="sub" role="status"></span>
+            </p>
+        </div>
+
+        <form action="/vendor/profile/save" method="post" id="profile-form" enctype="multipart/form-data" novalidate>
 
             <div class="card">
                 <h2>About your shop</h2>
@@ -41,7 +52,11 @@
                         <input type="text" name="address" id="address" maxlength="150" value="{{.Address}}" placeholder="Where customers can collect their orders">
                     </div>
                     <div class="full">
-                        <label class="field" for="logo_url">Logo link (optional)</label>
+                        <label class="field" for="logo_file">Shop logo (optional)</label>
+                        <input type="file" name="logo_file" id="logo_file" accept="image/*" data-image-upload>
+                        <img data-image-preview="logo_file" alt="Preview of the chosen logo" hidden style="max-width:120px;max-height:120px;border-radius:10px;margin-top:8px;object-fit:cover">
+                        <p class="muted" data-image-status="logo_file" role="status"></p>
+                        <label class="field" for="logo_url">Or paste a logo link (optional)</label>
                         <input type="text" name="logo_url" id="logo_url" maxlength="500" value="{{.LogoURL}}" placeholder="https://...">
                     </div>
                 </div>
@@ -351,6 +366,8 @@
         loadBanks();
     })();
     </script>
+<script src="/static/js/share-link.js"></script>
+<script src="/static/js/image-upload.js"></script>
 <script src="/static/js/vendor-banner.js"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/nav-active.js"></script>

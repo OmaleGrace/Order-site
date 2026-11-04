@@ -90,6 +90,10 @@ func validImageURL(raw string) string {
 	if len(raw) > 500 {
 		return "The picture link is too long"
 	}
+	// A picture the vendor uploaded from their own device is served from /media/<id>.
+	if rest := strings.TrimPrefix(raw, "/media/"); rest != raw && rest != "" && strings.Trim(rest, "0123456789") == "" {
+		return ""
+	}
 	u, err := url.Parse(raw)
 	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil {
 		return "The picture link must start with https://"

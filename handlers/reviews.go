@@ -41,6 +41,10 @@ func (h *Handlers) ReviewOrder(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if err := parseFormOrMultipart(w, r); err != nil {
+		errors.Render(w, "The review form is too large or could not be read.", http.StatusBadRequest)
+		return
+	}
 
 	userID, ok := h.reviewUser(w, r)
 	if !ok {
@@ -59,6 +63,12 @@ func (h *Handlers) ReviewOrder(w http.ResponseWriter, r *http.Request) {
 	comment := strings.TrimSpace(strings.ReplaceAll(r.FormValue("comment"), "\x00", ""))
 	if len([]rune(comment)) > 1000 {
 		h.reviewError(w, r, orderID, "Your review must be 1,000 characters or fewer.")
+		return
+	}
+
+	photoURL, uploadErr := h.uploadedImageURL(r, "photo")
+	if uploadErr != nil {
+		h.reviewError(w, r, orderID, uploadErr.Error())
 		return
 	}
 
@@ -87,10 +97,10 @@ func (h *Handlers) ReviewOrder(w http.ResponseWriter, r *http.Request) {
 
 	var reviewID int64
 	err = tx.QueryRow(`
-        INSERT INTO order_reviews (order_id, user_id, vendor_id, rating, comment)
-        VALUES ($1,$2,$3,$4,$5)
+        INSERT INTO order_reviews (order_id, user_id, vendor_id, rating, comment, photo_url)
+        VALUES ($1,$2,$3,$4,$5,$6)
         ON CONFLICT (order_id) DO NOTHING
-        RETURNING id`, orderID, userID, vendorID, rating, comment).Scan(&reviewID)
+        RETURNING id`, orderID, userID, vendorID, rating, comment, photoURL).Scan(&reviewID)
 	if err == sql.ErrNoRows {
 		h.reviewError(w, r, orderID, "You have already reviewed this order.")
 		return

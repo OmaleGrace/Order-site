@@ -100,6 +100,8 @@ type AdminEarningsPage struct {
 	CommissionPercent int
 	TotalSalesKobo    int
 	TotalCommission   int
+	TotalServiceFees  int
+	WalletHeldKobo    int // customer wallet balances: money you owe back to customers
 	TotalOwedKobo     int
 	TotalAvailable    int
 	HoldHours         int
@@ -129,6 +131,8 @@ func (h *Handlers) AdminEarnings(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	page := AdminEarningsPage{Notice: r.URL.Query().Get("msg"), CommissionPercent: commissionPercent(), HoldHours: payoutHoldHours()}
+	_ = h.DB.QueryRow(`SELECT COALESCE(SUM(amount_kobo), 0) FROM wallet_transactions`).Scan(&page.WalletHeldKobo)
+	_ = h.DB.QueryRow(`SELECT COALESCE(SUM(service_fee_kobo), 0) FROM orders WHERE status NOT IN ('pending', 'cancelled')`).Scan(&page.TotalServiceFees)
 	for rows.Next() {
 		var row AdminEarningsRow
 		if err := rows.Scan(&row.VendorID, &row.Name, &row.BankName, &row.BankCode, &row.AccountNumber, &row.AccountName, &row.AccountVerified, &row.Orders, &row.SalesKobo, &row.CommissionKobo, &row.PaidOutKobo); err != nil {

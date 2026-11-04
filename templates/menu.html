@@ -68,6 +68,7 @@
                     <select name="sort">
                         <option value="relevance" {{if eq .Sort "relevance"}}selected{{end}}>Recommended</option>
                         <option value="name" {{if eq .Sort "name"}}selected{{end}}>Name A–Z</option>
+                        <option value="trending" {{if eq .Sort "trending"}}selected{{end}}>Trending now</option>
                         <option value="price_asc" {{if eq .Sort "price_asc"}}selected{{end}}>Price: low to high</option>
                         <option value="price_desc" {{if eq .Sort "price_desc"}}selected{{end}}>Price: high to low</option>
                     </select>
@@ -85,6 +86,12 @@
             </form>
         </details>
     </div>
+
+    <nav class="category-filters" aria-label="Quick filters">
+        <a href="/menu?sort=trending" class="category-btn {{if eq .Sort "trending"}}active{{end}}">🔥 Trending</a>
+        <a href="/menu?max_price=2000" class="category-btn {{if eq .MaxPrice 2000}}active{{end}}">Under ₦2,000</a>
+        <a href="/menu?max_price=1000" class="category-btn {{if eq .MaxPrice 1000}}active{{end}}">Under ₦1,000</a>
+    </nav>
 
     <nav class="category-filters" aria-label="Categories">
         <a href="/menu{{if .Search}}?search={{.Search}}{{end}}" class="category-btn {{if not .Category}}active{{end}}"{{if not .Category}} aria-current="true"{{end}}>All</a>

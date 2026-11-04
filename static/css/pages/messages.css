@@ -215,11 +215,12 @@ main {
 
 .composer textarea {
   width:100%;
-  min-height:90px;
-  resize:vertical;
+  min-height:42px;
+  max-height:110px;
+  resize:none;
   border:1px solid #cbd8ce;
   border-radius:12px;
-  padding:12px;
+  padding:9px 12px;
   font:inherit;
 }
 
@@ -355,3 +356,24 @@ main {
 }
 
 .row-wrap { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Smaller composer */
+.composer { padding-top:10px; }
+.composer-row { margin-top:6px; }
+.composer .hint { font-size:.74rem; }
+.composer .button { padding:8px 13px; font-size:.9rem; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* Sender picture beside each name */
+.bubble .sender { display:flex; align-items:center; gap:7px; }
+.avatar { flex:0 0 26px; width:26px; height:26px; border-radius:50%; overflow:hidden; display:inline-grid; place-items:center; background:#d7e6da; color:#14532d; font-size:.8rem; font-weight:800; }
+.avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* Compact message composer: the input should not dominate the conversation. */
+.composer textarea { min-height: 34px; max-height: 76px; height: 38px; padding: 7px 10px; font-size: .9rem; line-height: 1.35; }
+.composer { padding-top: 9px; }
+.composer-row { margin-top: 5px; }
+.composer .button { padding: 7px 11px; font-size: .84rem; }
+.presence-pill { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:var(--muted); margin-top:5px; }
+.presence-pill:before { content:""; width:8px; height:8px; border-radius:50%; background:#a0aaa3; }
+.presence-pill.online:before { background:#16a34a; }

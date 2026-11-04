@@ -33,7 +33,7 @@ func isPrivatePage(path string) bool {
 	for _, p := range []string{
 		"/account", "/orders", "/cart", "/checkout", "/admin", "/vendor",
 		"/favorites", "/become-a-vendor", "/login", "/signup",
-		"/forgot-password", "/reset-password", "/order-success", "/payment", "/track",
+		"/forgot-password", "/reset-password", "/order-success", "/payment", "/track", "/wallet", "/group-order",
 	} {
 		if path == p || strings.HasPrefix(path, p+"/") {
 			return true

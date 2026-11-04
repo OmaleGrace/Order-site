@@ -129,6 +129,9 @@ func signupFail(w http.ResponseWriter, r *http.Request, msg string, code int) {
 
 func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 	tmpl := render.MustPage("signup.html")
+	if r.Method == http.MethodGet {
+		rememberReferral(w, r) // an invite link: /signup?ref=CODE
+	}
 
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
@@ -230,6 +233,8 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 			signupFail(w, r, "Could not create account", http.StatusInternalServerError)
 			return
 		}
+
+		h.linkReferral(w, r, userID)
 
 		// Log the new customer in straight away
 		token, err := middleware.CreateSession(h.DB, userID)

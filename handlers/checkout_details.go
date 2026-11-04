@@ -23,6 +23,9 @@ type CheckoutPage struct {
 	VendorName      string
 	Lines           []CheckoutLine
 	SubtotalKobo    int
+	ServiceFeeKobo  int
+	WalletKobo      int  // the customer's wallet balance (members only)
+	HasPass         bool // an active pass waives the service fee
 	OffersPickup    bool
 	OffersDelivery  bool
 	DeliveryFeeKobo int
@@ -115,6 +118,14 @@ func (h *Handlers) CheckoutDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page.IsGuest = isGuest
+	page.ServiceFeeKobo = serviceFeeKobo()
+	if !isGuest {
+		page.WalletKobo = walletBalance(h.DB, userID)
+		if page.ServiceFeeKobo > 0 && h.hasPass(userID) {
+			page.ServiceFeeKobo = 0
+			page.HasPass = true
+		}
+	}
 	if !isGuest {
 		h.DB.QueryRow("SELECT COALESCE(phone, '') FROM users WHERE id = $1", userID).Scan(&page.Phone)
 	}

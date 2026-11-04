@@ -87,10 +87,16 @@ func (h *Handlers) AdminRiderSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if id > 0 {
-		if _, err := h.DB.Exec(`UPDATE riders SET name=$1,phone=$2,vehicle=$3,active=$4 WHERE id=$5`, name, phone, vehicle, r.FormValue("active") == "on", id); err != nil {
+		active := r.FormValue("active") == "on"
+		if _, err := h.DB.Exec(`UPDATE riders SET name=$1,phone=$2,vehicle=$3,active=$4 WHERE id=$5`, name, phone, vehicle, active, id); err != nil {
 			log.Printf("admin riders: update failed: %v", err)
 			http.Redirect(w, r, "/admin/riders?msg=Could+not+update+rider", 303)
 			return
+		}
+		if !active {
+			if _, err := h.DB.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
+				log.Printf("admin riders: revoke links after edit failed: %v", err)
+			}
 		}
 	} else {
 		if _, err := h.DB.Exec(`INSERT INTO riders(name,phone,vehicle,active) VALUES($1,$2,$3,TRUE)`, name, phone, vehicle); err != nil {
@@ -112,8 +118,26 @@ func (h *Handlers) AdminRiderToggle(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin/riders?msg=Invalid+rider", 303)
 		return
 	}
-	if _, err := h.DB.Exec(`UPDATE riders SET active=NOT active WHERE id=$1`, id); err != nil {
+	tx, err := h.DB.Begin()
+	if err != nil {
+		http.Redirect(w, r, "/admin/riders?msg=Could+not+update+rider", 303)
+		return
+	}
+	defer tx.Rollback()
+	var active bool
+	if err := tx.QueryRow(`UPDATE riders SET active=NOT active WHERE id=$1 RETURNING active`, id).Scan(&active); err != nil {
 		log.Printf("admin riders: toggle failed: %v", err)
+		http.Redirect(w, r, "/admin/riders?msg=Could+not+update+rider", 303)
+		return
+	}
+	if !active {
+		if _, err := tx.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
+			log.Printf("admin riders: revoke rider links failed: %v", err)
+			http.Redirect(w, r, "/admin/riders?msg=Could+not+revoke+rider+links", 303)
+			return
+		}
+	}
+	if err := tx.Commit(); err != nil {
 		http.Redirect(w, r, "/admin/riders?msg=Could+not+update+rider", 303)
 		return
 	}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Request a group order - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/feedback.css">
+    <link rel="stylesheet" href="/static/css/pages/wallet.css">
+</head>
+<body data-nm="customer">
+<header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
+<main class="fb-page">
+    <section class="fb-card">
+        <h1>Request a group order</h1>
+        <p class="fb-lead">Feeding an office, a party or an event? Tell a shop what you need. They send you one price, and you pay it from your wallet or by card to confirm.</p>
+        {{if .Error}}<p class="fb-error" role="alert">{{.Error}}</p>{{end}}
+        <form action="/group-order" method="post">
+            <label for="vendor_id">Which shop?</label>
+            <select id="vendor_id" name="vendor_id" required>
+                <option value="">Choose a shop</option>
+                {{range .Vendors}}<option value="{{.ID}}" {{if .Selected}}selected{{end}}>{{.Name}}</option>{{end}}
+            </select>
+            <div class="fb-two">
+                <div><label for="event_at">When do you need it?</label><input type="datetime-local" id="event_at" name="event_at" min="{{.MinDate}}" required></div>
+                <div><label for="headcount">How many people?</label><input type="number" id="headcount" name="headcount" min="{{.MinHead}}" max="{{.MaxHead}}" required></div>
+            </div>
+            <label for="delivery_method">Pickup or delivery?</label>
+            <select id="delivery_method" name="delivery_method"><option value="pickup">Pickup</option><option value="delivery">Delivery</option></select>
+            <label for="address">Delivery address (if delivery)</label>
+            <input type="text" id="address" name="address" maxlength="300" autocomplete="street-address">
+            <div class="fb-two">
+                <div><label for="phone">Phone the shop can call</label><input type="tel" id="phone" name="phone" value="{{.Phone}}" placeholder="08012345678" required></div>
+                <div><label for="budget">Budget in ₦ (optional)</label><input type="number" id="budget" name="budget" min="0" step="1000"></div>
+            </div>
+            <label for="notes">What do you need?</label>
+            <textarea id="notes" name="notes" maxlength="1000" required placeholder="Dishes, quantities, dietary needs, serving style..."></textarea>
+            <button class="fb-button" type="submit">Send request</button>
+        </form>
+        <p><a href="/group-orders">See my group orders</a></p>
+    </section>
+</main>
+{{template "scripts-common"}}
+</body>
+</html>

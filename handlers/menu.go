@@ -26,7 +26,7 @@ func (h *Handlers) Menu(w http.ResponseWriter, r *http.Request) {
 	search := strings.TrimSpace(r.URL.Query().Get("search"))
 	category := strings.TrimSpace(r.URL.Query().Get("category"))
 	sortBy := r.URL.Query().Get("sort")
-	if sortBy != "price_asc" && sortBy != "price_desc" && sortBy != "name" {
+	if sortBy != "price_asc" && sortBy != "price_desc" && sortBy != "name" && sortBy != "trending" {
 		sortBy = "relevance"
 	}
 	minPrice, _ := strconv.Atoi(r.URL.Query().Get("min_price"))

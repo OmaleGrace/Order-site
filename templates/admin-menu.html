@@ -20,7 +20,7 @@
 
         <div class="card">
             <h2 id="form-title">Add a menu item</h2>
-            <form action="{{.Base}}/menu/save" method="post" id="item-form">
+            <form action="{{.Base}}/menu/save" method="post" id="item-form" enctype="multipart/form-data">
                 <input type="hidden" name="id" id="item-id">
                 <div class="grid">
                     <div>
@@ -35,8 +35,12 @@
                         <label for="category">Category</label>
                         <input type="text" name="category" id="category" placeholder="e.g. Rice, Drinks">
                     </div>
-                    <div>
-                        <label for="image_url">Image URL (optional)</label>
+                    <div class="full">
+                        <label for="image_file">Dish photo (optional)</label>
+                        <input type="file" name="image_file" id="image_file" accept="image/*" data-image-upload>
+                        <img data-image-preview="image_file" alt="Preview of the chosen photo" hidden style="max-width:160px;max-height:120px;border-radius:10px;margin-top:8px;object-fit:cover">
+                        <p class="muted" data-image-status="image_file" role="status"></p>
+                        <label for="image_url">Or paste a picture link (optional)</label>
                         <input type="text" name="image_url" id="image_url">
                     </div>
                     <div class="full">
@@ -114,6 +118,7 @@
         </div>
     </main>
 
+    <script src="/static/js/image-upload.js"></script>
     <script src="/static/js/pages/admin-menu.js"></script>
     <script src="/static/js/lightbox.js"></script>
 <script src="/static/js/vendor-banner.js"></script>

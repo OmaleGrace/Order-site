@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Feedback | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/admin-support.css">
+    <link rel="stylesheet" href="/static/css/pages/admin-feedback.css">
+    <link rel="stylesheet" href="/static/css/portal-nav.css">
+</head>
+<body>
+<header class="top"><a href="/admin">{{brandName}} · Admin</a>{{template "admin-nav" dict "Class" "nav" "Active" "/admin/feedback"}}</header>
+<main class="wrap">
+    <h1>Feedback</h1>
+    <p class="meta">Everything visitors and customers send through the Feedback page.</p>
+    <div class="fbk-summary">
+        <div><strong>{{.Total}}</strong><span>total</span></div>
+        <div><strong>{{.NewCount}}</strong><span>new</span></div>
+        <div><strong>{{if .AvgRating}}{{.AvgRating}} ★{{else}}–{{end}}</strong><span>average rating</span></div>
+    </div>
+    <nav class="fbk-filters" aria-label="Filter feedback">
+        <a href="/admin/feedback"{{if eq .Filter ""}} class="on"{{end}}>All</a>
+        <a href="/admin/feedback?status=new"{{if eq .Filter "new"}} class="on"{{end}}>New</a>
+        <a href="/admin/feedback?status=read"{{if eq .Filter "read"}} class="on"{{end}}>Read</a>
+        <a href="/admin/feedback?status=resolved"{{if eq .Filter "resolved"}} class="on"{{end}}>Resolved</a>
+    </nav>
+    {{if .Items}}
+    {{range .Items}}
+    <article class="ticket">
+        <div class="head">
+            <div><strong>{{.Category}}</strong>{{if .Rating.Valid}} <span class="fbk-stars" aria-label="{{.Rating.Int64}} out of 5">{{.Rating.Int64}} ★</span>{{end}}
+                <div class="meta">{{if .Name}}{{.Name}}{{else}}Anonymous{{end}}{{if .Email}} · <a href="mailto:{{.Email}}">{{.Email}}</a>{{end}}{{if .Account}} · has an account{{end}} · {{.CreatedAt}}{{if .Page}} · from {{.Page}}{{end}}</div>
+            </div>
+            <span class="badge">{{.Status}}</span>
+        </div>
+        <p class="fbk-message">{{.Message}}</p>
+        <form action="/admin/feedback/update" method="post" class="fbk-form">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <input type="hidden" name="filter" value="{{$.Filter}}">
+            <textarea name="admin_note" maxlength="1000" aria-label="Private note" placeholder="Private note (only admins see this)">{{.AdminNote}}</textarea>
+            <select name="status" aria-label="Status">
+                <option value="new" {{if eq .Status "new"}}selected{{end}}>New</option>
+                <option value="read" {{if eq .Status "read"}}selected{{end}}>Read</option>
+                <option value="resolved" {{if eq .Status "resolved"}}selected{{end}}>Resolved</option>
+            </select>
+            <button class="button" type="submit">Save</button>
+        </form>
+    </article>
+    {{end}}
+    {{else}}
+    <section class="card"><p>No feedback here yet.</p></section>
+    {{end}}
+</main>
+<script src="/static/js/nav-active.js"></script>
+{{template "scripts-common"}}
+</body>
+</html>

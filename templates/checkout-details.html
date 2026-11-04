@@ -193,9 +193,12 @@
                 <div class="summary-line" id="loyalty-discount-row" hidden><span>Loyalty discount</span><strong id="loyalty-discount-line">-₦0</strong></div>
                 <p class="summary-note" id="commission-transparency-note" hidden>LaikiHub's commission is calculated from the food amount actually paid after your loyalty discount.</p>
                 <div class="summary-line"><span>Delivery</span><strong id="fee-line">₦0</strong></div>
+                {{if .ServiceFeeKobo}}<div class="summary-line"><span>Service fee</span><strong>₦{{naira .ServiceFeeKobo}}</strong></div>{{end}}
                 <div class="summary-divider"></div>
                 <div class="total-row"><span>Total</span><strong id="total-line">₦{{naira .SubtotalKobo}}</strong></div>
-                <p class="summary-note">You'll be securely redirected to Paystack to complete payment.</p>
+                <p class="summary-note" id="payment-note">You'll be securely redirected to Paystack to complete payment.</p>
+                {{if .WalletKobo}}<label class="wallet-opt" style="display:block;margin:10px 0"><input type="checkbox" name="use_wallet" value="1" id="use-wallet"> Pay from my wallet (balance ₦{{naira .WalletKobo}}). It only works if your balance covers the whole order. <a href="/wallet">Top up</a></label>{{end}}
+                {{if .HasPass}}<p class="summary-note">Your LaikiHub Pass is active: no service fee.</p>{{end}}
                 <button type="submit" class="checkout-btn" id="pay-btn" disabled>Continue to secure payment <span aria-hidden="true">→</span></button>
                 <div class="secure-note"><span aria-hidden="true">🔒</span><span>Secure payment powered by Paystack. LaikiHub never sees your card PIN.</span></div>
             </aside>
@@ -208,6 +211,7 @@
 <script>
 (function () {
     var subtotal = {{.SubtotalKobo}};
+    var serviceFee = {{.ServiceFeeKobo}};
     var fee = {{.DeliveryFeeKobo}};
     var rates = {{.Rates}} || []; // per-area pricing set by the shop; the server applies the same rules
     var form = document.getElementById('checkout-form');
@@ -226,6 +230,12 @@
     var totalLine = document.getElementById('total-line');
     var hint = document.getElementById('phone-hint');
     var payBtn = document.getElementById('pay-btn');
+    var walletBox = document.getElementById('use-wallet');
+    var paymentNote = document.getElementById('payment-note');
+    if (walletBox) walletBox.addEventListener('change', function () {
+        payBtn.firstChild.textContent = walletBox.checked ? 'Pay from my wallet ' : 'Continue to secure payment ';
+        if (paymentNote) paymentNote.textContent = walletBox.checked ? 'Your wallet will be debited when you place this order. The full amount must be available.' : "You'll be securely redirected to Paystack to complete payment.";
+    });
     var payLabel = payBtn.innerHTML;
     var useLoyalty = document.getElementById('use-loyalty');
     var loyaltyWrap = document.getElementById('loyalty-input-wrap');
@@ -327,7 +337,7 @@
         couponDiscountLine.textContent = '-' + naira(couponDiscountKobo);
         feeLine.textContent = delivery ? (currentFee ? naira(currentFee) : 'Free') : '₦0';
         loyaltyDiscountLine.textContent = '-' + naira(discountKobo);
-        totalLine.textContent = naira(Math.max(0, subtotal - totalDiscountKobo) + currentFee);
+        totalLine.textContent = naira(Math.max(0, subtotal - totalDiscountKobo) + currentFee + serviceFee);
         var allOk = method() !== '' && !quote.blocked;
         fields.forEach(function (fld) {
             var err = fld.check();

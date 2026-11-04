@@ -14,6 +14,7 @@ import (
 )
 
 type VendorProfilePage struct {
+	Slug                string
 	Name                string
 	Description         string
 	Area                string
@@ -43,10 +44,10 @@ func (h *Handlers) VendorProfile(w http.ResponseWriter, r *http.Request) {
 	var feeKobo int
 	err := h.DB.QueryRow(`
 		SELECT name, description, area, address, phone, logo_url,
-		       offers_pickup, offers_delivery, delivery_fee_kobo
+		       offers_pickup, offers_delivery, delivery_fee_kobo, slug
 		FROM vendors WHERE id = $1
 	`, vendorID).Scan(&p.Name, &p.Description, &p.Area, &p.Address, &p.Phone,
-		&p.LogoURL, &p.OffersPickup, &p.OffersDelivery, &feeKobo)
+		&p.LogoURL, &p.OffersPickup, &p.OffersDelivery, &feeKobo, &p.Slug)
 	if err != nil {
 		log.Printf("vendor profile: query failed: %v", err)
 		errors.Render(w, "Could not load your shop details", http.StatusInternalServerError)
@@ -137,7 +138,7 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if err := r.ParseForm(); err != nil {
+	if err := parseFormOrMultipart(w, r); err != nil {
 		errors.Render(w, "Something went wrong", http.StatusBadRequest)
 		return
 	}
@@ -173,6 +174,12 @@ func (h *Handlers) VendorProfileSave(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		phone = normalized
+	}
+	if uploaded, upErr := h.uploadedImageURL(r, "logo_file"); upErr != nil {
+		back(upErr.Error())
+		return
+	} else if uploaded != "" {
+		logo = uploaded
 	}
 	if msg := validImageURL(logo); msg != "" {
 		back(msg)

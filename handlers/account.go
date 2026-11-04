@@ -22,19 +22,20 @@ type AccountRecentOrder struct {
 }
 
 type AccountPageData struct {
-	Name           string
-	Email          string
-	AuthProvider   string
-	ProfilePicture string
-	Phone          string
-	MemberSince    string
-	OrderCount     int
-	TotalSpentKobo int
-	Updated        bool
-	IsVendor       bool
-	FavoriteCount  int
-	ActiveOrders   int
-	RecentOrders   []AccountRecentOrder
+	Name                string
+	Email               string
+	AuthProvider        string
+	ProfilePicture      string
+	Phone               string
+	MemberSince         string
+	OrderCount          int
+	TotalSpentKobo      int
+	Updated             bool
+	IsVendor            bool
+	FavoriteCount       int
+	ActiveOrders        int
+	ActiveStatusEnabled bool
+	RecentOrders        []AccountRecentOrder
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +47,10 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 
 	var data AccountPageData
 	var phone *string
+	data.ActiveStatusEnabled = true
+	if err := h.DB.QueryRow(`SELECT COALESCE(active_status_enabled, TRUE) FROM users WHERE id=$1`, userID).Scan(&data.ActiveStatusEnabled); err != nil {
+		log.Printf("account: presence preference lookup failed: %v", err)
+	}
 
 	// One round trip for everything the top of the page needs. On a hosted database every
 	// extra query costs a network trip, and this page used to make seven of them in a row.

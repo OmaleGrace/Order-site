@@ -311,3 +311,7 @@ html body .account-feature-grid { grid-template-columns: repeat(auto-fit, minmax
 html body .account-welcome { border-radius: 18px; }
 html body .account-stat-card { border-radius: 14px; }
 html body .account-section { border-radius: 18px; }
+
+.account-presence-setting { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:14px; border:1px solid #e2e9e3; border-radius:12px; background:#fff; }
+.account-presence-setting label { display:flex; align-items:center; gap:9px; color:var(--ink,#18352b); }
+.account-presence-setting input { width:18px; height:18px; }

@@ -33,6 +33,7 @@ type ShopReview struct {
 	Rating    int
 	Comment   string
 	CreatedAt string
+	PhotoURL  string
 }
 
 type ShopPage struct {
@@ -98,12 +99,12 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 
 	h.DB.QueryRow("SELECT count(*) FROM orders WHERE vendor_id = $1 AND status = 'completed'", vendorID).Scan(&p.Completed)
 	h.DB.QueryRow("SELECT COALESCE(AVG(rating),0), COUNT(*) FROM order_reviews WHERE vendor_id = $1", vendorID).Scan(&p.ReviewAverage, &p.ReviewCount)
-	reviewRows, err := h.DB.Query(`SELECT COALESCE(u.name, 'Customer'), r.rating, r.comment, TO_CHAR(r.created_at, 'DD Mon YYYY') FROM order_reviews r JOIN users u ON u.id=r.user_id WHERE r.vendor_id=$1 AND r.comment <> '' ORDER BY r.created_at DESC LIMIT 5`, vendorID)
+	reviewRows, err := h.DB.Query(`SELECT COALESCE(u.name, 'Customer'), r.rating, r.comment, TO_CHAR(r.created_at, 'DD Mon YYYY'), COALESCE(r.photo_url,'') FROM order_reviews r JOIN users u ON u.id=r.user_id WHERE r.vendor_id=$1 AND (r.comment <> '' OR COALESCE(r.photo_url,'') <> '') ORDER BY r.created_at DESC LIMIT 5`, vendorID)
 	if err == nil {
 		defer reviewRows.Close()
 		for reviewRows.Next() {
 			var review ShopReview
-			if scanErr := reviewRows.Scan(&review.Customer, &review.Rating, &review.Comment, &review.CreatedAt); scanErr == nil {
+			if scanErr := reviewRows.Scan(&review.Customer, &review.Rating, &review.Comment, &review.CreatedAt, &review.PhotoURL); scanErr == nil {
 				p.Reviews = append(p.Reviews, review)
 			}
 		}
@@ -151,7 +152,7 @@ func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(image_url, ''), COALESCE(category, ''),
                COALESCE((SELECT AVG(r.rating) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
                COALESCE((SELECT COUNT(*) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
-               ` + strings.ReplaceAll(menu.HasOptionsSQL, "m.id", "menu_items.id") + `
+               `+strings.ReplaceAll(menu.HasOptionsSQL, "m.id", "menu_items.id")+`
 		FROM menu_items
 		WHERE vendor_id = $1 AND COALESCE(available, TRUE) = TRUE
 		ORDER BY category, name

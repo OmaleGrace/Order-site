@@ -17,6 +17,7 @@ type ShopCard struct {
 	Area            string
 	LogoURL         string
 	Verified        bool
+	Promoted        bool
 	OffersPickup    bool
 	OffersDelivery  bool
 	DeliveryFeeKobo int
@@ -66,7 +67,8 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 		       (SELECT count(*) FROM menu_items m WHERE m.vendor_id = v.id) AS dishes,
 		       (SELECT count(*) FROM orders o WHERE o.vendor_id = v.id AND o.status = 'completed') AS completed,
 		       COALESCE((SELECT AVG(r.rating) FROM order_reviews r WHERE r.vendor_id = v.id), 0) AS rating,
-		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count
+		       (SELECT count(*) FROM order_reviews r WHERE r.vendor_id = v.id) AS review_count,
+		       COALESCE(v.promoted_until > NOW(), FALSE) AS promoted
 		FROM vendors v
 		WHERE v.status = 'active' AND v.paid_until > NOW()
 		  AND EXISTS (SELECT 1 FROM menu_items m WHERE m.vendor_id = v.id)
@@ -93,7 +95,7 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	case "completed":
 		query += " ORDER BY completed DESC, v.name ASC"
 	default:
-		query += " ORDER BY v.verified DESC, completed DESC, v.name"
+		query += " ORDER BY promoted DESC, v.verified DESC, completed DESC, v.name"
 	}
 
 	rows, err := h.DB.Query(query, args...)
@@ -108,7 +110,7 @@ func (h *Handlers) VendorsList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var s ShopCard
 		if err := rows.Scan(&s.Name, &s.Slug, &s.Description, &s.Area, &s.LogoURL, &s.Verified,
-			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount); err != nil {
+			&s.OffersPickup, &s.OffersDelivery, &s.DeliveryFeeKobo, &s.Dishes, &s.Completed, &s.Rating, &s.ReviewCount, &s.Promoted); err != nil {
 			log.Printf("vendors list: scan failed: %v", err)
 			errors.Render(w, "Could not read the shops", http.StatusInternalServerError)
 			return

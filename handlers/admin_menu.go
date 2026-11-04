@@ -146,8 +146,8 @@ func (h *Handlers) renderMenuManager(w http.ResponseWriter, r *http.Request, ven
 }
 
 func (h *Handlers) saveMenuItem(w http.ResponseWriter, r *http.Request, vendorID int, isAdmin bool) {
-	if err := r.ParseForm(); err != nil {
-		errors.Render(w, "Something went wrong", http.StatusBadRequest)
+	if err := parseFormOrMultipart(w, r); err != nil {
+		errors.Render(w, "Something went wrong. If you chose a picture, it may be too big (3 MB maximum).", http.StatusBadRequest)
 		return
 	}
 
@@ -164,6 +164,13 @@ func (h *Handlers) saveMenuItem(w http.ResponseWriter, r *http.Request, vendorID
 	if len([]rune(name)) > 100 || len([]rune(description)) > 500 || len([]rune(category)) > 40 {
 		errors.Render(w, "Name, description or category is too long", http.StatusBadRequest)
 		return
+	}
+	// A picture chosen from the device wins over a pasted link.
+	if uploaded, upErr := h.uploadedImageURL(r, "image_file"); upErr != nil {
+		errors.Render(w, upErr.Error(), http.StatusBadRequest)
+		return
+	} else if uploaded != "" {
+		imageURL = uploaded
 	}
 	if msg := validImageURL(imageURL); msg != "" {
 		errors.Render(w, msg, http.StatusBadRequest)

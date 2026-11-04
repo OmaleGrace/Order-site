@@ -22,6 +22,8 @@ type AdminVendor struct {
 	PaidUntil  string
 	SetupPaid  bool
 	Verified   bool
+	Promoted   string // date the paid promotion ends, empty when not promoted
+	Plan       string // "Free" or "Pro until <date>"
 }
 
 type AdminVendorsPage struct {
@@ -59,7 +61,9 @@ func (h *Handlers) AdminVendors(w http.ResponseWriter, r *http.Request) {
 		           WHEN v.paid_until > NOW() + INTERVAL '50 years' THEN 'No expiry'
 		           ELSE TO_CHAR(v.paid_until, 'DD Mon YYYY')
 		       END,
-		       v.setup_paid_at IS NOT NULL, v.verified
+		       v.setup_paid_at IS NOT NULL, v.verified,
+		       CASE WHEN v.promoted_until > NOW() THEN TO_CHAR(v.promoted_until, 'DD Mon YYYY') ELSE '' END,
+		       CASE WHEN v.plan = 'pro' AND v.plan_until > NOW() THEN 'Pro until ' || TO_CHAR(v.plan_until, 'DD Mon YYYY') ELSE 'Free' END
 		FROM vendors v
 		LEFT JOIN users u ON u.id = v.owner_user_id
 		ORDER BY v.id
@@ -75,7 +79,7 @@ func (h *Handlers) AdminVendors(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var v AdminVendor
-		if err := rows.Scan(&v.ID, &v.Name, &v.Slug, &v.Status, &v.OwnerEmail, &v.Items, &v.PaidUntil, &v.SetupPaid, &v.Verified); err != nil {
+		if err := rows.Scan(&v.ID, &v.Name, &v.Slug, &v.Status, &v.OwnerEmail, &v.Items, &v.PaidUntil, &v.SetupPaid, &v.Verified, &v.Promoted, &v.Plan); err != nil {
 			log.Printf("admin vendors: scan failed: %v", err)
 			errors.Render(w, "Could not read vendors", http.StatusInternalServerError)
 			return
@@ -199,4 +203,50 @@ func (h *Handlers) AdminVendorStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vendorsRedirect(w, r, msg)
+}
+
+// AdminVendorGrowth sells the two paid extras by hand: Promoted placement and the Pro plan.
+// Days add to whatever time is left, so renewing early never loses paid time. "Clear" ends it now.
+func (h *Handlers) AdminVendorGrowth(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		errors.Render(w, "Invalid form", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(r.FormValue("id"))
+	if err != nil || id <= 0 {
+		errors.Render(w, "Invalid vendor", http.StatusBadRequest)
+		return
+	}
+	kind := r.FormValue("kind")
+	days, _ := strconv.Atoi(r.FormValue("days"))
+	clear := r.FormValue("action") == "clear"
+	if !clear && (days < 1 || days > 366) {
+		errors.Render(w, "Choose between 1 and 366 days", http.StatusBadRequest)
+		return
+	}
+
+	var res sql.Result
+	switch {
+	case kind == "promote" && clear:
+		res, err = h.DB.Exec(`UPDATE vendors SET promoted_until = NULL WHERE id = $1`, id)
+	case kind == "promote":
+		res, err = h.DB.Exec(`UPDATE vendors SET promoted_until = GREATEST(COALESCE(promoted_until, NOW()), NOW()) + make_interval(days => $2) WHERE id = $1`, id, days)
+	case kind == "pro" && clear:
+		res, err = h.DB.Exec(`UPDATE vendors SET plan = 'free', plan_until = NULL WHERE id = $1`, id)
+	case kind == "pro":
+		res, err = h.DB.Exec(`UPDATE vendors SET plan = 'pro', plan_until = GREATEST(COALESCE(plan_until, NOW()), NOW()) + make_interval(days => $2) WHERE id = $1`, id, days)
+	default:
+		errors.Render(w, "Unknown change", http.StatusBadRequest)
+		return
+	}
+	if err != nil {
+		log.Printf("admin vendor growth: update failed: %v", err)
+		errors.Render(w, "Could not update the vendor", http.StatusInternalServerError)
+		return
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		errors.Render(w, "Vendor not found", http.StatusNotFound)
+		return
+	}
+	http.Redirect(w, r, "/admin/vendors?msg="+url.QueryEscape("Vendor updated"), http.StatusSeeOther)
 }

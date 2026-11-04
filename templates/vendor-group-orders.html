@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Group orders - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/feedback.css">
+    <link rel="stylesheet" href="/static/css/pages/wallet.css">
+    <link rel="stylesheet" href="/static/css/portal-nav.css">
+</head>
+<body data-nm="vendor">
+<header class="top"><a href="/vendor/orders">{{brandName}} · Vendor</a>{{template "vendor-nav" dict "Class" "nav" "Active" "/vendor/group-orders"}}</header>
+<main class="fb-page">
+    {{if .Notice}}<p class="wl-notice" role="status">{{.Notice}}</p>{{end}}
+    <h1>Group orders</h1>
+    <p class="fb-lead">Customers ask for food for offices, parties and events. Send one price; if they accept, they pay it in full and it becomes a scheduled order.</p>
+    {{range .Rows}}
+    <section class="fb-card">
+        <h2>{{.Headcount}} people · {{.EventAt}}</h2>
+        <p class="fb-note">From {{.Customer}} · {{.Phone}} · {{if eq .Method "delivery"}}Delivery to {{.Address}}{{else}}Pickup{{end}}{{if .BudgetNaira}} · Budget ₦{{.BudgetNaira}}{{end}}</p>
+        <p>{{.Notes}}</p>
+        {{if .CanQuote}}
+        <form action="/vendor/group-orders/quote" method="post">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <label for="q{{.ID}}">Your price in ₦ (for everything, delivery included)</label>
+            <input type="number" id="q{{.ID}}" name="quote" min="5000" max="5000000" step="1" value="{{if .QuoteNaira}}{{.QuoteNaira}}{{end}}" required>
+            <label for="n{{.ID}}">Note to the customer (optional)</label>
+            <input type="text" id="n{{.ID}}" name="note" maxlength="500" value="{{.VendorNote}}">
+            <button class="fb-button" type="submit">{{if eq .State "quoted"}}Update price{{else}}Send price{{end}}</button>
+            <button class="wl-chip" type="submit" name="action" value="decline" formnovalidate>Decline</button>
+        </form>
+        {{else if eq .State "awaiting_payment"}}<p><strong>Quoted ₦{{.QuoteNaira}}</strong>. Waiting for the customer to pay.</p>
+        {{else if eq .State "paid"}}<p><strong>Paid ₦{{.QuoteNaira}}.</strong> It is in your Orders (status: {{.OrderStatus}}).</p>
+        {{else if eq .State "declined"}}<p>You declined this request.</p>
+        {{else}}<p>The customer withdrew this request.</p>{{end}}
+    </section>
+    {{else}}
+    <section class="fb-card"><p>No group order requests yet. Customers find you at <strong>/group-order</strong>.</p></section>
+    {{end}}
+</main>
+<script src="/static/js/nav-active.js"></script>
+{{template "scripts-common"}}
+</body>
+</html>

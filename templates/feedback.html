@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    <title>Send feedback - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/feedback.css">
+</head>
+<body data-nm="public">
+<header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
+<main class="fb-page">
+    <section class="fb-card">
+        {{if .Sent}}
+        <h1>Thank you! 💚</h1>
+        <p>We read every message and use it to make {{brandName}} better. If you left an email, we may reply.</p>
+        <p><a class="fb-button" href="/menu">Back to the menu</a></p>
+        {{else}}
+        <h1>Tell us what you think</h1>
+        <p class="fb-lead">Ideas, problems, compliments, complaints. Anything about the site, a shop or delivery. It takes one minute.</p>
+        {{if .Error}}<p class="fb-error" role="alert">{{.Error}}</p>{{end}}
+        <form action="/feedback" method="post">
+            <input type="hidden" name="page" value="{{.Page}}">
+            <div class="fb-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+            <label for="category">What is it about?</label>
+            <select id="category" name="category">{{range .Categories}}<option>{{.}}</option>{{end}}</select>
+
+            <fieldset class="fb-rating">
+                <legend>How is your experience so far? (optional)</legend>
+                <input type="radio" name="rating" id="r5" value="5"><label for="r5" title="Great">★</label>
+                <input type="radio" name="rating" id="r4" value="4"><label for="r4" title="Good">★</label>
+                <input type="radio" name="rating" id="r3" value="3"><label for="r3" title="Okay">★</label>
+                <input type="radio" name="rating" id="r2" value="2"><label for="r2" title="Poor">★</label>
+                <input type="radio" name="rating" id="r1" value="1"><label for="r1" title="Bad">★</label>
+            </fieldset>
+
+            <label for="message">Your feedback</label>
+            <textarea id="message" name="message" maxlength="2000" required placeholder="What should we know?"></textarea>
+
+            <div class="fb-two">
+                <div><label for="name">Name (optional)</label><input id="name" name="name" maxlength="80" value="{{.Name}}" autocomplete="name"></div>
+                <div><label for="email">Email, if you'd like a reply (optional)</label><input id="email" name="email" type="email" maxlength="254" value="{{.Email}}" autocomplete="email"></div>
+            </div>
+            <p class="fb-note">Please don't include passwords, PINs or card details.</p>
+            <button class="fb-button" type="submit">Send feedback</button>
+        </form>
+        {{end}}
+    </section>
+</main>
+{{template "site-footer"}}
+{{template "scripts-common"}}
+</body>
+</html>

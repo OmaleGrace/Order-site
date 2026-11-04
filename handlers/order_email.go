@@ -72,7 +72,7 @@ func loadOrderEmailDetails(db *sql.DB, orderID int) (orderEmailDetails, error) {
 	var scannedID int
 	var guestEmail string
 	err := db.QueryRow(`
-		SELECT o.id, o.total_kobo, o.status, o.created_at,
+		SELECT o.id, o.total_kobo + o.service_fee_kobo, o.status, o.created_at,
 		       COALESCE(NULLIF(o.guest_name, ''), u.name, 'Customer'),
 		       COALESCE(NULLIF(o.guest_email, ''), u.email),
 		       COALESCE(v.name, $2), o.guest_email

@@ -399,3 +399,5 @@ button[aria-busy="true"], input[aria-busy="true"] { cursor: progress; opacity: .
 .mt-18 { margin-top:18px !important; }
 .mt-22 { margin-top:22px !important; }
 .ml-8  { margin-left:8px !important; }
+
+.promoted-badge { display:inline-block; margin-right:6px; padding:2px 9px; border-radius:999px; background:#fff1dc; color:#8a4b00; font-size:.72rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }

@@ -297,7 +297,25 @@ func Connect() (*sql.DB, error) {
 		);
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_id INTEGER REFERENCES riders(id) ON DELETE SET NULL;
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_status TEXT NOT NULL DEFAULT 'unassigned';
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_access_token_hash TEXT;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_latitude DOUBLE PRECISION;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_longitude DOUBLE PRECISION;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_location_updated_at TIMESTAMPTZ;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_sharing_location BOOLEAN NOT NULL DEFAULT FALSE;
+        ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_status_updated_at TIMESTAMPTZ;
 		CREATE INDEX IF NOT EXISTS idx_orders_rider_status ON orders(rider_id, status) WHERE rider_id IS NOT NULL;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_rider_token_hash ON orders(rider_access_token_hash) WHERE rider_access_token_hash IS NOT NULL;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Messaging presence is optional and private by default only when a user switches it off.
+	_, err = db.Exec(`
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS active_status_enabled BOOLEAN NOT NULL DEFAULT TRUE;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+		CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at);
 	`)
 	if err != nil {
 		db.Close()
@@ -772,7 +790,177 @@ func Connect() (*sql.DB, error) {
 		return nil, err
 	}
 
+	// Pictures uploaded from a vendor's device are kept in the database, so they survive
+	// redeploys on hosts with temporary disks.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS uploaded_images (
+			id BIGSERIAL PRIMARY KEY,
+			content_type TEXT NOT NULL,
+			data BYTEA NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		)
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Vendor growth: paid "Promoted" placement and a paid Pro plan (lower commission).
+	_, err = db.Exec(`
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS promoted_until TIMESTAMPTZ;
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free';
+		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS plan_until TIMESTAMPTZ;
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Vendors can now pay for the Pro plan and for promotion themselves.
+	_, err = db.Exec(`
+		ALTER TABLE vendor_payments ADD COLUMN IF NOT EXISTS days INTEGER NOT NULL DEFAULT 0;
+		ALTER TABLE vendor_payments DROP CONSTRAINT IF EXISTS vendor_payments_kind_check;
+		ALTER TABLE vendor_payments ADD CONSTRAINT vendor_payments_kind_check
+			CHECK (kind IN ('setup', 'renewal', 'pro', 'promote'));
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Referrals: each customer gets an invite code; the bonus is paid once per invited friend.
+	_, err = db.Exec(`
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT;
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL;
+		CREATE UNIQUE INDEX IF NOT EXISTS uq_users_referral_code ON users(referral_code) WHERE referral_code IS NOT NULL;
+		CREATE TABLE IF NOT EXISTS referral_rewards (
+			referred_user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+			referrer_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+			points INTEGER NOT NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Wallet, gift cards and the pass. The wallet is a ledger (see handlers/wallet.go).
+	_, err = db.Exec(`
+		ALTER TABLE users ADD COLUMN IF NOT EXISTS pass_until TIMESTAMPTZ;
+		CREATE TABLE IF NOT EXISTS wallet_transactions (
+			id BIGSERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			amount_kobo INTEGER NOT NULL CHECK (amount_kobo <> 0),
+			kind TEXT NOT NULL CHECK (kind IN ('topup', 'gift_redeemed', 'order_payment', 'refund', 'pass_payment')),
+			reference TEXT UNIQUE,
+			order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+			note TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+		CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id, id DESC);
+		CREATE TABLE IF NOT EXISTS wallet_payments (
+			reference TEXT PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			kind TEXT NOT NULL CHECK (kind IN ('topup', 'giftcard', 'pass')),
+			amount_kobo INTEGER NOT NULL CHECK (amount_kobo > 0),
+			recipient_email TEXT NOT NULL DEFAULT '',
+			message TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid')),
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			paid_at TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS gift_cards (
+			id BIGSERIAL PRIMARY KEY,
+			code TEXT NOT NULL UNIQUE,
+			amount_kobo INTEGER NOT NULL CHECK (amount_kobo > 0),
+			buyer_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+			recipient_email TEXT NOT NULL DEFAULT '',
+			message TEXT NOT NULL DEFAULT '',
+			payment_reference TEXT UNIQUE,
+			redeemed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+			redeemed_at TIMESTAMP,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Group orders: a customer asks a shop, the shop quotes one price, the customer pays it in full.
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS group_requests (
+			id SERIAL PRIMARY KEY,
+			user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+			event_at TIMESTAMPTZ NOT NULL,
+			headcount INTEGER NOT NULL CHECK (headcount > 0),
+			delivery_method TEXT NOT NULL DEFAULT 'pickup' CHECK (delivery_method IN ('pickup', 'delivery')),
+			address TEXT NOT NULL DEFAULT '',
+			phone TEXT NOT NULL DEFAULT '',
+			notes TEXT NOT NULL DEFAULT '',
+			budget_kobo INTEGER,
+			quote_kobo INTEGER CHECK (quote_kobo IS NULL OR quote_kobo > 0),
+			vendor_note TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested', 'quoted', 'accepted', 'declined', 'cancelled')),
+			order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+		CREATE INDEX IF NOT EXISTS idx_group_requests_user ON group_requests(user_id, id DESC);
+		CREATE INDEX IF NOT EXISTS idx_group_requests_vendor ON group_requests(vendor_id, id DESC);
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Customer service fee. It is charged on top of the order total and kept by the platform,
+	// so it is stored apart from total_kobo: vendor payouts, statements and analytics (which are
+	// built on total_kobo) are unaffected.
+	_, err = db.Exec(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS service_fee_kobo INTEGER NOT NULL DEFAULT 0`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	// Site-wide feedback from anyone (not just order reviews).
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS site_feedback (
+			id BIGSERIAL PRIMARY KEY,
+			user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+			name TEXT NOT NULL DEFAULT '',
+			email TEXT NOT NULL DEFAULT '',
+			category TEXT NOT NULL DEFAULT 'Other',
+			rating SMALLINT CHECK (rating BETWEEN 1 AND 5),
+			message TEXT NOT NULL,
+			page TEXT NOT NULL DEFAULT '',
+			status TEXT NOT NULL DEFAULT 'new',
+			admin_note TEXT NOT NULL DEFAULT '',
+			created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+		CREATE INDEX IF NOT EXISTS idx_site_feedback_status ON site_feedback(status, created_at DESC);
+	`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	return db, nil
+}
+
+// CleanupUnusedImages deletes uploads that were never saved onto a dish or shop logo
+// (for example a vendor who chose a picture and then left the form).
+func CleanupUnusedImages(db *sql.DB) error {
+	_, err := db.Exec(`
+		DELETE FROM uploaded_images i
+		WHERE i.created_at < NOW() - INTERVAL '1 day'
+		  AND NOT EXISTS (SELECT 1 FROM menu_items m WHERE m.image_url = '/media/' || i.id::text)
+		  AND NOT EXISTS (SELECT 1 FROM vendors v WHERE v.logo_url = '/media/' || i.id::text)
+	`)
+	return err
 }
 
 // CleanupGuestAccounts removes placeholder guest rows (and their abandoned carts) that

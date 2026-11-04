@@ -16,7 +16,7 @@
     {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/shop.css">
-    <link rel="stylesheet" href="/static/css/home.css">
+    <link rel="stylesheet" href="/static/css/home.css?v=3">
 </head>
 
 <body>
@@ -89,6 +89,8 @@
         <span><strong>Favourites</strong><small>Saved shops and meals</small></span>
         <b aria-hidden="true">→</b>
     </a>
+    <a href="/feedback" class="quick-link"><span class="quick-icon">✉</span><span><strong>Feedback</strong><small>Share your experience</small></span><b aria-hidden="true">→</b></a>
+    <a href="/group-order" class="quick-link"><span class="quick-icon">👥</span><span><strong>Group order</strong><small>Order together</small></span><b aria-hidden="true">→</b></a>
 </section>
 {{if .Shops}}
 <section class="home-section">
@@ -108,7 +110,7 @@
             </div>
             <div class="shop-card-body">
                 <h3>{{.Name}}</h3>
-                {{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}
+                {{if .Promoted}}<span class="promoted-badge">Promoted</span>{{end}}{{if .Verified}}<span class="verified-badge">✔ Verified</span>{{end}}
                 {{if .Area}}<p class="shop-card-area">📍 {{.Area}}</p>{{end}}
                 {{if .OpenKnown}}<p class="shop-card-open {{if .OpenNow}}is-open{{else}}is-closed{{end}}">{{if .OpenNow}}🟢{{else}}🔴{{end}} {{.OpenLabel}}</p>{{end}}
                 <p class="shop-card-meta">{{.Dishes}} {{if eq .Dishes 1}}dish{{else}}dishes{{end}}{{if .OffersDelivery}} · 🛵 Delivers{{end}}</p>

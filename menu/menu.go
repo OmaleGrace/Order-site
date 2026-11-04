@@ -77,6 +77,12 @@ func GetAllWithOptions(db *sql.DB, search, category, sortBy string, minPriceKobo
 		query += " ORDER BY m.price_kobo DESC, m.name ASC"
 	case "name":
 		query += " ORDER BY m.name ASC"
+	case "trending":
+		// Most ordered in the last two weeks (paid orders only), then the usual order.
+		query += ` ORDER BY (SELECT COALESCE(SUM(oi.quantity), 0)
+			FROM order_items oi JOIN orders o ON o.id = oi.order_id
+			WHERE oi.menu_item_id = m.id AND o.status NOT IN ('pending', 'cancelled')
+			  AND o.created_at > NOW() - INTERVAL '14 days') DESC, m.id`
 	default:
 		query += " ORDER BY m.id"
 	}

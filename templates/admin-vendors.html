@@ -39,7 +39,7 @@
             <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Vendor</th><th>Owner</th><th>Items</th><th>Setup</th><th>Status</th><th></th></tr>
+                    <tr><th>Vendor</th><th>Owner</th><th>Items</th><th>Setup</th><th>Plan &amp; promotion</th><th>Status</th><th></th></tr>
                 </thead>
                 <tbody>
                     {{range .Vendors}}
@@ -48,6 +48,17 @@
                         <td>{{if .OwnerEmail}}{{.OwnerEmail}}{{else}}<span class="muted">no owner yet</span>{{end}}</td>
                         <td>{{.Items}}</td>
                         <td>{{if .SetupPaid}}Paid{{else}}<span class="muted">not paid</span>{{end}}</td>
+                        <td>
+                            <div>{{.Plan}}</div>
+                            <div class="muted">{{if .Promoted}}Promoted until {{.Promoted}}{{else}}Not promoted{{end}}</div>
+                            <form action="/admin/vendors/growth" method="post" class="row-actions">
+                                <input type="hidden" name="id" value="{{.ID}}">
+                                <select name="kind" aria-label="What to sell"><option value="promote">Promote</option><option value="pro">Pro plan</option></select>
+                                <input type="number" name="days" min="1" max="366" value="7" aria-label="Days" style="width:70px">
+                                <button type="submit" class="secondary">Add days</button>
+                                <button type="submit" name="action" value="clear" class="secondary" formnovalidate>End</button>
+                            </form>
+                        </td>
                         <td><span class="badge badge-{{.Status}}">{{.Status}}</span></td>
                         <td class="row-actions">
                             {{if ne .Status "active"}}

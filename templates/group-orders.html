@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>My group orders - {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/pages/feedback.css">
+    <link rel="stylesheet" href="/static/css/pages/wallet.css">
+</head>
+<body data-nm="customer">
+<header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
+<main class="fb-page">
+    {{if .Notice}}<p class="wl-notice" role="status">{{.Notice}}</p>{{end}}
+    <h1>My group orders</h1>
+    <p><a class="fb-button" href="/group-order">New request</a> <span class="fb-note">Wallet: ₦{{.WalletNaira}} · <a href="/wallet">Top up</a></span></p>
+    {{range .Rows}}
+    <section class="fb-card">
+        <h2>{{.Vendor}} · {{.Headcount}} people</h2>
+        <p class="fb-note">{{.EventAt}} · {{if eq .Method "delivery"}}Delivery to {{.Address}}{{else}}Pickup{{end}}</p>
+        <p>{{.Notes}}</p>
+        {{if eq .State "requested"}}<p><strong>Waiting for the shop to send a price.</strong></p>
+        {{else if eq .State "quoted"}}
+            <p><strong>Price: ₦{{.QuoteNaira}}</strong>{{if .VendorNote}}<br>{{.VendorNote}}{{end}}</p>
+        {{else if eq .State "awaiting_payment"}}
+            <p><strong>Price: ₦{{.QuoteNaira}}</strong>. Awaiting payment.</p>
+        {{else if eq .State "paid"}}<p><strong>Paid ₦{{.QuoteNaira}}.</strong> Order status: {{.OrderStatus}}.</p>
+        {{else if eq .State "declined"}}<p><strong>The shop declined.</strong>{{if .VendorNote}} {{.VendorNote}}{{end}}</p>
+        {{else}}<p><strong>Withdrawn.</strong></p>{{end}}
+
+        {{if or (eq .State "quoted") (eq .State "awaiting_payment")}}
+        <div class="wl-row">
+            <form action="/group-orders/pay" method="post"><input type="hidden" name="id" value="{{.ID}}"><input type="hidden" name="method" value="wallet"><button class="fb-button" type="submit">Pay from wallet</button></form>
+            <form action="/group-orders/pay" method="post"><input type="hidden" name="id" value="{{.ID}}"><input type="hidden" name="method" value="card"><button class="fb-button" type="submit">Pay by card</button></form>
+        </div>
+        {{end}}
+        {{if or (eq .State "requested") (eq .State "quoted") (eq .State "awaiting_payment")}}
+        <form action="/group-orders/cancel" method="post"><input type="hidden" name="id" value="{{.ID}}"><button type="submit" class="wl-chip">Withdraw request</button></form>
+        {{end}}
+    </section>
+    {{else}}
+    <section class="fb-card"><p>No group orders yet. <a href="/group-order">Request one</a>.</p></section>
+    {{end}}
+</main>
+{{template "scripts-common"}}
+</body>
+</html>
