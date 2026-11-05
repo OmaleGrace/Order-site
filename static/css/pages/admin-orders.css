@@ -66,7 +66,7 @@
 .admin-rider-map-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
 .map-live-status { font-size:.78rem; font-weight:700; color:#17633b; background:#e5f5eb; border-radius:999px; padding:5px 9px; }
 .map-updated { margin:7px 0 10px; color:#65746b; font-size:.84rem; }
-.rider-map-frame { display:block; width:100%; height:260px; border:0; border-radius:10px; background:#e9efeb; }
-.rider-map-frame:not([src]) { display:none; }
+.rider-leaflet-map { display:block; width:100%; height:360px; border:0; border-radius:10px; background:#e9efeb; overflow:hidden; }
+.map-accuracy { margin:8px 0 0; color:#52645a; font-size:.84rem; }
 .map-open-link { display:inline-block; margin-top:8px; font-weight:700; color:#14532d; }
-@media (max-width:600px) { .rider-map-frame { height:220px; } }
+@media (max-width:600px) { .rider-leaflet-map { height:280px; } }

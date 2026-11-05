@@ -8,7 +8,8 @@
         <link rel="stylesheet" href="/static/css/admin-orders.css">
         <link rel="stylesheet" href="/static/css/pages/admin-orders.css">
         <link rel="stylesheet" href="/static/css/portal-nav.css">
-    </head>
+        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+</head>
     <body>
         <header class="admin-header">
             <div class="brand"><a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div>
@@ -39,9 +40,10 @@
                                     <div class="rider-state">Rider: {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}}{{else}}Unassigned{{end}} · {{.DeliveryStatus}}</div>
                                     <div class="admin-rider-map" data-order-id="{{.ID}}" data-location-url="/admin/orders/{{.ID}}/rider-location">
                                         <div class="admin-rider-map-heading"><strong>Rider live location</strong><span class="map-live-status">{{if .RiderLocationAvailable}}Location received{{else}}Waiting for rider{{end}}</span></div>
-                                        <p class="map-updated">{{if .RiderLocationAvailable}}Last update: {{.RiderLocationUpdated}}{{else}}The map will appear when the rider starts sharing location.{{end}}</p>
-                                        <iframe title="Map showing rider location for order {{.ID}}" class="rider-map-frame" loading="lazy" referrerpolicy="no-referrer" {{if .RiderLocationAvailable}}src="{{.RiderMapEmbedURL}}"{{end}}></iframe>
-                                        {{if .RiderLocationAvailable}}<p><a class="map-open-link" href="{{.RiderMapURL}}" target="_blank" rel="noopener noreferrer">Open larger map ↗</a></p>{{end}}
+                                        <p class="map-updated">{{if .RiderLocationAvailable}}Last update: {{.RiderLocationUpdated}}{{else}}The map will centre on the rider when location sharing starts.{{end}}</p>
+                                        <div class="rider-leaflet-map" role="img" aria-label="Live map showing the rider's reported location"></div>
+                                        <p class="map-accuracy" aria-live="polite">Waiting for GPS accuracy information.</p>
+                                        <p><a class="map-open-link" href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">Open OpenStreetMap ↗</a></p>
                                     </div>
                                     <div class="rider-box">
                                         <form action="/admin/orders/rider" method="post"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider<br><select name="rider_id"><option value="0">Unassigned</option>
@@ -94,38 +96,69 @@
                 </section>
             {{end}}
         </main>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
         <script src="/static/js/nav-active.js"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <script>
         (() => {
-          const maps = document.querySelectorAll('.admin-rider-map[data-order-id]');
-          const makeEmbedURL = (lat, lon) => {
-            const params = new URLSearchParams({
-              bbox: `${(lon - 0.01).toFixed(6)},${(lat - 0.01).toFixed(6)},${(lon + 0.01).toFixed(6)},${(lat + 0.01).toFixed(6)}`,
-              layer: 'mapnik', marker: `${lat.toFixed(6)},${lon.toFixed(6)}`
-            });
-            return `https://www.openstreetmap.org/export/embed.html?${params.toString()}`;
+          const boxes = document.querySelectorAll('.admin-rider-map[data-order-id]');
+          const maps = new WeakMap();
+          const initMap = (box) => {
+            const element = box.querySelector('.rider-leaflet-map');
+            const map = L.map(element, {scrollWheelZoom: true}).setView([6.5244, 3.3792], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            maps.set(box, {map, marker: null, accuracyCircle: null, lastLat: null, lastLon: null});
+            window.setTimeout(() => map.invalidateSize(), 150);
           };
-          const refreshMap = async (box) => {
+          const refresh = async (box) => {
             try {
               const response = await fetch(box.dataset.locationUrl, {cache: 'no-store', headers: {'Accept': 'application/json'}});
               if (!response.ok) return;
               const data = await response.json();
               const status = box.querySelector('.map-live-status');
               const updated = box.querySelector('.map-updated');
-              const frame = box.querySelector('.rider-map-frame');
-              if (!data.available) {
+              const accuracyLabel = box.querySelector('.map-accuracy');
+              const state = maps.get(box);
+              if (!data.available || !Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) {
                 if (status) status.textContent = 'Waiting for rider';
                 if (updated) updated.textContent = 'The rider is not currently sharing a location.';
+                if (accuracyLabel) accuracyLabel.textContent = 'No live GPS reading yet.';
                 return;
               }
-              if (!Number.isFinite(data.latitude) || !Number.isFinite(data.longitude)) return;
-              const url = makeEmbedURL(data.latitude, data.longitude);
-              if (frame && frame.dataset.currentURL !== url) { frame.src = url; frame.dataset.currentURL = url; }
+              const lat = data.latitude, lon = data.longitude;
+              const point = [lat, lon];
+              const accuracy = Number(data.accuracy) || 0;
+              if (!state.marker) {
+                state.marker = L.marker(point).addTo(state.map).bindPopup('Rider reported position');
+                state.map.setView(point, 18);
+              } else {
+                state.marker.setLatLng(point);
+                if (state.lastLat !== lat || state.lastLon !== lon) state.map.panTo(point, {animate: true, duration: 0.5});
+              }
+              if (state.accuracyCircle) state.map.removeLayer(state.accuracyCircle);
+              if (accuracy > 0) {
+                state.accuracyCircle = L.circle(point, {radius: accuracy, color: '#17633f', weight: 2, fillColor: '#27a66a', fillOpacity: 0.14}).addTo(state.map);
+                if (accuracyLabel) accuracyLabel.textContent = `Reported GPS accuracy: about ±${Math.round(accuracy)} m. The circle shows the possible area around the reported point.`;
+              } else if (accuracyLabel) {
+                accuracyLabel.textContent = 'GPS accuracy was not supplied by this rider device.';
+              }
+              state.lastLat = lat; state.lastLon = lon;
               if (status) status.textContent = 'Live location sharing';
-              if (updated) updated.textContent = data.updated_at ? `Last update: ${data.updated_at}` : 'Location received';
-            } catch (_) { /* Keep the last known map visible during temporary network issues. */ }
+              if (updated) updated.textContent = data.updated_at ? `Last GPS update: ${data.updated_at}` : 'Location received';
+            } catch (_) { /* Keep the last visible point during temporary network issues. */ }
           };
-          maps.forEach((box) => { refreshMap(box); window.setInterval(() => refreshMap(box), 10000); });
+          boxes.forEach((box) => {
+            if (typeof L === 'undefined') {
+              const label = box.querySelector('.map-accuracy');
+              if (label) label.textContent = 'Map library could not load. Check the internet connection.';
+              return;
+            }
+            initMap(box);
+            refresh(box);
+            window.setInterval(() => refresh(box), 5000);
+          });
         })();
         </script>
         {{template "scripts-common"}}

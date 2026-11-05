@@ -27,7 +27,7 @@ func (h *Handlers) AdminAssignRider(w http.ResponseWriter, r *http.Request) {
 		token, hash, err = newRiderToken()
 		if err == nil {
 			var res sql.Result
-			res, err = h.DB.Exec(`UPDATE orders SET rider_id=$1,delivery_status='assigned',rider_access_token_hash=$2,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL,rider_status_updated_at=NOW() WHERE id=$3 AND delivery_method='delivery' AND status NOT IN ('pending','cancelled','completed') AND EXISTS(SELECT 1 FROM riders WHERE id=$1 AND active=TRUE)`, riderID, hash, orderID)
+			res, err = h.DB.Exec(`UPDATE orders SET rider_id=$1,delivery_status='assigned',rider_access_token_hash=$2,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL,rider_status_updated_at=NOW() WHERE id=$3 AND delivery_method='delivery' AND status NOT IN ('pending','cancelled','completed') AND EXISTS(SELECT 1 FROM riders WHERE id=$1 AND active=TRUE)`, riderID, hash, orderID)
 			if err == nil {
 				if n, _ := res.RowsAffected(); n == 0 {
 					err = fmt.Errorf("order or active rider not found")
@@ -35,7 +35,7 @@ func (h *Handlers) AdminAssignRider(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		_, err = h.DB.Exec(`UPDATE orders SET rider_id=NULL,delivery_status='unassigned',rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE id=$1 AND delivery_method='delivery'`, orderID)
+		_, err = h.DB.Exec(`UPDATE orders SET rider_id=NULL,delivery_status='unassigned',rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL WHERE id=$1 AND delivery_method='delivery'`, orderID)
 	}
 	if err != nil {
 		log.Printf("admin orders: rider assignment failed: %v", err)

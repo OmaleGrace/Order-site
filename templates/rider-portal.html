@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     {{template "head-common"}}
+    <link rel="stylesheet" href="/static/css/base.css">
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,6 +43,7 @@
         .footer{text-align:center;color:var(--muted);font-size:.8rem;padding:22px 8px}
         @media(max-width:520px){.page{padding:16px 12px 36px}.hero{padding:22px 19px;border-radius:18px}.card{padding:18px 16px}.card-head{display:block}.badge{display:inline-block;margin-top:10px}.steps{gap:5px}}
     </style>
+    <link rel="stylesheet" href="/static/css/ui.css?v=2">
 </head>
 <body>
 <main class="page">
@@ -149,11 +151,14 @@
         try {
             await post("location", {
                 latitude: String(position.coords.latitude),
-                longitude: String(position.coords.longitude)
+                longitude: String(position.coords.longitude),
+                accuracy: String(position.coords.accuracy)
             });
             lastSent = Date.now();
             setSharing(true);
-            message(result, "Your location is being shared. Last update: " + new Date().toLocaleTimeString(), "success");
+            const accuracy = Number(position.coords.accuracy);
+            const accuracyText = Number.isFinite(accuracy) && accuracy > 0 ? " (GPS accuracy about ±" + Math.round(accuracy) + " m)" : "";
+            message(result, "Your location is being shared" + accuracyText + ". Last update: " + new Date().toLocaleTimeString(), "success");
         } catch (error) {
             stopBrowserWatch();
             setSharing(false);
@@ -178,12 +183,12 @@
         navigator.geolocation.getCurrentPosition(function (position) {
             sendPosition(position);
             watchId = navigator.geolocation.watchPosition(sendPosition, locationError, {
-                enableHighAccuracy: true, maximumAge: 5000, timeout: 30000
+                enableHighAccuracy: true, maximumAge: 0, timeout: 60000
             });
         }, function (error) {
             startButton.disabled = false;
             locationError(error);
-        }, {enableHighAccuracy: true, maximumAge: 5000, timeout: 30000});
+        }, {enableHighAccuracy: true, maximumAge: 0, timeout: 60000});
     });
     stopButton.addEventListener("click", async function () {
         stopBrowserWatch();

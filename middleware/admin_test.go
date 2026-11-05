@@ -12,7 +12,7 @@ func setupAdminTestDB(t *testing.T) *sql.DB {
 
 	db, err := sql.Open(
 		"postgres",
-		"postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable",
+		testDatabaseURL(),
 	)
 	if err != nil {
 		t.Fatal(err)

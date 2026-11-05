@@ -4,16 +4,25 @@ import (
 	"database/sql"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
 	_ "github.com/lib/pq"
 )
 
+// testDatabaseURL is the test database. TEST_DATABASE_URL overrides the default, like testutil.
+func testDatabaseURL() string {
+	if v := os.Getenv("TEST_DATABASE_URL"); v != "" {
+		return v
+	}
+	return "postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable"
+}
+
 func setupMiddlewareTestDB(t *testing.T) *sql.DB {
 	db, err := sql.Open(
 		"postgres",
-		"postgresql://testuser:testpass@localhost:5433/food_ordering_test?sslmode=disable",
+		testDatabaseURL(),
 	)
 	if err != nil {
 		t.Fatal(err)

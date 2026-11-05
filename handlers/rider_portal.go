@@ -68,7 +68,7 @@ func (h *Handlers) VendorAssignRider(w http.ResponseWriter, r *http.Request) {
 		token, hash, err = newRiderToken()
 		if err == nil {
 			var res sql.Result
-			res, err = h.DB.Exec(`UPDATE orders SET rider_id=$1,delivery_status='assigned',rider_access_token_hash=$2,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL,rider_status_updated_at=NOW() WHERE id=$3 AND vendor_id=$4 AND delivery_method='delivery' AND status NOT IN ('pending','cancelled','completed') AND EXISTS(SELECT 1 FROM riders WHERE id=$1 AND active=TRUE)`, riderID, hash, orderID, vendorID)
+			res, err = h.DB.Exec(`UPDATE orders SET rider_id=$1,delivery_status='assigned',rider_access_token_hash=$2,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL,rider_status_updated_at=NOW() WHERE id=$3 AND vendor_id=$4 AND delivery_method='delivery' AND status NOT IN ('pending','cancelled','completed') AND EXISTS(SELECT 1 FROM riders WHERE id=$1 AND active=TRUE)`, riderID, hash, orderID, vendorID)
 			if err == nil {
 				if n, _ := res.RowsAffected(); n == 0 {
 					err = fmt.Errorf("order or active rider not found")
@@ -76,7 +76,7 @@ func (h *Handlers) VendorAssignRider(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		_, err = h.DB.Exec(`UPDATE orders SET rider_id=NULL,delivery_status='unassigned',rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE id=$1 AND vendor_id=$2 AND delivery_method='delivery'`, orderID, vendorID)
+		_, err = h.DB.Exec(`UPDATE orders SET rider_id=NULL,delivery_status='unassigned',rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL WHERE id=$1 AND vendor_id=$2 AND delivery_method='delivery'`, orderID, vendorID)
 	}
 	if err != nil {
 		log.Printf("vendor rider assignment failed: %v", err)
@@ -170,11 +170,15 @@ func (h *Handlers) RiderLocation(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("token")
 	lat, e1 := strconv.ParseFloat(r.FormValue("latitude"), 64)
 	lon, e2 := strconv.ParseFloat(r.FormValue("longitude"), 64)
-	if e1 != nil || e2 != nil || math.IsNaN(lat) || math.IsNaN(lon) || math.Abs(lat) > 90 || math.Abs(lon) > 180 {
+	accuracy, accuracyErr := strconv.ParseFloat(r.FormValue("accuracy"), 64)
+	if accuracyErr != nil || math.IsNaN(accuracy) || math.IsInf(accuracy, 0) || accuracy <= 0 || accuracy > 100000 {
+		accuracy = 0 // Older rider pages may not send accuracy; coordinates can still be saved.
+	}
+	if e1 != nil || e2 != nil || math.IsNaN(lat) || math.IsNaN(lon) || math.IsInf(lat, 0) || math.IsInf(lon, 0) || math.Abs(lat) > 90 || math.Abs(lon) > 180 {
 		http.Error(w, "Invalid coordinates", 400)
 		return
 	}
-	res, err := h.DB.Exec(`UPDATE orders SET rider_latitude=$1,rider_longitude=$2,rider_location_updated_at=NOW(),rider_sharing_location=TRUE WHERE rider_access_token_hash=$3 AND rider_id IS NOT NULL AND status NOT IN ('cancelled','completed') AND EXISTS(SELECT 1 FROM riders rr WHERE rr.id=orders.rider_id AND rr.active=TRUE)`, lat, lon, riderTokenHash(token))
+	res, err := h.DB.Exec(`UPDATE orders SET rider_latitude=$1,rider_longitude=$2,rider_location_accuracy=NULLIF($3,0),rider_location_updated_at=NOW(),rider_sharing_location=TRUE WHERE rider_access_token_hash=$4 AND rider_id IS NOT NULL AND status NOT IN ('cancelled','completed') AND EXISTS(SELECT 1 FROM riders rr WHERE rr.id=orders.rider_id AND rr.active=TRUE)`, lat, lon, accuracy, riderTokenHash(token))
 	if err != nil {
 		http.Error(w, "Could not save location", 500)
 		return
@@ -192,7 +196,7 @@ func (h *Handlers) RiderStopLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	_, err := h.DB.Exec(`UPDATE orders SET rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE rider_access_token_hash=$1`, riderTokenHash(r.PathValue("token")))
+	_, err := h.DB.Exec(`UPDATE orders SET rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL WHERE rider_access_token_hash=$1`, riderTokenHash(r.PathValue("token")))
 	if err != nil {
 		http.Error(w, "Could not stop sharing", 500)
 		return

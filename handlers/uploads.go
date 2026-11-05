@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"Order-site/imagestore"
 )
 
 // maxUploadBytes is the biggest picture the server accepts. The browser shrinks phone
@@ -58,6 +61,17 @@ func (h *Handlers) uploadedImageURL(r *http.Request, field string) (string, erro
 		return "", fmt.Errorf("Please upload a JPG, PNG, WebP or GIF picture")
 	}
 
+	// Preferred: keep the picture in Cloudinary, so it does not fill the database and is served
+	// from a fast image network. If Cloudinary is not set up, or is down for a moment, fall back
+	// to the database so an upload never fails just because of that.
+	if imagestore.Configured() {
+		cloudURL, cerr := imagestore.Upload(r.Context(), data)
+		if cerr == nil {
+			return cloudURL, nil
+		}
+		log.Printf("upload image: Cloudinary failed, keeping it in the database instead: %v", cerr)
+	}
+
 	var id int64
 	if err := h.DB.QueryRow(
 		`INSERT INTO uploaded_images (content_type, data) VALUES ($1, $2) RETURNING id`,
@@ -79,7 +93,19 @@ func (h *Handlers) ServeUploadedImage(w http.ResponseWriter, r *http.Request) {
 	}
 	var contentType string
 	var data []byte
-	if err := h.DB.QueryRow(`SELECT content_type, data FROM uploaded_images WHERE id = $1`, id).Scan(&contentType, &data); err != nil {
+	var cloudURL sql.NullString
+	if err := h.DB.QueryRow(`SELECT content_type, data, cloud_url FROM uploaded_images WHERE id = $1`, id).Scan(&contentType, &data, &cloudURL); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	// A picture that has been moved to Cloudinary keeps its old /media/<id> address working by
+	// forwarding to the new one, so nothing that saved the old address needs rewriting.
+	if cloudURL.Valid && strings.HasPrefix(cloudURL.String, "https://") {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		http.Redirect(w, r, cloudURL.String, http.StatusMovedPermanently)
+		return
+	}
+	if len(data) == 0 {
 		http.NotFound(w, r)
 		return
 	}

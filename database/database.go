@@ -83,6 +83,22 @@ func Connect() (*sql.DB, error) {
 		}
 	}
 
+	// Bring the database up to date. Each change is recorded in schema_migrations, so a restart
+	// only checks one small table instead of re-running every statement.
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("database migration failed: %w", err)
+	}
+
+	return db, nil
+}
+
+// baselineMigration is migration 1: every schema change made before numbered migrations existed.
+// Each statement is idempotent (IF NOT EXISTS and similar), so it is safe on a brand-new database
+// and on one that already has some or all of these changes. It runs once per database. All new
+// changes go in database/migrations/NNNN_name.sql instead of here.
+func baselineMigration(db execer) error {
+	var err error
 	// Create cart_items table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS cart_items (
@@ -95,8 +111,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Add image_url column to menu_items if it doesn't exist
@@ -105,8 +120,7 @@ func Connect() (*sql.DB, error) {
 		ADD COLUMN IF NOT EXISTS image_url TEXT
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Create orders table
@@ -121,8 +135,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Older databases may hold payment_reference as a number. References look like
@@ -141,8 +154,7 @@ func Connect() (*sql.DB, error) {
 		END $$;
 		CREATE INDEX IF NOT EXISTS orders_payment_reference_idx ON orders ((payment_reference::text));
 	`); err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Create order_items table
@@ -156,8 +168,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Keep existing databases compatible with the current user model.
@@ -177,8 +188,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN NOT NULL DEFAULT FALSE;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Vendor coupons and promo codes. Discounts apply to food only.
@@ -202,13 +212,11 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_coupons_vendor_active ON coupons(vendor_id, active, expires_at)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_id INTEGER REFERENCES coupons(id) ON DELETE SET NULL;
@@ -217,8 +225,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_reserved BOOLEAN NOT NULL DEFAULT FALSE;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Food customization/add-ons. Vendors can define option groups (for example, Size or Extras)
@@ -236,8 +243,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS menu_options (
@@ -250,8 +256,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS cart_item_options (
@@ -264,8 +269,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS order_item_options (
@@ -276,13 +280,11 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_menu_option_groups_item ON menu_option_groups(menu_item_id, position); CREATE INDEX IF NOT EXISTS idx_menu_options_group ON menu_options(group_id, position); CREATE INDEX IF NOT EXISTS idx_cart_item_options_cart ON cart_item_options(cart_item_id); CREATE INDEX IF NOT EXISTS idx_order_item_options_item ON order_item_options(order_item_id)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Delivery riders and order assignment. Existing orders remain unassigned until an admin assigns a rider.
@@ -307,8 +309,7 @@ func Connect() (*sql.DB, error) {
         CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_rider_token_hash ON orders(rider_access_token_hash) WHERE rider_access_token_hash IS NOT NULL;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Messaging presence is optional and private by default only when a user switches it off.
@@ -318,8 +319,7 @@ func Connect() (*sql.DB, error) {
 		CREATE INDEX IF NOT EXISTS idx_users_last_seen ON users(last_seen_at);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// In-app notifications for customers.
@@ -336,13 +336,11 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Loyalty rewards: 1 point per ₦100 of food on completed orders.
@@ -360,20 +358,16 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	if _, err = db.Exec(`ALTER TABLE loyalty_transactions DROP CONSTRAINT IF EXISTS loyalty_transactions_order_id_key`); err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	if _, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_user_created ON loyalty_transactions(user_id, created_at DESC)`); err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	if _, err = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS uq_loyalty_earned_order ON loyalty_transactions(order_id) WHERE type = 'earned' AND order_id IS NOT NULL`); err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Ensure scheduled-order columns exist before creating the partial index that references them.
@@ -382,8 +376,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS scheduled_for TIMESTAMPTZ;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Hot-path indexes used by the home page, cart/header counters and order history.
@@ -398,8 +391,7 @@ func Connect() (*sql.DB, error) {
 		`CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id)`,
 	} {
 		if _, err = db.Exec(indexSQL); err != nil {
-			db.Close()
-			return nil, err
+			return err
 		}
 	}
 
@@ -412,12 +404,10 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	if _, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)`); err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Keep existing order records compatible with checkout, vendor orders and delivery.
@@ -437,8 +427,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE orders ADD CONSTRAINT orders_loyalty_points_redeemed_check CHECK (loyalty_points_redeemed >= 0);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Money sent to vendors from their sales, recorded by the admin
@@ -453,8 +442,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Vendor payout account details. Verification is performed through Paystack
@@ -468,8 +456,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS payout_account_verified_at TIMESTAMPTZ;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Held payouts and automatic transfers: an order's completion time starts the hold, and each
@@ -487,8 +474,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS paystack_recipient_account TEXT NOT NULL DEFAULT '';
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// The vendor agreement a person accepts when applying; admins cannot approve without it.
@@ -498,8 +484,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendor_applications ADD COLUMN IF NOT EXISTS agreement_ip TEXT NOT NULL DEFAULT '';
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Short-lived server-side records used between Paystack account verification
@@ -518,8 +503,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Weekly opening hours. One row per open day; a vendor with no rows has not published hours.
@@ -535,8 +519,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Store the exact Nigerian state/LGA combinations each vendor serves.
@@ -551,13 +534,11 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_vendor_delivery_areas_vendor ON vendor_delivery_areas(vendor_id)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Per-area delivery pricing (fee, minimum order, free-delivery amount). It has its own
@@ -576,8 +557,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Private customer-to-vendor conversations. A customer has one thread per shop;
@@ -593,8 +573,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS messages (
@@ -607,35 +586,29 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	// delivered_at powers the chat ticks: sent (neither set), delivered (delivered_at set), read (read_at set).
 	_, err = db.Exec(`ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	// Messages that were already read before this column existed must also count as delivered.
 	_, err = db.Exec(`UPDATE messages SET delivered_at = read_at WHERE delivered_at IS NULL AND read_at IS NOT NULL`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_message_threads_customer_updated ON message_threads(customer_id, updated_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_message_threads_vendor_updated ON message_threads(vendor_id, updated_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_messages_thread_id ON messages(thread_id, id)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Password reset tokens are part of the authentication flow and may be absent
@@ -649,8 +622,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Remembers which phone number a text-message code was sent to, and for whom,
@@ -664,8 +636,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Loyalty rewards for completed customer orders. This additive migration
@@ -682,25 +653,21 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_loyalty_transactions_user_created ON loyalty_transactions(user_id, created_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Stage 20 menu availability: vendors can temporarily hide dishes without deleting them.
 	_, err = db.Exec(`ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS available BOOLEAN NOT NULL DEFAULT TRUE`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_menu_items_vendor_available ON menu_items(vendor_id, available)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Stage 19 support tickets. Customer/vendor support requests are retained for admin follow-up.
@@ -719,18 +686,15 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_support_tickets_status_updated ON support_tickets(status, updated_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_support_tickets_user_created ON support_tickets(user_id, created_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Verified-purchase reviews. A customer can review a completed order once,
@@ -747,8 +711,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS order_item_reviews (
@@ -761,25 +724,21 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_order_reviews_vendor_created ON order_reviews(vendor_id, created_at DESC)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Optional food photo attached to a review.
 	_, err = db.Exec(`ALTER TABLE order_reviews ADD COLUMN IF NOT EXISTS photo_url TEXT NOT NULL DEFAULT ''`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_order_item_reviews_menu_item ON order_item_reviews(menu_item_id)`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Guest checkout. A guest gets a lightweight placeholder row in users (flagged
@@ -793,8 +752,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE orders ADD COLUMN IF NOT EXISTS guest_phone TEXT NOT NULL DEFAULT '';
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Pictures uploaded from a vendor's device are kept in the database, so they survive
@@ -808,8 +766,7 @@ func Connect() (*sql.DB, error) {
 		)
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Vendor growth: paid "Promoted" placement and a paid Pro plan (lower commission).
@@ -819,8 +776,7 @@ func Connect() (*sql.DB, error) {
 		ALTER TABLE vendors ADD COLUMN IF NOT EXISTS plan_until TIMESTAMPTZ;
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Vendors can now pay for the Pro plan and for promotion themselves.
@@ -831,8 +787,7 @@ func Connect() (*sql.DB, error) {
 			CHECK (kind IN ('setup', 'renewal', 'pro', 'promote'));
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Referrals: each customer gets an invite code; the bonus is paid once per invited friend.
@@ -849,8 +804,7 @@ func Connect() (*sql.DB, error) {
 		);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Wallet, gift cards and the pass. The wallet is a ledger (see handlers/wallet.go).
@@ -892,8 +846,7 @@ func Connect() (*sql.DB, error) {
 		);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Group orders: a customer asks a shop, the shop quotes one price, the customer pays it in full.
@@ -920,8 +873,7 @@ func Connect() (*sql.DB, error) {
 		CREATE INDEX IF NOT EXISTS idx_group_requests_vendor ON group_requests(vendor_id, id DESC);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Customer service fee. It is charged on top of the order total and kept by the platform,
@@ -929,8 +881,7 @@ func Connect() (*sql.DB, error) {
 	// built on total_kobo) are unaffected.
 	_, err = db.Exec(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS service_fee_kobo INTEGER NOT NULL DEFAULT 0`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
 
 	// Site-wide feedback from anyone (not just order reviews).
@@ -951,11 +902,9 @@ func Connect() (*sql.DB, error) {
 		CREATE INDEX IF NOT EXISTS idx_site_feedback_status ON site_feedback(status, created_at DESC);
 	`)
 	if err != nil {
-		db.Close()
-		return nil, err
+		return err
 	}
-
-	return db, nil
+	return nil
 }
 
 // CleanupUnusedImages deletes uploads that were never saved onto a dish or shop logo
@@ -966,6 +915,7 @@ func CleanupUnusedImages(db *sql.DB) error {
 		WHERE i.created_at < NOW() - INTERVAL '1 day'
 		  AND NOT EXISTS (SELECT 1 FROM menu_items m WHERE m.image_url = '/media/' || i.id::text)
 		  AND NOT EXISTS (SELECT 1 FROM vendors v WHERE v.logo_url = '/media/' || i.id::text)
+		  AND NOT EXISTS (SELECT 1 FROM order_reviews r WHERE r.photo_url = '/media/' || i.id::text)
 	`)
 	return err
 }

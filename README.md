@@ -1,4 +1,3 @@
-
 LaikiHub — Food Marketplace Platform
 
 LaikiHub is a Go and PostgreSQL-powered food marketplace connecting customers with local food vendors in Nigeria. It features secure customer accounts (with Google Sign-In), custom vendor shops, dynamic menu management, cart processing, Paystack payments, Brevo transactional emails, and admin control panels.
@@ -117,3 +116,24 @@ A real `db/schema.sql` is included, so a brand-new database can be created from 
 Active status: members who are active in the last two minutes show a blue dot beside their picture in Messages. Each member can switch this off under Account → Privacy & messaging.
 
 Reviews can include one optional food photo (`order_reviews.photo_url`).
+
+## Pictures (Cloudinary) and database migrations
+
+**Pictures.** When `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` are set, every new upload (dishes, shop logos, review photos) is stored in Cloudinary, shrunk to at most 1200 px with automatic quality, and the database only keeps the address. If those settings are missing, or Cloudinary is down for a moment, the picture is kept in the database instead, so uploads never fail because of it.
+
+Pictures uploaded before this change are still in the database. To move them to Cloudinary, run once from the project folder (with `DATABASE_URL` and the three Cloudinary settings in the environment):
+
+```
+go run ./cmd/move-images            # copy every old picture, keep the database copy
+go run ./cmd/move-images -free      # also empty the database copy afterwards
+```
+
+Old `/media/<id>` links keep working: the site forwards them to Cloudinary. After `-free`, run `VACUUM FULL uploaded_images;` in the database to give the space back. Try it without `-free` first.
+
+**Migrations.** Database changes are numbered. Migration 1 is the baseline (everything before numbering). Every new change is a file `database/migrations/NNNN_name.sql` (next number: 0004). Each file runs once, in a transaction, in order, and is recorded in the `schema_migrations` table, so a restart only reads one small table instead of re-running about seventy statements. Never edit a released file; add a new one. The first start after this update runs the baseline once (it is safe on an existing database), then records it.
+
+**Tests.** Database tests use `TEST_DATABASE_URL` (default `postgresql://testuser:testpass@localhost:5433/food_ordering_test`). The database name must end in `_test`, and the suite opens many connections, so give the test Postgres a `max_connections` of at least 200.
+
+## Live rider map
+
+The admin order page shows the rider on a zoomable Leaflet map (assets from unpkg.com, allowed in the Content Security Policy) with a circle for the GPS accuracy the rider's phone reports. The accuracy is stored in `orders.rider_location_accuracy`, added by migration `0003_rider_location_accuracy.sql`. The admin page refreshes the position every 5 seconds from `GET /admin/orders/{orderID}/rider-location`.

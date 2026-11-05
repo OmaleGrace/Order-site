@@ -204,10 +204,10 @@ func (h *Handlers) AdminRiderLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	var lat, lon float64
+	var lat, lon, accuracy float64
 	var available bool
 	var updated string
-	err = h.DB.QueryRow(`SELECT COALESCE(rider_latitude,0), COALESCE(rider_longitude,0), COALESCE(rider_sharing_location,FALSE), COALESCE(TO_CHAR(rider_location_updated_at,'DD Mon YYYY, HH24:MI:SS'),'') FROM orders WHERE id=$1 AND delivery_method='delivery'`, orderID).Scan(&lat, &lon, &available, &updated)
+	err = h.DB.QueryRow(`SELECT COALESCE(rider_latitude,0), COALESCE(rider_longitude,0), COALESCE(rider_location_accuracy,0), COALESCE(rider_sharing_location,FALSE), COALESCE(TO_CHAR(rider_location_updated_at,'DD Mon YYYY, HH24:MI:SS'),'') FROM orders WHERE id=$1 AND delivery_method='delivery'`, orderID).Scan(&lat, &lon, &accuracy, &available, &updated)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
@@ -218,6 +218,6 @@ func (h *Handlers) AdminRiderLocation(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store, private")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"available": available, "latitude": lat, "longitude": lon, "updated_at": updated,
+		"available": available, "latitude": lat, "longitude": lon, "accuracy": accuracy, "updated_at": updated,
 	})
 }

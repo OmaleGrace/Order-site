@@ -45,8 +45,8 @@ func isPrivatePage(path string) bool {
 const (
 	strictCSP = "default-src 'self'; " +
 		"img-src 'self' https: data:; " +
-		"style-src 'self' 'unsafe-inline'; " +
-		"script-src 'self' 'unsafe-inline'; " +
+		"style-src 'self' 'unsafe-inline' https://unpkg.com; " +
+		"script-src 'self' 'unsafe-inline' https://unpkg.com; " +
 		"connect-src 'self'; " +
 		"font-src 'self'; " +
 		"object-src 'none'; " +
@@ -58,8 +58,8 @@ const (
 	// Google AdSense needs to load its script, show ad frames and report back.
 	adsenseCSP = "default-src 'self'; " +
 		"img-src 'self' https: data:; " +
-		"style-src 'self' 'unsafe-inline'; " +
-		"script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.gstatic.com https://*.doubleclick.net https://partner.googleadservices.com https://www.googletagservices.com https://adservice.google.com; " +
+		"style-src 'self' 'unsafe-inline' https://unpkg.com; " +
+		"script-src 'self' 'unsafe-inline' https://unpkg.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.gstatic.com https://*.doubleclick.net https://partner.googleadservices.com https://www.googletagservices.com https://adservice.google.com; " +
 		"frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com; " +
 		"connect-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://*.gstatic.com; " +
 		"font-src 'self'; " +

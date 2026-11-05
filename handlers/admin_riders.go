@@ -94,7 +94,7 @@ func (h *Handlers) AdminRiderSave(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !active {
-			if _, err := h.DB.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
+			if _, err := h.DB.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
 				log.Printf("admin riders: revoke links after edit failed: %v", err)
 			}
 		}
@@ -131,7 +131,7 @@ func (h *Handlers) AdminRiderToggle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !active {
-		if _, err := tx.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
+		if _, err := tx.Exec(`UPDATE orders SET rider_access_token_hash=NULL,rider_sharing_location=FALSE,rider_latitude=NULL,rider_longitude=NULL,rider_location_accuracy=NULL,rider_location_updated_at=NULL WHERE rider_id=$1 AND status NOT IN ('completed','cancelled')`, id); err != nil {
 			log.Printf("admin riders: revoke rider links failed: %v", err)
 			http.Redirect(w, r, "/admin/riders?msg=Could+not+revoke+rider+links", 303)
 			return
