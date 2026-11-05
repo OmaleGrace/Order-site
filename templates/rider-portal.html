@@ -1,2 +1,227 @@
 <!doctype html>
-<html lang="en"><head>{{template "head-common"}}<meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rider delivery</title><style>body{font:16px system-ui;background:#f3f7f3;color:#173b2a;margin:0}.wrap{max-width:620px;margin:25px auto;padding:16px}.card{background:white;border:1px solid #dce8de;border-radius:18px;padding:20px;margin:14px 0}button,select{font:inherit;padding:12px;border-radius:10px;border:1px solid #cbd8ce}button{background:#14532d;color:white;border:0;cursor:pointer;width:100%;margin:6px 0}.secondary{background:#e7f2e9;color:#14532d}.status{font-weight:700;color:#14532d}</style></head><body><main class="wrap"><h1>Delivery partner</h1><p>Welcome, <strong>{{.RiderName}}</strong>. Order #{{.OrderID}}</p><section class="card"><h2>Delivery progress</h2><p class="status" id="current-status">{{.DeliveryStatus}}</p><label for="delivery-status">Update status</label><select id="delivery-status"><option value="picked_up">Picked up</option><option value="on_the_way">On the way</option><option value="arrived">Arrived</option><option value="delivered">Delivered</option></select><button id="save-status">Update delivery status</button><p id="status-result" aria-live="polite"></p></section><section class="card"><h2>Location sharing</h2><p>Location is shared only after you grant Chrome permission. You can stop sharing at any time.</p><button id="start-location">Start sharing my location</button><button class="secondary" id="stop-location">Stop sharing location</button><p id="location-result" aria-live="polite"></p></section></main><script>(function(){const token=location.pathname.split('/').pop();const post=async(path,data)=>{const body=new URLSearchParams(data||{});const r=await fetch('/rider/'+token+'/'+path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});if(!r.ok)throw new Error(await r.text());return r;};document.getElementById('save-status').onclick=async()=>{try{await post('status',{status:document.getElementById('delivery-status').value});document.getElementById('current-status').textContent=document.getElementById('delivery-status').selectedOptions[0].text;document.getElementById('status-result').textContent='Status updated.';}catch(e){document.getElementById('status-result').textContent='Could not update status. Refresh this page and try again.';}};let watch=null;let lastSent=0;const result=document.getElementById('location-result');document.getElementById('start-location').onclick=()=>{if(!navigator.geolocation){result.textContent='Location is not supported by this browser.';return;}if(watch!==null)return;result.textContent='Waiting for location permission…';watch=navigator.geolocation.watchPosition(async pos=>{if(Date.now()-lastSent<10000)return;lastSent=Date.now();try{await post('location',{latitude:String(pos.coords.latitude),longitude:String(pos.coords.longitude)});result.textContent='Your location is being shared.';}catch(e){result.textContent='Could not update location.';}},err=>{if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;}result.textContent=err.code===1?'Location permission was denied. Enable it in Chrome site settings if you choose to share.':'Could not get your location.';},{enableHighAccuracy:true,maximumAge:10000,timeout:20000});};document.getElementById('stop-location').onclick=async()=>{if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;}try{await post('stop-location',{});result.textContent='Location sharing stopped.';}catch(e){result.textContent='Could not stop sharing. Please try again.';}};})();</script></body></html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delivery task | ENIE</title>
+    <style>
+        :root{color-scheme:light;--green:#17633f;--green-dark:#104b30;--mint:#eaf5ee;--ink:#172b22;--muted:#64756b;--line:#e1eae4;--surface:#fff;--bg:#f4f7f4;--amber:#fff6df}
+        *{box-sizing:border-box}
+        body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+        .page{max-width:760px;margin:0 auto;padding:28px 18px 56px}
+        .brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;font-weight:850;letter-spacing:.02em;color:var(--green-dark)}
+        .brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--green);color:#fff;font-size:19px}
+        .hero{padding:26px;border-radius:22px;background:linear-gradient(135deg,#145b39,#23794f);color:#fff;box-shadow:0 14px 35px #174a3224}
+        .eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800;opacity:.8}
+        h1{font-size:clamp(1.65rem,5vw,2.2rem);line-height:1.12;margin:8px 0}
+        .hero p{margin:8px 0 0;color:#e4f2e9}
+        .order-chip{display:inline-flex;margin-top:17px;padding:7px 12px;border:1px solid #ffffff55;border-radius:999px;font-size:.88rem;font-weight:750}
+        .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:16px;box-shadow:0 5px 20px #18352b08}
+        .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}
+        h2{font-size:1.12rem;margin:0 0 4px}
+        .muted{color:var(--muted);font-size:.92rem;margin:0}
+        .badge{white-space:nowrap;background:var(--mint);color:var(--green-dark);border-radius:999px;padding:6px 10px;font-size:.78rem;font-weight:800}
+        .status-value{font-size:1.08rem;font-weight:850;color:var(--green-dark);text-transform:capitalize;margin:10px 0 16px}
+        label{display:block;font-size:.88rem;font-weight:750;margin:0 0 7px}
+        select{width:100%;min-height:48px;padding:10px 12px;border:1px solid #cbd9ce;border-radius:12px;background:#fff;color:var(--ink);font:inherit}
+        .btn{width:100%;min-height:49px;padding:12px 16px;border:0;border-radius:12px;background:var(--green);color:#fff;font:inherit;font-weight:800;cursor:pointer;margin-top:12px}
+        .btn:hover{background:var(--green-dark)}
+        .btn:disabled{opacity:.55;cursor:not-allowed}
+        .btn.secondary{background:var(--mint);color:var(--green-dark)}
+        .btn.secondary:hover{background:#dcefe2}
+        .btn.danger{background:#fff0ed;color:#9b2c1b}
+        .message{min-height:24px;margin:12px 0 0;font-size:.9rem;color:var(--muted)}
+        .message.error{color:#a12c20}.message.success{color:var(--green-dark)}
+        .privacy{padding:13px 14px;border-radius:12px;background:#f1f6f2;color:#52645a;font-size:.87rem;margin-top:14px}
+        .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+        .step{height:5px;border-radius:99px;background:#e6eee8}
+        .step.active{background:#42a66d}
+        .secure-note{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--amber);color:#77520b;font-size:.88rem}
+        .footer{text-align:center;color:var(--muted);font-size:.8rem;padding:22px 8px}
+        @media(max-width:520px){.page{padding:16px 12px 36px}.hero{padding:22px 19px;border-radius:18px}.card{padding:18px 16px}.card-head{display:block}.badge{display:inline-block;margin-top:10px}.steps{gap:5px}}
+    </style>
+</head>
+<body>
+<main class="page">
+    <div class="brand"><span class="brand-mark">E</span><span>ENIE DELIVERY</span></div>
+    <header class="hero">
+        <div class="eyebrow">Rider task</div>
+        <h1>Hello, {{.RiderName}}</h1>
+        <p>Use this page to update the customer on their delivery.</p>
+        <span class="order-chip">Order #{{.OrderID}}</span>
+    </header>
+
+    <section class="card" aria-labelledby="progress-title">
+        <div class="card-head">
+            <div><h2 id="progress-title">Delivery progress</h2><p class="muted">Update the customer when the order reaches each stage.</p></div>
+            <span class="badge">Live task</span>
+        </div>
+        <p class="status-value" id="current-status">{{.DeliveryStatus}}</p>
+        <div class="steps" aria-hidden="true">
+            <span class="step" data-step="picked_up"></span><span class="step" data-step="on_the_way"></span><span class="step" data-step="arrived"></span><span class="step" data-step="delivered"></span>
+        </div>
+        <label for="delivery-status" style="margin-top:18px">New delivery status</label>
+        <select id="delivery-status">
+            <option value="picked_up">Picked up from vendor</option>
+            <option value="on_the_way">On the way</option>
+            <option value="arrived">Arrived at customer</option>
+            <option value="delivered">Delivered</option>
+        </select>
+        <button class="btn" id="save-status" type="button">Update delivery status</button>
+        <p class="message" id="status-result" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" aria-labelledby="location-title">
+        <div class="card-head">
+            <div><h2 id="location-title">Share delivery location</h2><p class="muted">Share your current location so the customer can follow the delivery.</p></div>
+            <span class="badge" id="sharing-badge">Not sharing</span>
+        </div>
+        <button class="btn" id="start-location" type="button">Start sharing location</button>
+        <button class="btn secondary" id="stop-location" type="button">Stop sharing</button>
+        <p class="message" id="location-result" role="status" aria-live="polite">Location sharing is off.</p>
+        <div class="secure-note" id="secure-note">This page needs a secure HTTPS connection for browser location access. Ask the store/admin to provide the secure HTTPS rider link. Changing the device permission alone cannot enable location on an insecure page.</div>
+        <div class="privacy"><strong>Your privacy:</strong> location is sent only while sharing is active on this page. You can stop sharing at any time. Keep this private link to yourself.</div>
+    </section>
+    <p class="footer">ENIE • Delivery updates</p>
+</main>
+<script>
+(function () {
+    "use strict";
+    const token = location.pathname.split("/").filter(Boolean).pop();
+    const byId = id => document.getElementById(id);
+    const result = byId("location-result");
+    const startButton = byId("start-location");
+    const stopButton = byId("stop-location");
+    const badge = byId("sharing-badge");
+    let watchId = null;
+    let lastSent = 0;
+    let sending = false;
+
+    function message(el, text, kind) {
+        el.textContent = text;
+        el.className = "message" + (kind ? " " + kind : "");
+    }
+    async function post(action, data) {
+        const response = await fetch("/rider/" + encodeURIComponent(token) + "/" + action, {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: new URLSearchParams(data || {}),
+            credentials: "same-origin",
+            cache: "no-store"
+        });
+        if (!response.ok) {
+            const detail = await response.text();
+            throw new Error(detail || "Request failed (" + response.status + ")");
+        }
+        return response;
+    }
+    function stopBrowserWatch() {
+        if (watchId !== null && navigator.geolocation) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+    }
+    function setSharing(on) {
+        badge.textContent = on ? "Sharing location" : "Not sharing";
+        badge.style.background = on ? "#e2f5e8" : "";
+        badge.style.color = on ? "#14532d" : "";
+        startButton.disabled = on;
+        stopButton.disabled = !on;
+    }
+    function locationError(error) {
+        stopBrowserWatch();
+        if (error && error.code === 1) {
+            message(result, "Location permission was denied. Check the browser's site permission and your device location setting, then try again.", "error");
+        } else if (error && error.code === 2) {
+            message(result, "Your device could not determine a location. Check that device location services are enabled and try again.", "error");
+        } else if (error && error.code === 3) {
+            message(result, "Getting your location took too long. Move to an area with a clearer signal and try again.", "error");
+        } else {
+            message(result, "Your browser could not access location. Check the connection and device settings.", "error");
+        }
+        setSharing(false);
+    }
+    async function sendPosition(position) {
+        if (sending || Date.now() - lastSent < 10000) return;
+        sending = true;
+        try {
+            await post("location", {
+                latitude: String(position.coords.latitude),
+                longitude: String(position.coords.longitude)
+            });
+            lastSent = Date.now();
+            setSharing(true);
+            message(result, "Your location is being shared. Last update: " + new Date().toLocaleTimeString(), "success");
+        } catch (error) {
+            stopBrowserWatch();
+            setSharing(false);
+            message(result, "Could not send your location to ENIE. Please check your connection and reopen the rider link.", "error");
+        } finally {
+            sending = false;
+        }
+    }
+    startButton.addEventListener("click", async function () {
+        if (!window.isSecureContext) {
+            byId("secure-note").style.display = "block";
+            message(result, "This link is not using a secure HTTPS connection. Location access is blocked by the browser.", "error");
+            return;
+        }
+        if (!navigator.geolocation) {
+            message(result, "This browser does not support location sharing. Try a current version of Chrome, Safari or Firefox.", "error");
+            return;
+        }
+        if (watchId !== null) return;
+        message(result, "Waiting for your device to provide a location…");
+        startButton.disabled = true;
+        navigator.geolocation.getCurrentPosition(function (position) {
+            sendPosition(position);
+            watchId = navigator.geolocation.watchPosition(sendPosition, locationError, {
+                enableHighAccuracy: true, maximumAge: 5000, timeout: 30000
+            });
+        }, function (error) {
+            startButton.disabled = false;
+            locationError(error);
+        }, {enableHighAccuracy: true, maximumAge: 5000, timeout: 30000});
+    });
+    stopButton.addEventListener("click", async function () {
+        stopBrowserWatch();
+        try {
+            await post("stop-location", {});
+            setSharing(false);
+            message(result, "Location sharing has stopped.", "success");
+        } catch (error) {
+            message(result, "The page stopped watching your device, but the server could not confirm the stop. Please retry.", "error");
+        }
+    });
+    byId("save-status").addEventListener("click", async function () {
+        const button = this;
+        button.disabled = true;
+        try {
+            const select = byId("delivery-status");
+            await post("status", {status: select.value});
+            byId("current-status").textContent = select.selectedOptions[0].text;
+            message(byId("status-result"), "Delivery status updated.", "success");
+            const order = ["picked_up", "on_the_way", "arrived", "delivered"];
+            document.querySelectorAll("[data-step]").forEach((step, index) => {
+                step.classList.toggle("active", index <= order.indexOf(select.value));
+            });
+        } catch (error) {
+            message(byId("status-result"), "Could not update the delivery status. Refresh the page and try again.", "error");
+        } finally {
+            button.disabled = false;
+        }
+    });
+    setSharing(false);
+    const order = ["picked_up", "on_the_way", "arrived", "delivered"];
+    const initial = {{printf "%q" .DeliveryStatus}};
+    const currentIndex = order.indexOf(initial);
+    document.querySelectorAll("[data-step]").forEach((step, index) => {
+        step.classList.toggle("active", currentIndex >= 0 && index <= currentIndex);
+    });
+    if (!window.isSecureContext) byId("secure-note").style.display = "block";
+})();
+</script>
+</body>
+</html>
