@@ -75,7 +75,7 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("Referrer-Policy", "strict-origin-when-cross-origin")
-		h.Set("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=(), usb=()")
+		h.Set("Permissions-Policy", "geolocation=(self), microphone=(), camera=(), payment=(), usb=()")
 		h.Set("Cross-Origin-Opener-Policy", "same-origin-allow-popups")
 		h.Set("X-Permitted-Cross-Domain-Policies", "none")
 

@@ -57,6 +57,9 @@ func TestSecurityHeaders(t *testing.T) {
 			t.Errorf("missing %s", k)
 		}
 	}
+	if got := w.Header().Get("Permissions-Policy"); !strings.Contains(got, "geolocation=(self)") {
+		t.Errorf("geolocation should be allowed for this site, got %q", got)
+	}
 	if !strings.Contains(w.Header().Get("Content-Security-Policy"), "frame-ancestors 'none'") {
 		t.Error("CSP lacks frame-ancestors")
 	}
