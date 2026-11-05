@@ -16,7 +16,7 @@
     {{end}}
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/shop.css">
-    <link rel="stylesheet" href="/static/css/home.css?v=3">
+    <link rel="stylesheet" href="/static/css/home.css?v=4">
 </head>
 
 <body>
@@ -28,10 +28,12 @@
     <nav class="home-sidebar-nav">
         <a href="/menu">🍽️ <span>Menu</span></a>
         <a href="/vendors">🏪 <span>Shops</span></a>
+        <a href="/group-order">🎉 <span>Group orders</span></a>
         <a href="/become-a-vendor">🤝 <span>Sell with us</span></a>
         <a href="/about">ℹ️ <span>About</span></a>
         <a href="/contact">✉️ <span>Contact</span></a>
         <a href="/help">🆘 <span>Help & Support</span></a>
+        <a href="/feedback">💡 <span>Feedback</span></a>
     </nav>
     <div class="home-sidebar-account">
         <a href="/login">Log in</a>
@@ -89,8 +91,21 @@
         <span><strong>Favourites</strong><small>Saved shops and meals</small></span>
         <b aria-hidden="true">→</b>
     </a>
-    <a href="/feedback" class="quick-link"><span class="quick-icon">✉</span><span><strong>Feedback</strong><small>Share your experience</small></span><b aria-hidden="true">→</b></a>
-    <a href="/group-order" class="quick-link"><span class="quick-icon">👥</span><span><strong>Group order</strong><small>Order together</small></span><b aria-hidden="true">→</b></a>
+</section>
+
+<section class="home-group" aria-labelledby="home-group-title">
+    <div class="home-group-text">
+        <p class="home-group-eyebrow">Group orders</p>
+        <h2 id="home-group-title">Feeding an office, a party or an event?</h2>
+        <p>Pick a shop and tell them what you need and when. They send you one price for everything, and you only pay once you are happy with it. Pay from your wallet or by card.</p>
+        <a class="home-group-btn" href="/group-order">Request a group order</a>
+        <a class="home-group-link" href="/group-orders">See my requests</a>
+    </div>
+    <ul class="home-group-points" aria-label="How group orders work">
+        <li><b>1</b><span>Tell the shop what you need</span></li>
+        <li><b>2</b><span>They reply with one price</span></li>
+        <li><b>3</b><span>Pay to confirm; it is scheduled</span></li>
+    </ul>
 </section>
 {{if .Shops}}
 <section class="home-section">
@@ -324,6 +339,7 @@
             <a href="/orders">My orders</a>
             <a href="/favorites">Favourites</a>
             <a href="/loyalty">Loyalty rewards</a>
+            <a href="/group-order">Group orders</a>
         </div>
         <div>
             <h4>Vendors</h4>
@@ -335,6 +351,7 @@
             <a href="/about">About</a>
             <a href="/guides">Food Guides</a>
             <a href="/contact">Contact</a>
+            <a href="/feedback">Send feedback</a>
             <a href="/privacy">Privacy Policy</a>
             <a href="/terms">Terms of Service</a>
         </div>

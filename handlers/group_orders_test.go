@@ -26,3 +26,11 @@ func TestGroupState(t *testing.T) {
 		}
 	}
 }
+
+func TestCommaInt(t *testing.T) {
+	for in, want := range map[int]string{0: "0", 999: "999", 1000: "1,000", 142000: "142,000", 5000000: "5,000,000", -12500: "-12,500"} {
+		if got := commaInt(in); got != want {
+			t.Errorf("commaInt(%d) = %q, want %q", in, got, want)
+		}
+	}
+}

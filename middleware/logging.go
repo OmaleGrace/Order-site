@@ -52,6 +52,10 @@ func RequireLogin(db *sql.DB, next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		// Background polls (which also run in hidden tabs) do not count as being active.
+		if !strings.HasSuffix(r.URL.Path, "/updates") {
+			TouchLastSeen(db, userID)
+		}
 		r = WithUserID(r, userID)
 		next(w, r)
 	}

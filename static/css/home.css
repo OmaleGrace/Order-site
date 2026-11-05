@@ -518,6 +518,20 @@ body:has(.home-sidebar) .site-header { display:none; }
     body:has(.home-sidebar) { padding-left:0; }
 }
 
+/* Group orders banner */
+.home-group { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:26px; align-items:center;
+    width:min(calc(100% - 2 * var(--home-gutter, 20px)), 1100px); margin:34px auto 0; padding:28px 30px; border-radius:24px;
+    background:linear-gradient(135deg,#174a32 0%,#1f6044 100%); color:#fff; box-shadow:0 18px 40px rgba(23,74,50,.18); }
+.home-group-eyebrow { margin:0 0 6px; color:#ffd7b8; text-transform:uppercase; letter-spacing:.09em; font-size:.74rem; font-weight:800; }
+.home-group h2 { margin:0 0 8px; font-size:clamp(1.35rem,3.2vw,1.9rem); line-height:1.2; color:#fff; }
+.home-group-text p { margin:0 0 16px; color:#dcebe0; line-height:1.55; }
+.home-group-btn { display:inline-block; padding:12px 22px; border-radius:999px; background:#f26a1b; color:#fff; font-weight:800; text-decoration:none; }
+.home-group-btn:hover { background:#d85c12; }
+.home-group-link { margin-left:14px; color:#fff; font-weight:700; text-decoration:underline; text-underline-offset:3px; }
+.home-group-points { list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.home-group-points li { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.1); }
+.home-group-points b { display:grid; place-items:center; flex:none; width:30px; height:30px; border-radius:50%; background:#fbfaf6; color:#174a32; }
+@media (max-width:760px) { .home-group { grid-template-columns:1fr; padding:22px 18px; width:calc(100% - 28px); margin-top:24px; } .home-group-link { display:block; margin:12px 0 0; } }
 /* Reliable touch/trackpad scrolling for horizontally browsable home cards. */
 .shop-row, .cat-row, .h-row, .banner-track {
     max-width: 100%; min-width: 0; overflow-x: auto !important; overflow-y: hidden;

@@ -28,6 +28,28 @@ const (
 	maxGroupQuoteKobo = 500000000 // N5,000,000
 )
 
+// commaInt writes a whole number of naira with thousands separators, for example 142000 -> 142,000.
+func commaInt(n int) string {
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	digits := strconv.Itoa(n)
+	var b strings.Builder
+	for i, c := range digits {
+		if i > 0 && (len(digits)-i)%3 == 0 {
+			b.WriteByte(',')
+		}
+		b.WriteRune(c)
+	}
+	if neg {
+		return "-" + b.String()
+	}
+	return b.String()
+}
+
+var groupFuncs = template.FuncMap{"commas": commaInt}
+
 func lagosLocation() *time.Location {
 	loc, err := time.LoadLocation("Africa/Lagos")
 	if err != nil {
@@ -238,7 +260,7 @@ func (h *Handlers) GroupOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 	page.Rows = scanGroupRows(rows)
-	tmpl, err := render.Page("group-orders.html", template.FuncMap{})
+	tmpl, err := render.Page("group-orders.html", groupFuncs)
 	if err != nil {
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)
 		return
@@ -425,7 +447,7 @@ func (h *Handlers) VendorGroupOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 	page.Rows = scanGroupRows(rows)
-	tmpl, err := render.Page("vendor-group-orders.html", template.FuncMap{})
+	tmpl, err := render.Page("vendor-group-orders.html", groupFuncs)
 	if err != nil {
 		errors.Render(w, "Could not display the page", http.StatusInternalServerError)
 		return

@@ -17,13 +17,14 @@
             {{if gt .ThreadID 0}}
                 <section class="card">
                     <div class="chat-head">
-                        <div>
-                            <h2>{{if .IsVendor}}<button type="button" class="person-link" data-profile-photo title="View profile picture">{{.Title}}</button>{{else if .ShopURL}}<a class="person-link" href="{{.ShopURL}}" title="View shop">{{.Title}}</a>{{else}}{{.Title}}{{end}}
-                            </h2>
-                            <div class="muted">
-                                {{if .IsVendor}}Customer conversation · {{.ShopName}}{{else}}Conversation with {{.ShopName}}{{end}}
-                            </div><span class="presence-pill {{if .OtherOnline}}online{{end}}">{{if .OtherOnline}}Active now{{else}}Not active{{end}}</span>
-                        </div><a class="back" href="/messages">← All messages</a><a class="button secondary" href="/messages/{{.ThreadID}}">↻ Refresh</a></div>
+                        <div class="chat-who">
+                            <span class="av-wrap{{if .OtherOnline}} is-online{{end}}"><span class="avatar lg" aria-hidden="true">{{if .OtherPicture}}<img src="{{.OtherPicture}}" alt="" width="44" height="44">{{else}}{{.OtherInitial}}{{end}}</span><i class="presence-dot" title="Active now"></i></span>
+                            <div>
+                                <h2>{{if .IsVendor}}<button type="button" class="person-link" data-profile-photo title="View profile picture">{{.Title}}</button>{{else if .ShopURL}}<a class="person-link" href="{{.ShopURL}}" title="View shop">{{.Title}}</a>{{else}}{{.Title}}{{end}}</h2>
+                                <div class="muted chat-sub"><span class="presence-text"{{if not .OtherOnline}} hidden{{end}}><i class="presence-dot inline" aria-hidden="true"></i> Active now</span><span class="sub-text"{{if .OtherOnline}} hidden{{end}}>{{if .IsVendor}}Customer · {{.ShopName}}{{else}}Shop conversation{{end}}</span></div>
+                            </div>
+                        </div>
+                        <div class="chat-tools"><a class="back" href="/messages">← All</a><a class="refresh" href="/messages/{{.ThreadID}}" title="Refresh" aria-label="Refresh">↻</a></div></div>
                     <div class="messages" id="message-list" data-thread-id="{{.ThreadID}}" data-last-id="{{.LastMessageID}}" data-other-kind="{{if .OtherIsShop}}shop{{else}}user{{end}}" data-other-name="{{.OtherName}}" data-other-picture="{{.OtherPicture}}" data-shop-url="{{.ShopURL}}" aria-live="polite">
                         {{range .Messages}}
                             <article class="bubble {{if .Mine}}mine{{end}}" data-id="{{.ID}}"><span class="sender"><span class="avatar" aria-hidden="true">{{if .Avatar}}<img src="{{.Avatar}}" alt="" loading="lazy" width="26" height="26">{{else}}{{.Initial}}{{end}}</span>{{if .Mine}}You{{else if $.OtherIsShop}}
@@ -57,9 +58,9 @@
                 <section class="card">
                     {{if .Threads}}
                         <div class="thread-list">
-                            {{range .Threads}}<a class="thread-link" href="/messages/{{.ID}}"><div class="thread-top"><strong>{{.OtherPartyName}} <span class="muted">· {{.ShopName}}</span></strong><span class="muted">{{formatChatTime .UpdatedAt}}</span></div>
+                            {{range .Threads}}<a class="thread-link" href="/messages/{{.ID}}"><span class="av-wrap{{if .OtherOnline}} is-online{{end}}"><span class="avatar md" aria-hidden="true">{{if .OtherPicture}}<img src="{{.OtherPicture}}" alt="" width="42" height="42" loading="lazy">{{else}}{{.OtherInitial}}{{end}}</span><i class="presence-dot" title="Active now"></i></span><div class="thread-body"><div class="thread-top"><strong>{{.OtherPartyName}} <span class="muted">· {{.ShopName}}</span></strong><span class="muted">{{formatChatTime .UpdatedAt}}</span></div>
                                 <p class="thread-preview">{{.LastMessage}}</p>
-                                {{if .UnreadCount}}<span class="badge">{{.UnreadCount}} unread</span>{{end}}</a>{{end}}
+                                {{if .UnreadCount}}<span class="badge">{{.UnreadCount}} unread</span>{{end}}</div></a>{{end}}
                         </div>
                     {{else}}
                         <div class="empty">

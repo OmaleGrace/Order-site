@@ -33,6 +33,9 @@ type ChatThreadSummary struct {
 	LastMessage    string
 	UpdatedAt      time.Time
 	UnreadCount    int
+	OtherPicture   string
+	OtherInitial   string
+	OtherOnline    bool
 }
 
 type ChatMessage struct {
@@ -80,8 +83,9 @@ type MessagesPage struct {
 	OtherIsShop  bool
 	OtherName    string
 	OtherPicture string
-	ShopURL      string
+	OtherInitial string
 	OtherOnline  bool
+	ShopURL      string
 }
 
 func currentChatUserID(h *Handlers, w http.ResponseWriter, r *http.Request) (int, bool) {
@@ -110,7 +114,6 @@ func currentChatUserID(h *Handlers, w http.ResponseWriter, r *http.Request) (int
 		errors.Render(w, "Could not verify your session. Please try again.", http.StatusInternalServerError)
 		return 0, false
 	}
-	_, _ = h.DB.Exec(`UPDATE users SET last_seen_at=NOW() WHERE id=$1 AND (last_seen_at IS NULL OR last_seen_at < NOW()-INTERVAL '1 minute')`, userID)
 	return userID, true
 }
 
@@ -120,6 +123,7 @@ func (h *Handlers) MessagesInbox(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	middleware.TouchLastSeen(h.DB, userID)
 	p := MessagesPage{UserID: userID, Notice: r.URL.Query().Get("msg")}
 	// Opening the inbox means every message waiting for this user has now reached them.
 	if _, err := h.DB.Exec(`UPDATE messages m SET delivered_at = NOW()
@@ -134,10 +138,14 @@ func (h *Handlers) MessagesInbox(w http.ResponseWriter, r *http.Request) {
 		       v.name,
 		       COALESCE((SELECT m.body FROM messages m WHERE m.thread_id = t.id ORDER BY m.id DESC LIMIT 1), 'Conversation started'),
 		       t.updated_at,
-		       (SELECT COUNT(*) FROM messages m WHERE m.thread_id = t.id AND m.sender_user_id <> $1 AND m.read_at IS NULL)
+		       (SELECT COUNT(*) FROM messages m WHERE m.thread_id = t.id AND m.sender_user_id <> $1 AND m.read_at IS NULL),
+		       CASE WHEN t.customer_id = $1 THEN COALESCE(NULLIF(v.logo_url, ''), NULLIF(o.profile_picture, ''), '')
+		            ELSE COALESCE(NULLIF(c.profile_picture, ''), '') END,
+		       COALESCE((CASE WHEN t.customer_id = $1 THEN o.active_status_enabled ELSE c.active_status_enabled END) AND (CASE WHEN t.customer_id = $1 THEN o.last_seen_at ELSE c.last_seen_at END) > NOW() - INTERVAL '2 minutes', false)
 		FROM message_threads t
 		JOIN vendors v ON v.id = t.vendor_id
 		JOIN users c ON c.id = t.customer_id
+		LEFT JOIN users o ON o.id = v.owner_user_id
 		WHERE t.customer_id = $1 OR v.owner_user_id = $1
 		ORDER BY t.updated_at DESC, t.id DESC`, userID)
 	if err != nil {
@@ -148,11 +156,12 @@ func (h *Handlers) MessagesInbox(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 	for rows.Next() {
 		var item ChatThreadSummary
-		if err := rows.Scan(&item.ID, &item.OtherPartyName, &item.ShopName, &item.LastMessage, &item.UpdatedAt, &item.UnreadCount); err != nil {
+		if err := rows.Scan(&item.ID, &item.OtherPartyName, &item.ShopName, &item.LastMessage, &item.UpdatedAt, &item.UnreadCount, &item.OtherPicture, &item.OtherOnline); err != nil {
 			log.Printf("messages inbox scan failed: %v", err)
 			errors.Render(w, "Could not load your messages", http.StatusInternalServerError)
 			return
 		}
+		item.OtherInitial = initialOf(item.OtherPartyName)
 		item.LastMessage = truncateChatPreview(item.LastMessage, 100)
 		p.Threads = append(p.Threads, item)
 	}
@@ -227,14 +236,16 @@ func (h *Handlers) MessageThread(w http.ResponseWriter, r *http.Request) {
 	p := MessagesPage{ThreadID: threadID, UserID: userID, Notice: r.URL.Query().Get("msg")}
 	var customerID int
 	var ownerID sql.NullInt64
-	var customerName, customerPicture, shopSlug string
-	var shopActive bool
+	var customerName, customerPicture, shopSlug, shopLogo string
+	var shopActive, customerOnline, ownerOnline bool
 	if err := h.DB.QueryRow(`SELECT t.customer_id, v.owner_user_id, v.name, COALESCE(c.name, 'Customer'),
 			COALESCE(c.profile_picture, ''), COALESCE(v.slug, ''), COALESCE(v.status = 'active' AND v.paid_until > NOW(), false),
-            CASE WHEN $2 = t.customer_id THEN COALESCE((SELECT u.active_status_enabled AND u.last_seen_at > NOW()-INTERVAL '5 minutes' FROM users u WHERE u.id=v.owner_user_id), FALSE)
-                 ELSE COALESCE(c.active_status_enabled AND c.last_seen_at > NOW()-INTERVAL '5 minutes', FALSE) END
+			COALESCE(NULLIF(v.logo_url, ''), NULLIF(o.profile_picture, ''), ''),
+			COALESCE(c.active_status_enabled AND c.last_seen_at > NOW() - INTERVAL '2 minutes', false),
+			COALESCE(o.active_status_enabled AND o.last_seen_at > NOW() - INTERVAL '2 minutes', false)
 		FROM message_threads t JOIN vendors v ON v.id = t.vendor_id JOIN users c ON c.id = t.customer_id
-		WHERE t.id = $1`, threadID, userID).Scan(&customerID, &ownerID, &p.ShopName, &customerName, &customerPicture, &shopSlug, &shopActive, &p.OtherOnline); err != nil {
+		LEFT JOIN users o ON o.id = v.owner_user_id
+		WHERE t.id = $1`, threadID).Scan(&customerID, &ownerID, &p.ShopName, &customerName, &customerPicture, &shopSlug, &shopActive, &shopLogo, &customerOnline, &ownerOnline); err != nil {
 		if err == sql.ErrNoRows {
 			errors.Render(w, "Conversation not found", http.StatusNotFound)
 		} else {
@@ -251,14 +262,21 @@ func (h *Handlers) MessageThread(w http.ResponseWriter, r *http.Request) {
 		p.Title = customerName
 		p.OtherName = customerName
 		p.OtherPicture = customerPicture
+		p.OtherOnline = customerOnline
 	} else {
 		p.Title = p.ShopName
 		p.OtherName = p.ShopName
 		p.OtherIsShop = true
+		p.OtherOnline = ownerOnline
 		// The public shop page only exists while the shop is active and paid up.
 		if shopActive && shopSlug != "" {
 			p.ShopURL = "/v/" + url.PathEscape(shopSlug)
 		}
+	}
+	p.OtherInitial = initialOf(p.OtherName)
+	if p.OtherIsShop {
+		// The lightbox opens a customer's picture; for a shop the picture is only shown in the header.
+		p.OtherPicture = shopLogo
 	}
 	_, _ = h.DB.Exec(`UPDATE messages SET delivered_at = COALESCE(delivered_at, NOW()), read_at = NOW() WHERE thread_id = $1 AND sender_user_id <> $2 AND read_at IS NULL`, threadID, userID)
 	rows, err := h.DB.Query(`SELECT m.id, m.sender_user_id, COALESCE(u.name, 'User'), m.body, m.created_at, `+chatStatusSQL+`, `+chatAvatarSQL+`
@@ -297,13 +315,16 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Conversation not found", http.StatusNotFound)
 		return
 	}
-	var allowed bool
-	if err := h.DB.QueryRow(`SELECT EXISTS(SELECT 1 FROM message_threads t JOIN vendors v ON v.id=t.vendor_id WHERE t.id=$1 AND (t.customer_id=$2 OR v.owner_user_id=$2))`, threadID, userID).Scan(&allowed); err != nil {
+	// One query both checks access and says whether the other person is active right now.
+	var otherOnline bool
+	if err := h.DB.QueryRow(`SELECT COALESCE((CASE WHEN t.customer_id=$2 THEN o.active_status_enabled ELSE c.active_status_enabled END) AND (CASE WHEN t.customer_id=$2 THEN o.last_seen_at ELSE c.last_seen_at END) > NOW() - INTERVAL '2 minutes', false)
+		FROM message_threads t JOIN vendors v ON v.id=t.vendor_id JOIN users c ON c.id=t.customer_id LEFT JOIN users o ON o.id=v.owner_user_id
+		WHERE t.id=$1 AND (t.customer_id=$2 OR v.owner_user_id=$2)`, threadID, userID).Scan(&otherOnline); err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
 		http.Error(w, "Could not check conversation access", http.StatusInternalServerError)
-		return
-	}
-	if !allowed {
-		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 	after, err := strconv.Atoi(r.URL.Query().Get("after"))
@@ -348,6 +369,7 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if visible {
+		middleware.TouchLastSeen(h.DB, userID)
 		// Tab is open and visible: everything from the other person is delivered and read.
 		_, _ = h.DB.Exec(`UPDATE messages SET delivered_at=COALESCE(delivered_at, NOW()), read_at=NOW() WHERE thread_id=$1 AND sender_user_id<>$2 AND read_at IS NULL`, threadID, userID)
 	} else {
@@ -363,8 +385,6 @@ func (h *Handlers) MessageUpdates(w http.ResponseWriter, r *http.Request) {
 		FROM messages WHERE thread_id=$1 AND sender_user_id=$2`, threadID, userID).Scan(&deliveredUpTo, &readUpTo); err != nil {
 		log.Printf("message updates: status lookup failed: %v", err)
 	}
-	var otherOnline bool
-	_ = h.DB.QueryRow(`SELECT CASE WHEN t.customer_id=$2 THEN COALESCE((SELECT u.active_status_enabled AND u.last_seen_at>NOW()-INTERVAL '5 minutes' FROM users u WHERE u.id=v.owner_user_id),FALSE) ELSE COALESCE(c.active_status_enabled AND c.last_seen_at>NOW()-INTERVAL '5 minutes',FALSE) END FROM message_threads t JOIN vendors v ON v.id=t.vendor_id JOIN users c ON c.id=t.customer_id WHERE t.id=$1`, threadID, userID).Scan(&otherOnline)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	if err := json.NewEncoder(w).Encode(struct {

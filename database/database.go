@@ -769,6 +769,13 @@ func Connect() (*sql.DB, error) {
 		db.Close()
 		return nil, err
 	}
+
+	// Optional food photo attached to a review.
+	_, err = db.Exec(`ALTER TABLE order_reviews ADD COLUMN IF NOT EXISTS photo_url TEXT NOT NULL DEFAULT ''`)
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
 	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_order_item_reviews_menu_item ON order_item_reviews(menu_item_id)`)
 	if err != nil {
 		db.Close()

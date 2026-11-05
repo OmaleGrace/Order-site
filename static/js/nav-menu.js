@@ -19,19 +19,21 @@
         '/admin/riders': '🛵', '/admin/support': '🆘', '/admin/users': '👥', '/admin/earnings': '💰', '/admin/settlements': '🏦',
         '/vendor/dashboard': '📊', '/vendor/orders': '📦', '/vendor/menu': '🍽️', '/vendor/delivery': '🛵', '/vendor/coupons': '🏷️',
         '/vendor/analytics': '📈', '/vendor/statements': '🧾', '/vendor/ai': '✍️', '/vendor/profile': '🏪', '/vendor/billing': '💳',
-        '/terms': '📄', '/privacy': '🔒', '/guides': '📚'
+        '/terms': '📄', '/privacy': '🔒', '/guides': '📚',
+        '/group-order': '🎉', '/group-orders': '🎉', '/vendor/group-orders': '🎉', '/feedback': '💡', '/wallet': '👛'
     };
 
     // Which links collapse into a flyout, per kind of menu. Links not listed stay in the bar.
     var GROUPS = {
         customer: [
-            { label: 'My account', icon: '👤', hrefs: ['/account', '/orders', '/favorites', '/loyalty', '/logout'] }
+            { label: 'My account', icon: '👤', hrefs: ['/account', '/orders', '/favorites', '/loyalty', '/logout'] },
+            { label: 'More', icon: '⋯', hrefs: ['/help', '/feedback'] }
         ],
         vendor: [
             { label: 'Grow', icon: '📈', hrefs: ['/vendor/coupons', '/vendor/analytics', '/vendor/ai'] },
             { label: 'Shop', icon: '🏪', hrefs: ['/vendor/delivery', '/vendor/profile'] },
             { label: 'Money', icon: '💰', hrefs: ['/vendor/statements', '/vendor/billing'] },
-            { label: 'More', icon: '⋯', hrefs: ['/help', '/', '/logout'] }
+            { label: 'More', icon: '⋯', hrefs: ['/help', '/feedback', '/', '/logout'] }
         ],
         admin: [
             { label: 'Marketplace', icon: '🏪', hrefs: ['/admin/applications', '/admin/vendors', '/admin/menu', '/admin/riders'] },
@@ -40,7 +42,7 @@
             { label: 'More', icon: '⋯', hrefs: ['/', '/logout'] }
         ],
         public: [
-            { label: 'More', icon: '⋯', hrefs: ['/about', '/contact', '/help', '/become-a-vendor'] }
+            { label: 'More', icon: '⋯', hrefs: ['/about', '/contact', '/help', '/feedback', '/become-a-vendor'] }
         ]
     };
     var SUBTITLE = { customer: 'Browse & order', vendor: 'Vendor tools', admin: 'Admin console', public: 'Explore' };
@@ -49,9 +51,31 @@
     var GENERATED = {
         public: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/cart', 'Cart'], ['/become-a-vendor', 'Sell with us'], ['/about', 'About'], ['/contact', 'Contact'],
                  ['/help', 'Help & Support'], ['/feedback', 'Feedback'], ['/login', 'Log in'], ['/signup', 'Sign up']],
-        customer: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/orders', 'My orders'], ['/cart', 'Cart'], ['/wallet', 'Wallet'], ['/group-order', 'Group order'], ['/account', 'Account'],
+        customer: [['/menu', 'Menu'], ['/vendors', 'Shops'], ['/orders', 'My orders'], ['/cart', 'Cart'], ['/wallet', 'Wallet'], ['/group-order', 'Group orders'], ['/account', 'Account'],
                    ['/help', 'Help & Support'], ['/feedback', 'Feedback'], ['/logout', 'Log out']]
     };
+
+    // Links every visitor should be able to find from any page. If a page's own menu lacks one, it is
+    // added (before Log in / Sign up / Log out, which stay last). The feedback link remembers the
+    // page it was clicked from so the team knows what the comment is about.
+    var ENSURE = {
+        customer: [['/group-order', 'Group orders'], ['/feedback', 'Feedback']],
+        public: [['/group-order', 'Group orders'], ['/feedback', 'Feedback']],
+        vendor: [['/feedback', 'Feedback']]
+    };
+    function ensureLinks(nav, kind) {
+        (ENSURE[kind] || []).forEach(function (p) {
+            var has = [].some.call(nav.querySelectorAll('a[href]'), function (a) { return norm(a.getAttribute('href')) === p[0]; });
+            if (has) return;
+            var a = document.createElement('a');
+            a.href = p[0] === '/feedback' && location.pathname !== '/feedback' ? '/feedback?from=' + encodeURIComponent(location.pathname) : p[0];
+            a.textContent = (nav.classList.contains('home-sidebar-nav') && ICONS[p[0]] ? ICONS[p[0]] + ' ' : '') + p[1];
+            var tail = [].filter.call(nav.children, function (el) {
+                return el.tagName === 'A' && ['/logout', '/login', '/signup'].indexOf(norm(el.getAttribute('href'))) !== -1;
+            })[0];
+            if (tail) nav.insertBefore(a, tail); else nav.appendChild(a);
+        });
+    }
 
     function norm(href) {
         try { var u = new URL(href, location.href); return u.origin === location.origin ? (u.pathname.replace(/\/+$/, '') || '/') : null; }
@@ -307,6 +331,7 @@
             if (home) { extra = home.querySelector('.home-sidebar-account'); body.classList.add('nm-home'); }
         }
 
+        ensureLinks(nav, kind);
         markCurrent(nav);
         if (!home) groupNav(nav, kind);
 

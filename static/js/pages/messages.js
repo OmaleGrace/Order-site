@@ -133,6 +133,16 @@
   });
 
   // ---- polling -----------------------------------------------------------
+  // The blue dot and the "Active now" line in the chat header follow what the server says each poll.
+  const presenceWrap = document.querySelector('.chat-head .av-wrap');
+  const presenceText = document.querySelector('.chat-head .presence-text');
+  const subText = document.querySelector('.chat-head .sub-text');
+  function setPresence(online) {
+    if (presenceWrap) presenceWrap.classList.toggle('is-online', online);
+    if (presenceText) presenceText.hidden = !online;
+    if (subText) subText.hidden = online;
+  }
+
   let polling = false, stopped = false, delay = 5000;
   async function poll() {
     if (polling) return;
@@ -150,8 +160,7 @@
         list.scrollTop = list.scrollHeight;
       }
       applyReceipts(data.delivered_up_to || 0, data.read_up_to || 0);
-      const presence = document.querySelector('.presence-pill');
-      if (presence) { presence.classList.toggle('online', !!data.other_online); presence.textContent = data.other_online ? 'Active now' : 'Not active'; }
+      setPresence(!!data.other_online);
     } catch (_) { /* Keep the chat usable; retry on the next interval. */ }
     finally { polling = false; }
   }
@@ -199,7 +208,7 @@
 (function () {
   var box = document.getElementById('body');
   if (!box) return;
-  var fit = function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 76) + 'px'; };
+  var fit = function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 110) + 'px'; };
   box.addEventListener('input', fit);
   fit();
 })();

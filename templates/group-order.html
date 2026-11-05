@@ -5,41 +5,97 @@
     {{template "meta-noindex"}}
     <title>Request a group order - {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/pages/feedback.css">
-    <link rel="stylesheet" href="/static/css/pages/wallet.css">
+    <link rel="stylesheet" href="/static/css/pages/group-order.css?v=1">
 </head>
 <body data-nm="customer">
-<header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
-<main class="fb-page">
-    <section class="fb-card">
-        <h1>Request a group order</h1>
-        <p class="fb-lead">Feeding an office, a party or an event? Tell a shop what you need. They send you one price, and you pay it from your wallet or by card to confirm.</p>
-        {{if .Error}}<p class="fb-error" role="alert">{{.Error}}</p>{{end}}
-        <form action="/group-order" method="post">
-            <label for="vendor_id">Which shop?</label>
-            <select id="vendor_id" name="vendor_id" required>
-                <option value="">Choose a shop</option>
-                {{range .Vendors}}<option value="{{.ID}}" {{if .Selected}}selected{{end}}>{{.Name}}</option>{{end}}
-            </select>
-            <div class="fb-two">
-                <div><label for="event_at">When do you need it?</label><input type="datetime-local" id="event_at" name="event_at" min="{{.MinDate}}" required></div>
-                <div><label for="headcount">How many people?</label><input type="number" id="headcount" name="headcount" min="{{.MinHead}}" max="{{.MaxHead}}" required></div>
+<main class="go-page">
+    <header class="go-hero">
+        <p class="go-eyebrow">Group orders</p>
+        <h1>Food for the whole crew</h1>
+        <p class="go-lead">Feeding an office, a party or an event? Tell a shop what you need and when. They send you one price for everything, and you only pay once you are happy with it.</p>
+        <ol class="go-steps" aria-label="How group orders work">
+            <li><b>1</b><div><strong>Send a request</strong><span>Pick a shop and describe what you need.</span></div></li>
+            <li><b>2</b><div><strong>Get one price</strong><span>The shop replies with a single price, delivery included.</span></div></li>
+            <li><b>3</b><div><strong>Pay to confirm</strong><span>Pay from your wallet or by card. It is then scheduled for your event.</span></div></li>
+        </ol>
+    </header>
+
+    <div class="go-layout">
+        <section class="go-card" aria-labelledby="go-form-title">
+            <h2 id="go-form-title">Your request</h2>
+            {{if .Error}}<p class="go-error" role="alert">{{.Error}}</p>{{end}}
+            <form action="/group-order" method="post" id="group-form">
+                <div class="go-section">
+                    <p class="go-section-title"><i>1</i> The event</p>
+                    <label class="go-field"><span>Which shop?</span>
+                        <select id="vendor_id" name="vendor_id" required>
+                            <option value="">Choose a shop</option>
+                            {{range .Vendors}}<option value="{{.ID}}" {{if .Selected}}selected{{end}}>{{.Name}}</option>{{end}}
+                        </select>
+                    </label>
+                    <div class="go-grid">
+                        <label class="go-field"><span>When do you need it?</span>
+                            <input type="datetime-local" id="event_at" name="event_at" min="{{.MinDate}}" required>
+                            <small>At least a day ahead.</small>
+                        </label>
+                        <label class="go-field"><span>How many people?</span>
+                            <input type="number" id="headcount" name="headcount" min="{{.MinHead}}" max="{{.MaxHead}}" inputmode="numeric" placeholder="e.g. 25" required>
+                            <small>{{.MinHead}} to {{.MaxHead}} people.</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="go-section">
+                    <p class="go-section-title"><i>2</i> Pickup or delivery</p>
+                    <div class="go-choice" role="radiogroup" aria-label="Pickup or delivery">
+                        <label><input type="radio" name="delivery_method" value="pickup" checked><span>🛍️ <div>Pickup<small>You collect from the shop</small></div></span></label>
+                        <label><input type="radio" name="delivery_method" value="delivery"><span>🛵 <div>Delivery<small>Brought to your address</small></div></span></label>
+                    </div>
+                    <label class="go-field" id="go-address-box" hidden><span>Delivery address</span>
+                        <input type="text" id="address" name="address" maxlength="300" autocomplete="street-address" placeholder="Street, area and landmark">
+                    </label>
+                </div>
+
+                <div class="go-section">
+                    <p class="go-section-title"><i>3</i> What you need</p>
+                    <label class="go-field"><span>Describe your order</span>
+                        <textarea id="notes" name="notes" maxlength="1000" required placeholder="Dishes and quantities, dietary needs, how it should be served..."></textarea>
+                        <small class="go-count" id="notes-count" aria-live="off">0 / 1000</small>
+                    </label>
+                    <div class="go-grid">
+                        <label class="go-field"><span>Phone the shop can call</span>
+                            <input type="tel" id="phone" name="phone" value="{{.Phone}}" inputmode="tel" autocomplete="tel" placeholder="08012345678" required>
+                        </label>
+                        <label class="go-field"><span>Budget (optional)</span>
+                            <div class="go-money"><input type="number" id="budget" name="budget" min="0" step="1000" inputmode="numeric" placeholder="e.g. 150000"></div>
+                            <small>Helps the shop quote within your range.</small>
+                        </label>
+                    </div>
+                </div>
+
+                <button class="go-submit" type="submit">Send request</button>
+            </form>
+        </section>
+
+        <aside class="go-aside" aria-label="Good to know">
+            <div class="go-card">
+                <h3>Good to know</h3>
+                <ul>
+                    <li>You only pay after the shop sends a price, and only if you accept it.</li>
+                    <li>Pay from your wallet or by card. The price covers everything, delivery included.</li>
+                    <li>You can withdraw a request any time before you pay.</li>
+                    <li>The shop may call the number you give to confirm details.</li>
+                </ul>
             </div>
-            <label for="delivery_method">Pickup or delivery?</label>
-            <select id="delivery_method" name="delivery_method"><option value="pickup">Pickup</option><option value="delivery">Delivery</option></select>
-            <label for="address">Delivery address (if delivery)</label>
-            <input type="text" id="address" name="address" maxlength="300" autocomplete="street-address">
-            <div class="fb-two">
-                <div><label for="phone">Phone the shop can call</label><input type="tel" id="phone" name="phone" value="{{.Phone}}" placeholder="08012345678" required></div>
-                <div><label for="budget">Budget in ₦ (optional)</label><input type="number" id="budget" name="budget" min="0" step="1000"></div>
+            <div class="go-card">
+                <h3>Already sent one?</h3>
+                <p class="go-lead" style="margin-bottom:12px">See replies and pay for your requests.</p>
+                <a class="go-btn secondary" href="/group-orders">My group orders</a>
             </div>
-            <label for="notes">What do you need?</label>
-            <textarea id="notes" name="notes" maxlength="1000" required placeholder="Dishes, quantities, dietary needs, serving style..."></textarea>
-            <button class="fb-button" type="submit">Send request</button>
-        </form>
-        <p><a href="/group-orders">See my group orders</a></p>
-    </section>
+        </aside>
+    </div>
 </main>
+<script src="/static/js/pages/group-order.js"></script>
 {{template "scripts-common"}}
 </body>
 </html>
