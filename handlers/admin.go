@@ -3,10 +3,12 @@ package handlers
 import (
 	"Order-site/errors"
 	"Order-site/render"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type AdminOrderItem struct {
@@ -30,6 +32,7 @@ type AdminOrder struct {
 	RiderName              string
 	RiderPhone             string
 	RiderMapURL            string
+	RiderMapEmbedURL       string
 	RiderLocationAvailable bool
 	RiderLocationUpdated   string
 	DeliveryStatus         string
@@ -130,6 +133,7 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		}
 		if order.RiderLocationAvailable && (riderLat != 0 || riderLon != 0) {
 			order.RiderMapURL = fmt.Sprintf("https://www.openstreetmap.org/?mlat=%.6f&mlon=%.6f#map=16/%.6f/%.6f", riderLat, riderLon, riderLat, riderLon)
+			order.RiderMapEmbedURL = fmt.Sprintf("https://www.openstreetmap.org/export/embed.html?bbox=%.6f%%2C%.6f%%2C%.6f%%2C%.6f&layer=mapnik&marker=%.6f%%2C%.6f", riderLon-.01, riderLat-.01, riderLon+.01, riderLat+.01, riderLat, riderLon)
 		}
 
 		itemRows, err := h.DB.Query(`
@@ -190,4 +194,30 @@ func (h *Handlers) AdminOrders(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not display orders", http.StatusInternalServerError)
 		return
 	}
+}
+
+// AdminRiderLocation returns the latest active rider location for one order.
+// The route is protected by the admin middleware in main.go.
+func (h *Handlers) AdminRiderLocation(w http.ResponseWriter, r *http.Request) {
+	orderID, err := strconv.Atoi(r.PathValue("orderID"))
+	if err != nil || orderID < 1 {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	var lat, lon float64
+	var available bool
+	var updated string
+	err = h.DB.QueryRow(`SELECT COALESCE(rider_latitude,0), COALESCE(rider_longitude,0), COALESCE(rider_sharing_location,FALSE), COALESCE(TO_CHAR(rider_location_updated_at,'DD Mon YYYY, HH24:MI:SS'),'') FROM orders WHERE id=$1 AND delivery_method='delivery'`, orderID).Scan(&lat, &lon, &available, &updated)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	if !available || (lat == 0 && lon == 0) {
+		available = false
+	}
+	w.Header().Set("Cache-Control", "no-store, private")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"available": available, "latitude": lat, "longitude": lon, "updated_at": updated,
+	})
 }

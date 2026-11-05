@@ -1,0 +1,29 @@
+ENIE LIVE RIDER MAP UPDATE
+
+This patch adds a live rider map to the Admin > Orders page.
+It uses the GPS coordinates already stored in the orders table and refreshes each map every 10 seconds.
+
+INSTALL
+1. Back up your current project first.
+2. Extract this ZIP into the ROOT of your ENIE Go project.
+3. Keep the folder structure and allow the six included files to replace the matching files.
+4. Commit and push the changes to the GitHub repository connected to Render.
+5. Wait for Render to finish deploying.
+6. Sign in as an ENIE admin and open /admin/orders.
+7. Assign a rider, open the rider link on the phone, and start location sharing.
+8. The order's map should appear/update automatically (normally within 10 seconds).
+
+FILES REPLACED
+- handlers/admin.go
+- main.go
+- templates/admin-orders.html
+- static/css/pages/admin-orders.css
+- middleware/security.go
+- middleware/security_test.go
+
+NOTES
+- The map is visible only to signed-in admins on the Admin Orders page.
+- The map is embedded from OpenStreetMap; an internet connection is required to load map tiles.
+- The admin page requests the latest location from the Go server every 10 seconds.
+- This update also retains same-site geolocation permission (geolocation=(self)) so rider location sharing continues to work.
+- The Go tests could not be run in this environment because the project requires Go 1.26.0 and the toolchain download was unavailable. Run `go test ./...` in your Codespace or deployment environment before release if possible.

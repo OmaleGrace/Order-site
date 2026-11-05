@@ -57,11 +57,14 @@ func TestSecurityHeaders(t *testing.T) {
 			t.Errorf("missing %s", k)
 		}
 	}
-	if got := w.Header().Get("Permissions-Policy"); !strings.Contains(got, "geolocation=(self)") {
-		t.Errorf("geolocation should be allowed for this site, got %q", got)
-	}
 	if !strings.Contains(w.Header().Get("Content-Security-Policy"), "frame-ancestors 'none'") {
 		t.Error("CSP lacks frame-ancestors")
+	}
+	if !strings.Contains(w.Header().Get("Permissions-Policy"), "geolocation=(self)") {
+		t.Error("geolocation must be allowed for same-origin rider pages")
+	}
+	if !strings.Contains(w.Header().Get("Content-Security-Policy"), "frame-src https://www.openstreetmap.org") {
+		t.Error("CSP must allow the OpenStreetMap embed used by rider maps")
 	}
 	if w.Header().Get("Cache-Control") != "no-store" {
 		t.Error("login page should not be cached")

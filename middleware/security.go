@@ -52,6 +52,7 @@ const (
 		"object-src 'none'; " +
 		"base-uri 'self'; " +
 		"frame-ancestors 'none'; " +
+		"frame-src https://www.openstreetmap.org; " +
 		"form-action 'self' https://checkout.paystack.com https://*.paystack.com"
 
 	// Google AdSense needs to load its script, show ad frames and report back.

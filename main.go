@@ -227,6 +227,7 @@ func main() {
 	mux.HandleFunc("POST /orders/reorder", middleware.Logging(middleware.RequireLogin(db, h.Reorder)))
 	mux.HandleFunc("GET /orders/{orderID}/review", middleware.Logging(middleware.RequireLogin(db, h.ReviewOrder)))
 	mux.HandleFunc("POST /orders/{orderID}/review", middleware.Logging(middleware.RequireLogin(db, h.ReviewOrder)))
+	mux.HandleFunc("GET /admin/orders/{orderID}/rider-location", middleware.Logging(middleware.Admin(db, h.AdminRiderLocation)))
 	mux.HandleFunc(
 		"GET /admin/orders",
 		middleware.Logging(
