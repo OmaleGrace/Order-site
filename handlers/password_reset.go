@@ -5,14 +5,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
+	"Order-site/brand"
 	emailer "Order-site/email"
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/render"
+	"Order-site/safe"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -72,13 +73,20 @@ func (h *Handlers) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			resetLink := fmt.Sprintf("%s/reset-password?token=%s", strings.TrimRight(os.Getenv("APP_BASE_URL"), "/"), token)
+			// A link with no domain is useless in an email, so without a configured site address
+			// nothing is sent (the person still sees the same message below) and the log says why.
+			if base := brand.SiteURL(); base == "" {
+				fmt.Println("Password reset email not sent: set APP_BASE_URL to the site's public address")
+			} else {
+				resetLink := fmt.Sprintf("%s/reset-password?token=%s", base, token)
 
-			go func() {
-				if err := emailer.Send(email, "Reset Your Password", fmt.Sprintf("<h1>Reset your password</h1><p>Click the link below to reset your password. This link expires in 15 minutes.</p><p><a href=\"%s\">Reset Password</a></p>", resetLink)); err != nil {
-					fmt.Println("Password reset email error:", err)
-				}
-			}()
+				go func() {
+					defer safe.Recover("password reset email")
+					if err := emailer.Send(email, "Reset Your Password", fmt.Sprintf("<h1>Reset your password</h1><p>Click the link below to reset your password. This link expires in 15 minutes.</p><p><a href=\"%s\">Reset Password</a></p>", resetLink)); err != nil {
+						fmt.Println("Password reset email error:", err)
+					}
+				}()
+			}
 		}
 
 		fmt.Fprint(w, `

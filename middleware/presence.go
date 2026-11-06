@@ -5,6 +5,8 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"Order-site/safe"
 )
 
 // ActiveWindow is how recently someone must have been active to count as "active now".
@@ -28,6 +30,7 @@ func TouchLastSeen(db *sql.DB, userID int) {
 	}
 	lastTouch.Store(userID, now)
 	go func() {
+		defer safe.Recover("record user activity")
 		if _, err := db.Exec(`UPDATE users SET last_seen_at = NOW() WHERE id = $1 AND NOT is_guest`, userID); err != nil {
 			log.Printf("presence: could not record activity: %v", err)
 		}

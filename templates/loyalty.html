@@ -3,13 +3,13 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Loyalty - {{brandName}}</title>
+    <title>Loyalty | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
     <link rel="stylesheet" href="/static/css/loyalty.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="narrow">
 <header class="account-header">
     <div class="header-inner">
         <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
@@ -20,7 +20,7 @@
 <main class="account-container loyalty-page">
     <section class="loyalty-hero">
         <div>
-            <p class="eyebrow">LaikiHub Rewards · <a href="/referrals">Invite friends, earn points</a></p>
+            <p class="eyebrow">{{brandName}} Rewards · <a href="/referrals">Invite friends, earn points</a></p>
             <h1>Earn points every time you order.</h1>
             <p>Complete orders earn loyalty points automatically. Your progress builds toward higher tiers as you keep ordering.</p>
         </div>
@@ -35,7 +35,7 @@
             <p>{{.NextTierAt}} lifetime points unlocks {{.NextTier}}.</p>
             <div class="tier-progress"><span style="width: {{.Progress}}%"></span></div>
             {{else}}
-            <p>You've reached the highest LaikiHub loyalty tier.</p>
+            <p>You've reached the highest {{brandName}} loyalty tier.</p>
             <div class="tier-progress"><span style="width: 100%"></span></div>
             {{end}}
         </article>
@@ -59,7 +59,7 @@
             {{end}}
         </div>
         {{else}}
-        <div class="account-empty"><span>✨</span><div><h3>Your points journey starts here.</h3><p>Complete your first order to start earning LaikiHub loyalty points.</p></div><a href="/menu" class="account-button">Browse food</a></div>
+        <div class="account-empty"><span>✨</span><div><h3>Your points journey starts here.</h3><p>Complete your first order to start earning {{brandName}} loyalty points.</p></div><a href="/menu" class="account-button">Browse food</a></div>
         {{end}}
     </section>
 
@@ -68,6 +68,7 @@
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/nav-active.js"></script>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 </body>
 </html>

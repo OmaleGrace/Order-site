@@ -3,12 +3,12 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>My group orders - {{brandName}}</title>
+    <title>My group orders | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/pages/group-order.css?v=1">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body data-nm="customer">
+<body data-nm="customer" data-w="medium">
 <main class="go-page">
     {{if .Notice}}<p class="go-notice" role="status">{{.Notice}}</p>{{end}}
     <div class="go-top">
@@ -65,6 +65,7 @@
     {{end}}
     </div>
 </main>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 </body>
 </html>

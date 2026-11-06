@@ -3,10 +3,10 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Order Confirmed - {{brandName}}</title>
+    <title>Order Confirmed | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/order-success.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 <body data-nm="customer">
 <main class="success-page">
@@ -23,6 +23,7 @@
         <a href="/" class="back-link">← Back to Home</a>
     </div>
 </main>
-<div class="success-box"><a href="/help">Help & Support</a></div>{{template "scripts-common"}}
+<div class="success-box"><a href="/help">Help & Support</a></div>{{template "site-footer-slim"}}
+{{template "scripts-common"}}
 </body>
 </html>

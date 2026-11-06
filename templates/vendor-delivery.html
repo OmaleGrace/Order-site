@@ -4,12 +4,12 @@
     {{template "head-common"}}
     <link rel="stylesheet" href="/static/css/base.css">
     {{template "meta-noindex"}}
-<title>Delivery pricing - {{brandName}}</title>
+<title>Delivery pricing | {{brandName}}</title>
 <link rel="stylesheet" href="/static/css/pages/vendor-delivery.css">
 <link rel="stylesheet" href="/static/css/portal-nav.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="medium">
 <header class="vendor-header">
   <a class="vendor-brand" href="/vendor/dashboard"><img src="/static/img/laikihub-mark.svg" alt=""><span>{{.VendorName}}</span></a>
   {{template "vendor-nav" dict "Class" "vendor-nav" "Active" "/vendor/delivery"}}

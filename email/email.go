@@ -2,6 +2,7 @@ package email
 
 import (
 	"Order-site/brand"
+	"Order-site/safe"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -27,6 +28,7 @@ type emailRequest struct {
 }
 
 func Send(toEmail, subject, htmlContent string) error {
+	defer safe.Recover("send email")
 	apiKey := os.Getenv("BREVO_API_KEY")
 	if apiKey == "" {
 		return fmt.Errorf("BREVO_API_KEY not set")

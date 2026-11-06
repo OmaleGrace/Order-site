@@ -15,6 +15,7 @@ import (
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/render"
+	"Order-site/safe"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -255,6 +256,7 @@ func (h *Handlers) Signup(w http.ResponseWriter, r *http.Request) {
 		})
 
 		go func() {
+			defer safe.Recover("signup background task")
 			if err := emailer.Send(email, "Welcome to "+brand.Name()+"!", fmt.Sprintf("<h1>Welcome, %s!</h1><p>Your account has been created successfully. Start browsing our menu and place your first order today.</p>", html.EscapeString(firstName))); err != nil {
 				fmt.Println("Welcome email error:", err)
 			}

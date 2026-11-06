@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Delivery task | ENIE</title>
+    <title>Delivery task | {{brandName}}</title>
     <style>
         :root{color-scheme:light;--green:#17633f;--green-dark:#104b30;--mint:#eaf5ee;--ink:#172b22;--muted:#64756b;--line:#e1eae4;--surface:#fff;--bg:#f4f7f4;--amber:#fff6df}
         *{box-sizing:border-box}
@@ -43,11 +43,11 @@
         .footer{text-align:center;color:var(--muted);font-size:.8rem;padding:22px 8px}
         @media(max-width:520px){.page{padding:16px 12px 36px}.hero{padding:22px 19px;border-radius:18px}.card{padding:18px 16px}.card-head{display:block}.badge{display:inline-block;margin-top:10px}.steps{gap:5px}}
     </style>
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="narrow">
 <main class="page">
-    <div class="brand"><span class="brand-mark">E</span><span>ENIE DELIVERY</span></div>
+    <div class="brand"><img class="brand-mark" src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"><span>{{brandName}} Delivery</span></div>
     <header class="hero">
         <div class="eyebrow">Rider task</div>
         <h1>Hello, {{.RiderName}}</h1>
@@ -86,7 +86,7 @@
         <div class="secure-note" id="secure-note">This page needs a secure HTTPS connection for browser location access. Ask the store/admin to provide the secure HTTPS rider link. Changing the device permission alone cannot enable location on an insecure page.</div>
         <div class="privacy"><strong>Your privacy:</strong> location is sent only while sharing is active on this page. You can stop sharing at any time. Keep this private link to yourself.</div>
     </section>
-    <p class="footer">ENIE • Delivery updates</p>
+    <p class="footer">{{brandName}} • Delivery updates</p>
 </main>
 <script>
 (function () {
@@ -162,7 +162,7 @@
         } catch (error) {
             stopBrowserWatch();
             setSharing(false);
-            message(result, "Could not send your location to ENIE. Please check your connection and reopen the rider link.", "error");
+            message(result, "Could not send your location to {{brandName}}. Please check your connection and reopen the rider link.", "error");
         } finally {
             sending = false;
         }

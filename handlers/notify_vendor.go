@@ -10,6 +10,7 @@ import (
 
 	"Order-site/brand"
 	"Order-site/email"
+	"Order-site/safe"
 	"Order-site/sms"
 )
 
@@ -17,6 +18,7 @@ import (
 // email, and (when Termii is set up) a text message. Slow vendors cause cancelled orders, so the
 // alert goes out the moment payment is confirmed. Failures are logged and never block the customer.
 func notifyVendorNewOrder(db *sql.DB, orderID int) {
+	defer safe.Recover("vendor new-order alert")
 	var ownerID int
 	var shop, ownerEmail, shopPhone, method, address, customer string
 	var total int

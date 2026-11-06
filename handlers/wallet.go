@@ -23,6 +23,7 @@ import (
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/render"
+	"Order-site/safe"
 )
 
 // The wallet is a ledger: every credit or debit is a row in wallet_transactions and the
@@ -568,6 +569,7 @@ func (h *Handlers) payOrderWithWallet(orderID, userID int) error {
 		log.Printf("wallet order %d: clear cart failed: %v", orderID, err)
 	}
 	go func(id int) {
+		defer safe.Recover("wallet order notifications")
 		if err := sendOrderPlacedEmail(h.DB, id); err != nil {
 			log.Printf("wallet order %d: confirmation email failed: %v", id, err)
 		}

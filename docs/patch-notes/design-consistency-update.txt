@@ -1,0 +1,20 @@
+ENIE design consistency update
+
+What changed:
+- The shared UI stylesheet now loads after each page's own stylesheets, so
+  common typography, portal headers, cards, tables, status labels and controls
+  are applied consistently.
+- Added the missing base stylesheet to vendor statements, admin settlements,
+  vendor delivery and rider portal.
+- No Go handlers, database schema, routes, business rules or JavaScript
+  behaviour were changed.
+
+Installation:
+1. Back up your current project.
+2. Extract this ZIP into the project root and allow matching files to be replaced.
+3. Run: go test ./...
+4. Commit and push the changes, then allow Render to deploy.
+5. Hard-refresh the browser (Ctrl+Shift+R) after deployment.
+
+This is a full project ZIP based on the uploaded archive. It does not include
+changes made in your repository after that archive was created.

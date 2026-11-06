@@ -65,7 +65,9 @@
     };
     function ensureLinks(nav, kind) {
         (ENSURE[kind] || []).forEach(function (p) {
-            var has = [].some.call(nav.querySelectorAll('a[href]'), function (a) { return norm(a.getAttribute('href')) === p[0]; });
+            // "Group orders" can already be there as /group-orders (the customer's list), which also covers /group-order.
+            var wanted = p[0] === '/group-order' ? ['/group-order', '/group-orders'] : [p[0]];
+            var has = [].some.call(nav.querySelectorAll('a[href]'), function (a) { return wanted.indexOf(norm(a.getAttribute('href'))) !== -1; });
             if (has) return;
             var a = document.createElement('a');
             a.href = p[0] === '/feedback' && location.pathname !== '/feedback' ? '/feedback?from=' + encodeURIComponent(location.pathname) : p[0];

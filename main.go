@@ -14,6 +14,7 @@ import (
 	"Order-site/errors"
 	"Order-site/handlers"
 	"Order-site/middleware"
+	"Order-site/safe"
 
 	"github.com/joho/godotenv"
 )
@@ -51,7 +52,11 @@ func main() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		for range ticker.C {
-			h.ActivateScheduledOrders()
+			// One bad tick must not stop scheduled orders for good, or crash the site.
+			func() {
+				defer safe.Recover("scheduled order activation")
+				h.ActivateScheduledOrders()
+			}()
 		}
 	}()
 
@@ -327,6 +332,9 @@ func main() {
 		if err := srv.ListenAndServe(); err != nil &&
 			err != http.ErrServerClosed {
 			fmt.Println("Server error:", err)
+			// Without this the program would wait for a shutdown signal while serving nothing
+			// (for example when the port is already taken), and the host would never restart it.
+			os.Exit(1)
 		}
 	}()
 

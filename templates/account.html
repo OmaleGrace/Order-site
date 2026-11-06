@@ -3,12 +3,14 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>My Account - {{brandName}}</title>
+    <title>My Account | {{brandName}}</title>
+    <meta name="description" content="Manage your {{brandName}} profile, orders, preferences and marketplace activity.">
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/pages/account-v3.css?v=1">
 </head>
-<body>
+<body data-w="wide">
 <header class="account-header">
     <div class="header-inner">
         <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
@@ -16,120 +18,132 @@
     </div>
 </header>
 
-<main class="account-container account-dashboard">
+<main class="account-container account-dashboard account-v3">
     {{if .Updated}}
-    <div class="update-banner" role="status">✓ Profile updated successfully.</div>
+    <div class="update-banner account-success" role="status"><span aria-hidden="true">✓</span> Your account details have been updated.</div>
     {{end}}
 
-    <section class="account-welcome">
-        <div class="account-heading">
-            {{if .ProfilePicture}}
-            <img src="{{.ProfilePicture}}" alt="Profile picture" class="profile-image zoomable">
-            {{else}}
-            <div class="profile-icon" aria-hidden="true">👤</div>
-            {{end}}
-            <div>
-                <h1>Welcome back{{if .Name}}, {{.Name}}{{end}}.</h1>
-                <p>Track orders, reorder favourites and manage your details.</p>
+    <section class="account-hero-v3">
+        <div class="account-hero-main">
+            <div class="account-avatar-wrap">
+                {{if .ProfilePicture}}
+                <img src="{{.ProfilePicture}}" alt="Profile picture" class="account-avatar-v3 zoomable">
+                {{else}}
+                <div class="account-avatar-v3 account-avatar-fallback" aria-hidden="true">{{if .Name}}{{printf "%.1s" .Name}}{{else}}👤{{end}}</div>
+                {{end}}
+                <span class="account-avatar-status" title="Signed in"></span>
+            </div>
+            <div class="account-hero-copy">
+                <p class="account-kicker">YOUR ACCOUNT</p>
+                <h1>Hello{{if .Name}}, {{.Name}}{{end}}</h1>
+                <p>Manage your profile, orders, preferences and marketplace activity from one place.</p>
+                <div class="account-member-meta"><span>✦</span> Member since {{.MemberSince}}</div>
             </div>
         </div>
-        <a href="/account/edit" class="account-button primary account-edit-btn">✏️ Edit profile</a>
+        <div class="account-hero-actions">
+            <a href="/account/edit" class="account-v3-primary">Edit profile <span aria-hidden="true">↗</span></a>
+            <a href="/orders" class="account-v3-secondary">View orders</a>
+        </div>
     </section>
 
     {{if gt .ActiveOrders 0}}
-    <a href="/orders" class="active-order-banner">
-        <span class="active-order-icon">●</span>
-        <span><strong>{{.ActiveOrders}} active order{{if ne .ActiveOrders 1}}s{{end}}</strong><small>View the latest status and tracking updates.</small></span>
-        <b aria-hidden="true">→</b>
+    <a href="/orders" class="account-live-order">
+        <span class="live-order-dot" aria-hidden="true"></span>
+        <span class="live-order-copy"><strong>{{.ActiveOrders}} active order{{if ne .ActiveOrders 1}}s{{end}}</strong><small>Your order is in progress. Check its latest status and updates.</small></span>
+        <span class="live-order-arrow" aria-hidden="true">→</span>
     </a>
     {{end}}
 
-    <section class="account-stats" aria-label="Account summary">
-        <div class="account-stat-card"><span class="account-stat-icon">📦</span><div><strong>{{.OrderCount}}</strong><small>Orders</small></div></div>
-        <div class="account-stat-card"><span class="account-stat-icon">❤️</span><div><strong>{{.FavoriteCount}}</strong><small>Favourites</small></div></div>
-        <div class="account-stat-card"><span class="account-stat-icon">₦</span><div><strong>₦{{naira .TotalSpentKobo}}</strong><small>Total spent</small></div></div>
-        <div class="account-stat-card"><span class="account-stat-icon">🌱</span><div><strong>{{.MemberSince}}</strong><small>Member since</small></div></div>
+    <section class="account-metrics-v3" aria-label="Your account at a glance">
+        <article class="account-metric-v3"><span class="metric-symbol">▣</span><div><strong>{{.OrderCount}}</strong><small>Orders placed</small></div></article>
+        <article class="account-metric-v3"><span class="metric-symbol">♡</span><div><strong>{{.FavoriteCount}}</strong><small>Saved favourites</small></div></article>
+        <article class="account-metric-v3"><span class="metric-symbol">₦</span><div><strong>₦{{naira .TotalSpentKobo}}</strong><small>Total spent</small></div></article>
     </section>
 
-    <section class="account-section">
-        <div class="section-title-row"><div><h2>Privacy &amp; messaging</h2><p>Choose whether other people can see when you are active.</p></div></div>
-        <form method="post" action="/account/presence" class="account-presence-setting">
-            <label><input type="checkbox" name="active_status" value="on" {{if .ActiveStatusEnabled}}checked{{end}}> Show my active status in messages</label>
-            <button type="submit" class="account-button">Save setting</button>
-        </form>
-    </section>
-
-    <section class="account-section">
-        <div class="section-title-row">
-            <div><h2>Shortcuts</h2></div>
-        </div>
-        <div class="account-feature-grid">
-            <a href="/loyalty" class="account-feature-card"><span class="feature-icon">✨</span><span><strong>Loyalty rewards</strong><small>See your points, tier and rewards progress.</small></span><b>→</b></a>
-            <a href="/favorites" class="account-feature-card"><span class="feature-icon">❤️</span><span><strong>Favourites</strong><small>Quickly find meals you've saved.</small></span><b>→</b></a>
-            <a href="/messages" class="account-feature-card"><span class="feature-icon">💬</span><span><strong>Messages</strong><small>Keep up with shop and support conversations.</small></span><b>→</b></a>
-            <a href="/account/edit" class="account-feature-card"><span class="feature-icon">⚙️</span><span><strong>Profile & phone</strong><small>Update your profile details and phone verification.</small></span><b>→</b></a>
-        </div>
-    </section>
-
-    <section class="account-section recent-section">
-        <div class="section-title-row">
-            <div><h2>Recent orders</h2></div>
-            {{if .RecentOrders}}<a href="/orders" class="section-link">View all →</a>{{end}}
-        </div>
-
-        {{if .RecentOrders}}
-        <div class="recent-orders-list">
-            {{range .RecentOrders}}
-            <div class="recent-order-card">
-                <a href="/orders" class="recent-order-main">
-                    <div class="recent-order-icon">{{if eq .DeliveryMethod "delivery"}}🚚{{else}}🏪{{end}}</div>
-                    <div><strong>{{.Reference}}</strong><small>{{.CreatedAt}} · {{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}</small></div>
-                </a>
-                <div class="recent-order-side"><span class="order-status-pill status-{{.Status}}">{{.Status}}</span><strong>₦{{naira .TotalKobo}}</strong></div>
-                {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
-                <form action="/orders/reorder" method="post" class="account-reorder-form">
-                    <input type="hidden" name="order_id" value="{{.ID}}">
-                    <button type="submit" class="account-reorder-btn">↻ Order again</button>
-                </form>
+    <div class="account-layout-v3">
+        <div class="account-primary-column">
+            <section class="account-panel-v3">
+                <div class="account-panel-heading">
+                    <div><p class="account-kicker">KEEP IT CLOSE</p><h2>Your activity</h2><p>Pick up where you left off.</p></div>
+                    <a href="/orders" class="account-text-link">All orders <span aria-hidden="true">→</span></a>
+                </div>
+                {{if .RecentOrders}}
+                <div class="account-recent-list">
+                    {{range .RecentOrders}}
+                    <article class="account-recent-item">
+                        <a href="/orders" class="account-recent-main">
+                            <span class="account-recent-icon">{{if eq .DeliveryMethod "delivery"}}🚚{{else}}🥡{{end}}</span>
+                            <span class="account-recent-label"><strong>{{.Reference}}</strong><small>{{.CreatedAt}} · {{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}</small></span>
+                        </a>
+                        <span class="account-recent-total"><strong>₦{{naira .TotalKobo}}</strong><small class="order-status-pill status-{{.Status}}">{{.Status}}</small></span>
+                        {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
+                        <form action="/orders/reorder" method="post" class="account-reorder-form">
+                            <input type="hidden" name="order_id" value="{{.ID}}">
+                            <button type="submit" class="account-reorder-btn">↻ Order again</button>
+                        </form>
+                        {{end}}
+                    </article>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="account-empty-v3"><span aria-hidden="true">🍲</span><div><strong>Your next favourite meal is waiting.</strong><p>Your recent orders will appear here after you place an order.</p></div><a href="/menu" class="account-v3-primary">Explore menu</a></div>
                 {{end}}
-            </div>
-            {{end}}
-        </div>
-        {{else}}
-        <div class="account-empty">
-            <span>🍽️</span><div><h3>Your order history starts here.</h3><p>Place your first order and you'll be able to find it here whenever you need it again.</p></div>
-            <a href="/menu" class="account-button">Browse food</a>
-        </div>
-        {{end}}
-    </section>
+            </section>
 
-    <section class="account-section profile-summary">
-        <div class="section-title-row"><div><p class="eyebrow">Account details</p><h2>Your information</h2></div><a href="/account/edit" class="section-link">Edit →</a></div>
-        <div class="account-info">
-            <div class="info-row"><span class="label">Name</span><span class="value">{{.Name}}</span></div>
-            <div class="info-row"><span class="label">Email</span><span class="value">{{.Email}}</span></div>
-            {{if .Phone}}<div class="info-row"><span class="label">Phone</span><span class="value">{{.Phone}}</span></div>{{end}}
-            <div class="info-row"><span class="label">Sign-in method</span><span class="value provider">{{if eq .AuthProvider "google"}}Google{{else if eq .AuthProvider "facebook"}}Facebook{{else}}Email & Password{{end}}</span></div>
+            <section class="account-panel-v3">
+                <div class="account-panel-heading"><div><p class="account-kicker">QUICK ACCESS</p><h2>Manage your marketplace</h2><p>Useful places, all within easy reach.</p></div></div>
+                <div class="account-tools-grid">
+                    <a href="/favorites" class="account-tool-card"><span class="tool-icon">♡</span><span><strong>Favourites</strong><small>Your saved meals and shops</small></span><b>→</b></a>
+                    <a href="/wallet" class="account-tool-card"><span class="tool-icon">₦</span><span><strong>Wallet</strong><small>Manage your wallet activity</small></span><b>→</b></a>
+                    <a href="/loyalty" class="account-tool-card"><span class="tool-icon">✦</span><span><strong>Rewards</strong><small>Points and rewards progress</small></span><b>→</b></a>
+                    <a href="/group-orders" class="account-tool-card"><span class="tool-icon">♧</span><span><strong>Group orders</strong><small>Orders shared with others</small></span><b>→</b></a>
+                    <a href="/messages" class="account-tool-card"><span class="tool-icon">✉</span><span><strong>Messages</strong><small>Shop and support conversations</small></span><b>→</b></a>
+                    <a href="/help" class="account-tool-card"><span class="tool-icon">?</span><span><strong>Help centre</strong><small>Get help with your account</small></span><b>→</b></a>
+                </div>
+            </section>
         </div>
-    </section>
+
+        <aside class="account-side-column">
+            <section class="account-panel-v3 account-profile-panel">
+                <div class="account-panel-heading compact"><div><p class="account-kicker">PERSONAL DETAILS</p><h2>Your profile</h2></div><a href="/account/edit" class="account-text-link">Edit</a></div>
+                <div class="account-profile-detail"><span>Name</span><strong>{{.Name}}</strong></div>
+                <div class="account-profile-detail"><span>Email address</span><strong>{{.Email}}</strong></div>
+                <div class="account-profile-detail"><span>Phone number</span><strong>{{if .Phone}}{{.Phone}}{{else}}Not added{{end}}</strong></div>
+                <div class="account-profile-detail"><span>Sign-in method</span><strong class="account-provider-badge">{{if eq .AuthProvider "google"}}Google{{else if eq .AuthProvider "facebook"}}Facebook{{else}}Email &amp; password{{end}}</strong></div>
+                <a href="/account/edit" class="account-profile-edit-link">Review personal details <span aria-hidden="true">→</span></a>
+            </section>
+
+            <section class="account-panel-v3 account-preferences-panel">
+                <div class="account-panel-heading compact"><div><p class="account-kicker">YOUR PRIVACY</p><h2>Activity status</h2><p>Control whether people in your chats can see when you're active.</p></div></div>
+                <form method="post" action="/account/presence" class="account-presence-v3">
+                    <label for="active-status-setting"><span><strong>Show active status</strong><small>Visible to chat participants</small></span><input id="active-status-setting" type="checkbox" name="active_status" value="on" {{if .ActiveStatusEnabled}}checked{{end}}></label>
+                    <button type="submit" class="account-v3-secondary full-width">Save preference</button>
+                </form>
+            </section>
+
+            <section class="account-panel-v3 account-security-panel">
+                <span class="security-icon" aria-hidden="true">⌑</span>
+                <div><h2>Account security</h2><p>Keep your sign-in details private. You can request a password reset whenever you need one.</p></div>
+                <a href="/forgot-password" class="account-text-link">Reset password <span aria-hidden="true">→</span></a>
+            </section>
+        </aside>
+    </div>
 
     {{if .IsVendor}}
-    <section class="account-section vendor-account-section">
-        <div class="section-title-row"><div><p class="eyebrow">You sell on LaikiHub</p><h2>Shop management</h2></div><a href="/vendor/dashboard" class="section-link">Dashboard →</a></div>
-        <div class="account-feature-grid vendor-feature-grid">
-            <a href="/vendor/dashboard" class="account-feature-card feature-primary"><span class="feature-icon">📊</span><span><strong>Vendor dashboard</strong><small>See sales, active orders and shop health.</small></span><b>→</b></a>
-            <a href="/vendor/orders" class="account-feature-card"><span class="feature-icon">🧾</span><span><strong>Shop orders</strong><small>Manage incoming and active orders.</small></span><b>→</b></a>
-            <a href="/vendor/menu" class="account-feature-card"><span class="feature-icon">🍽️</span><span><strong>Shop menu</strong><small>Manage dishes and prices.</small></span><b>→</b></a>
-            <a href="/vendor/profile" class="account-feature-card"><span class="feature-icon">🏪</span><span><strong>Shop profile</strong><small>Update shop details and payout account.</small></span><b>→</b></a>
-            <a href="/vendor/ai" class="account-feature-card"><span class="feature-icon">✨</span><span><strong>AI Writing Studio</strong><small>Create stronger menu and marketing copy.</small></span><b>→</b></a>
-            <a href="/vendor/billing" class="account-feature-card"><span class="feature-icon">💳</span><span><strong>Billing</strong><small>Review vendor billing and payment information.</small></span><b>→</b></a>
+    <section class="account-panel-v3 account-vendor-panel">
+        <div class="account-panel-heading"><div><p class="account-kicker">SELL ON {{brandName}}</p><h2>Your shop workspace</h2><p>Manage your shop without leaving your account.</p></div><a href="/vendor/dashboard" class="account-text-link">Open dashboard →</a></div>
+        <div class="account-tools-grid vendor-tools-grid">
+            <a href="/vendor/dashboard" class="account-tool-card"><span class="tool-icon">▦</span><span><strong>Vendor dashboard</strong><small>Sales and shop overview</small></span><b>→</b></a>
+            <a href="/vendor/orders" class="account-tool-card"><span class="tool-icon">▤</span><span><strong>Shop orders</strong><small>Manage incoming orders</small></span><b>→</b></a>
+            <a href="/vendor/menu" class="account-tool-card"><span class="tool-icon">🍽</span><span><strong>Shop menu</strong><small>Dishes and prices</small></span><b>→</b></a>
+            <a href="/vendor/profile" class="account-tool-card"><span class="tool-icon">⌂</span><span><strong>Shop profile</strong><small>Shop and payout details</small></span><b>→</b></a>
+            <a href="/vendor/ai" class="account-tool-card"><span class="tool-icon">✧</span><span><strong>AI Writing Studio</strong><small>Menu and marketing copy</small></span><b>→</b></a>
+            <a href="/vendor/billing" class="account-tool-card"><span class="tool-icon">▣</span><span><strong>Billing</strong><small>Billing and payments</small></span><b>→</b></a>
         </div>
     </section>
     {{end}}
 
-    <div class="account-bottom-actions">
-        <a href="/logout" class="logout-button">Log out</a>
-    </div>
+    <div class="account-logout-row"><p>Finished for now?</p><a href="/logout" class="account-logout-v3">Log out securely</a></div>
 </main>
 
 {{template "site-footer"}}

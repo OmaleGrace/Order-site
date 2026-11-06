@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"Order-site/errors"
+	"Order-site/safe"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -74,6 +75,7 @@ func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func(id int, newStatus string) {
+		defer safe.Recover("admin status notification")
 		if err := sendOrderStatusEmail(h.DB, id, newStatus); err != nil {
 			fmt.Println("Order status email error:", err)
 		}

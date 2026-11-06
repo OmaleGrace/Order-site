@@ -15,6 +15,8 @@
 {{/* Keeps private pages (accounts, vendor and admin tools) out of search results. */}}
 {{define "meta-noindex"}}<meta name="robots" content="noindex, nofollow">{{end}}
 
+{{/* Slim footer for sign-in, error and confirmation pages: {{template "site-footer-slim"}} */}}
+{{define "site-footer-slim"}}<footer class="ui-footer-slim"><a href="/help">Help</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><span>&copy; 2026 {{brandName}}</span></footer>{{end}}
 {{/* Shared footer for customer pages: {{template "site-footer"}} */}}
 {{define "site-footer"}}<footer class="ui-footer">
     <div class="ui-footer-inner">

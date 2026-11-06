@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"Order-site/errors"
+	"Order-site/safe"
 )
 
 func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,7 @@ func (h *Handlers) VendorUpdateOrderStatus(w http.ResponseWriter, r *http.Reques
 	}
 
 	go func(id int, newStatus string) {
+		defer safe.Recover("vendor status notification")
 		if err := sendOrderStatusEmail(h.DB, id, newStatus); err != nil {
 			fmt.Println("Order status email error:", err)
 		}

@@ -3,13 +3,13 @@
     <head>
         {{template "head-common"}}
         {{template "meta-noindex"}}
-        <title>Users - {{brandName}}</title>
+        <title>Users | {{brandName}}</title>
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/pages/admin-users.css">
         <link rel="stylesheet" href="/static/css/portal-nav.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+        <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-    <body>
+    <body data-w="wide">
         <header class="top"><a class="brand" href="/admin"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}<small>Platform administration</small></a>{{template "admin-nav" dict "Class" "" "Active" "/admin/users"}}
         </header>
         <main>

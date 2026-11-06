@@ -3,26 +3,26 @@
 <head>
     {{template "head-common"}}
     {{template "meta-desc" "Create a free account to order meals from local food shops for pickup or delivery."}}
-    <title>Sign Up - {{brandName}}</title>
+    <title>Sign Up | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/auth.css">
     <link rel="stylesheet" href="/static/css/pages/signup.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 
 <body data-nm="public">
     <main class="auth-main">
-        <section class="auth-story" aria-label="Join LaikiHub">
-            <a href="/" class="auth-brand"><img src="/static/img/laikihub-mark.svg" alt="LaikiHub logo"><span>{{brandName}}</span></a>
+        <section class="auth-story" aria-label="Join {{brandName}}">
+            <a href="/" class="auth-brand"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}} logo"><span>{{brandName}}</span></a>
             <p class="auth-eyebrow">Good food. Great moments.</p>
             <h2>Make room for something delicious.</h2>
-            <p>Join LaikiHub to explore local food vendors, save the dishes you love, and make ordering feel effortless.</p>
+            <p>Join {{brandName}} to explore local food vendors, save the dishes you love, and make ordering feel effortless.</p>
             <div class="auth-perks"><span>Discover nearby vendors</span><span>Save favourite dishes</span><span>Track your orders</span></div>
         </section>
         <div class="auth-wrapper">
-            <div class="auth-mobile-brand"><img src="/static/img/laikihub-mark.svg" alt="LaikiHub logo"><span>{{brandName}}</span></div>
+            <div class="auth-mobile-brand"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}} logo"><span>{{brandName}}</span></div>
             <p class="auth-kicker">Join the table</p>
-            <h1>Create your LaikiHub account.</h1>
+            <h1>Create your {{brandName}} account.</h1>
             <p class="auth-subtext">Tell us a little about yourself so we can give you a better experience.</p>
             <div class="form-banner" id="form-banner" role="status" aria-live="polite" hidden></div>
 
@@ -141,7 +141,7 @@
                 <p class="field-error" id="terms-error" aria-live="polite"></p>
 
                 <button type="submit">Create Account</button>
-                <p class="signup-submit-note">Your account details are protected and used to provide the LaikiHub service.</p>
+                <p class="signup-submit-note">Your account details are protected and used to provide the {{brandName}} service.</p>
             </form>
 
             <div class="auth-divider"><span>or</span></div>
@@ -156,6 +156,7 @@
     <script src="/static/js/pages/signup-2.js"></script>
 
     <script src="/static/js/pages/signup-3.js"></script>
+{{template "site-footer-slim"}}
 {{template "scripts-common"}}
 </body>
 </html>

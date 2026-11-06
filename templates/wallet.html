@@ -3,13 +3,13 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>My wallet - {{brandName}}</title>
+    <title>My wallet | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/pages/feedback.css">
     <link rel="stylesheet" href="/static/css/pages/wallet.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body data-nm="customer">
+<body data-nm="customer" data-w="narrow">
 <header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
 <main class="fb-page">
     {{if .Notice}}<p class="wl-notice" role="status">{{.Notice}}</p>{{end}}
@@ -71,6 +71,7 @@
     <p><a href="/account">← Back to my account</a> · <a href="/referrals">Invite friends</a></p>
 </main>
 <script src="/static/js/pages/wallet.js"></script>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 </body>
 </html>

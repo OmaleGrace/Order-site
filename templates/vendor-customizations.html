@@ -3,17 +3,17 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Customize {{.ItemName}} - {{brandName}}</title>
+    <title>Customize {{.ItemName}} | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/vendor-customizations.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="wide">
 <header class="custom-header">
     <div class="custom-header-inner">
-        <a class="custom-brand" href="/vendor/dashboard" aria-label="LaikiHub Vendor Dashboard">
+        <a class="custom-brand" href="/vendor/dashboard" aria-label="{{brandName}} Vendor Dashboard">
             <span class="custom-brand-mark">E</span>
-            <span>LaikiHub</span>
+            <span>{{brandName}}</span>
         </a>
         {{template "vendor-nav" dict "Class" "custom-nav" "Active" "/vendor/menu"}}
     </div>

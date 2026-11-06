@@ -1,3 +1,4 @@
+
 LaikiHub — Food Marketplace Platform
 
 LaikiHub is a Go and PostgreSQL-powered food marketplace connecting customers with local food vendors in Nigeria. It features secure customer accounts (with Google Sign-In), custom vendor shops, dynamic menu management, cart processing, Paystack payments, Brevo transactional emails, and admin control panels.

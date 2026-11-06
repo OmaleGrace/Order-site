@@ -13,6 +13,7 @@ import (
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/render"
+	"Order-site/safe"
 )
 
 type HomeDish struct {
@@ -99,6 +100,7 @@ func (h *Handlers) loadHomePublicData() homePublicData {
 	wg.Add(3)
 
 	go func() {
+		defer safe.Recover("home background task")
 		defer wg.Done()
 		popular = queryDishes(h.DB, `
             SELECT m.id, m.name, m.price_kobo, COALESCE(m.image_url, '')
@@ -118,6 +120,7 @@ func (h *Handlers) loadHomePublicData() homePublicData {
 	}()
 
 	go func() {
+		defer safe.Recover("home background task")
 		defer wg.Done()
 		rows, err := h.DB.Query(`
             SELECT DISTINCT m.category
@@ -144,6 +147,7 @@ func (h *Handlers) loadHomePublicData() homePublicData {
 	}()
 
 	go func() {
+		defer safe.Recover("home background task")
 		defer wg.Done()
 		shops = h.topShops(8)
 	}()

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     {{template "head-common"}}
-    <title>{{.Title}} - {{brandName}}</title>
+    <title>{{.Title}} | {{brandName}}</title>
     <meta name="robots" content="noindex">
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/error.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 
 <body data-nm="public">
@@ -29,7 +29,8 @@
             {{if .CanRetry}}<p class="error-help">Still stuck? <a href="/contact">Contact us</a> and mention error {{.Code}}.</p>{{end}}
         </div>
     </main>
-    <script src="/static/js/error-page.js" defer></script>
-    <script src="/static/js/nav-menu.js?v=1" defer></script>
+    {{template "site-footer-slim"}}
+<script src="/static/js/error-page.js" defer></script>
+    <script src="/static/js/nav-menu.js?v=3" defer></script>
 </body>
 </html>

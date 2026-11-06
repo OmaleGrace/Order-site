@@ -6,9 +6,9 @@
         <title>Help & Support | {{brandName}}</title>
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/pages/help.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+        <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-    <body>
+    <body data-w="wide">
         <header class="top"><a href="/"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}}</a><nav class="nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help" class="active active-link" aria-current="page">Help &amp; Support</a><a href="/logout">Logout</a></nav>
         </header>
         <main class="wrap">
@@ -18,7 +18,7 @@
             <section class="hero">
                 <div class="card">
                     <h1>Help & Support</h1>
-                    <p class="muted">Need help with an order, payment, delivery, coupon, loyalty points, or your account? Send LaikiHub a support request and track the response here.</p>
+                    <p class="muted">Need help with an order, payment, delivery, coupon, loyalty points, or your account? Send {{brandName}} a support request and track the response here.</p>
                 </div>
                 <div class="card"><strong>Quick help</strong><p class="muted">For an order issue, include the order number so support can investigate the exact order.</p><a class="button" href="/orders">View my orders</a></div>
             </section>
@@ -31,7 +31,7 @@
                     </details>
                     <details>
                         <summary>How do loyalty points work?</summary>
-                        <p class="muted">Completed food spend earns points according to LaikiHub's loyalty rules. During checkout, eligible points can reduce the food amount; delivery fees are separate.</p>
+                        <p class="muted">Completed food spend earns points according to {{brandName}}'s loyalty rules. During checkout, eligible points can reduce the food amount; delivery fees are separate.</p>
                     </details>
                     <details>
                         <summary>Can I change a scheduled order?</summary>
@@ -81,7 +81,7 @@
                             </p>
                             <p>{{.Message}}</p>
                             {{if .AdminReply}}
-                                <div class="reply"><strong>LaikiHub support</strong><p>{{.AdminReply}}</p>
+                                <div class="reply"><strong>{{brandName}} support</strong><p>{{.AdminReply}}</p>
                                 </div>
                             {{end}}
                         </article>

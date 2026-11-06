@@ -34,8 +34,15 @@ func AdSensePublisherID() string {
 }
 
 // SiteURL returns the configured public base URL without a trailing slash.
+// APP_BASE_URL is the preferred name. PUBLIC_BASE_URL and SITE_URL are older names that are
+// still accepted, so setting any one of them is enough for every feature (emails, links, SMS).
 func SiteURL() string {
-	return strings.TrimRight(strings.TrimSpace(os.Getenv("APP_BASE_URL")), "/")
+	for _, name := range []string{"APP_BASE_URL", "PUBLIC_BASE_URL", "SITE_URL"} {
+		if v := strings.TrimRight(strings.TrimSpace(os.Getenv(name)), "/"); v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 // Funcs makes shared site configuration available inside templates.

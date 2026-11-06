@@ -4,19 +4,19 @@
     {{template "head-common"}}
     <link rel="stylesheet" href="/static/css/base.css">
     {{template "meta-noindex"}}
-<title>Settlements - {{brandName}}</title>
+<title>Settlements | {{brandName}}</title>
 <link rel="stylesheet" href="/static/css/pages/admin-settlements.css">
 <link rel="stylesheet" href="/static/css/portal-nav.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="wide">
 <header class="site-header">
   <a class="brand" href="/admin"><img src="/static/img/laikihub-mark.svg" alt=""><span>{{brandName}} Admin</span></a>
   {{template "admin-nav" dict "Class" "site-nav" "Active" "/admin/settlements"}}
 </header>
 <main>
   <h1>Settlements</h1>
-  <p class="lead">What each shop was paid by customers, what LaikiHub kept, and what is still owed to shops.</p>
+  <p class="lead">What each shop was paid by customers, what {{brandName}} kept, and what is still owed to shops.</p>
   {{if .Notice}}<div class="notice" role="alert">{{.Notice}}</div>{{end}}
   <div class="chips" role="group" aria-label="Choose a period">{{range .Choices}}<a href="/admin/settlements?period={{.Key}}"{{if .Active}} class="on" aria-current="true"{{end}}>{{.Label}}</a>{{end}}</div>
   <form class="range" method="get" action="/admin/settlements">
@@ -34,7 +34,7 @@
     <h2 id="se-title">{{.Period.Label}}</h2>
     <p class="muted">Generated {{.Generated}} (Nigerian time). "Owed now" is each shop's balance across all time, not just this period.</p>
     {{if .Rows}}<div class="scroll"><table><thead><tr>
-      <th>Shop</th><th>Payout account</th><th class="num">Orders</th><th class="num">Customers paid</th><th class="num">Delivery</th><th class="num">LaikiHub commission</th><th class="num">Shop earnings</th><th class="num">Paid out</th><th class="num">Owed now</th>
+      <th>Shop</th><th>Payout account</th><th class="num">Orders</th><th class="num">Customers paid</th><th class="num">Delivery</th><th class="num">{{brandName}} commission</th><th class="num">Shop earnings</th><th class="num">Paid out</th><th class="num">Owed now</th>
     </tr></thead><tbody>
     {{range .Rows}}<tr><td>{{.Name}}</td><td>{{if .PayoutVerified}}<span class="pill ok">Verified</span>{{else}}<span class="pill no">Not verified</span>{{end}}</td>
       <td class="num">{{.Orders}}</td><td class="num">{{money .CollectedKobo}}</td><td class="num">{{money .DeliveryKobo}}</td><td class="num">{{money .CommissionKobo}}</td>

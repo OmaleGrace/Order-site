@@ -11,10 +11,10 @@ import (
 	"log"
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
+	"Order-site/brand"
 	"Order-site/errors"
 	"Order-site/middleware"
 	"Order-site/render"
@@ -35,7 +35,7 @@ func riderTokenHash(token string) string {
 }
 
 func riderAccessURL(r *http.Request, token string) string {
-	base := strings.TrimSpace(os.Getenv("SITE_URL"))
+	base := brand.SiteURL()
 	if base == "" {
 		scheme := "http"
 		if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {

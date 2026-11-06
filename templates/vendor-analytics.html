@@ -3,13 +3,13 @@
     <head>
         {{template "head-common"}}
         {{template "meta-noindex"}}
-        <title>Analytics - {{.VendorName}}</title>
+        <title>Analytics | {{.VendorName}}</title>
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/pages/vendor-analytics.css">
         <link rel="stylesheet" href="/static/css/portal-nav.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+        <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-    <body>
+    <body data-w="wide">
         <header class="vendor-header">
             <div class="vendor-brand"><a href="/vendor/dashboard">🍴 {{.VendorName}}</a><span>Vendor Analytics</span></div>
             {{template "vendor-nav" dict "Class" "vendor-nav" "Active" "/vendor/analytics"}}

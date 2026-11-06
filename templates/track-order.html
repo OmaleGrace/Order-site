@@ -5,12 +5,12 @@
     {{template "meta-noindex"}}
     <meta name="referrer" content="no-referrer">
     {{if not .Finished}}<meta http-equiv="refresh" content="60">{{end}}
-    <title>Track your order - {{brandName}}</title>
+    <title>Track your order | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/pages/track-order.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body data-nm="public">
+<body data-nm="public" data-w="medium">
 <header class="track-header">
     <a href="/" class="track-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="36" height="36"> <span>{{brandName}}</span></a>
     <a href="/menu" class="track-header-link">Order more food</a>
@@ -70,6 +70,7 @@
 
     <p class="track-signup">Want to see all your orders in one place and earn points? <a href="/signup">Create an account</a>.</p>
 </main>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 <script>
 (() => {

@@ -128,6 +128,12 @@ func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
 			allLive = false
 		}
 	}
+	if err := vendorRows.Err(); err != nil {
+		vendorRows.Close()
+		fmt.Println("Vendor check read error:", err)
+		errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+		return
+	}
 	vendorRows.Close()
 
 	if len(vendorIDs) != 1 {

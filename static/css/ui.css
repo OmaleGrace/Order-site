@@ -110,3 +110,149 @@ html body .check-filter { display: flex; align-items: center; gap: 8px; font-wei
 .shop-offer{display:flex;gap:8px;align-items:center;background:#fff7e0;border:1px dashed #d9a400;border-radius:10px;padding:8px 12px;font-size:.9rem}
 .shop-offers-note{margin:0;font-size:.8rem;color:#667}
 .tag-rating{background:#fff4d6;color:#7a5600}
+
+/* ---------- Touch scrolling for the installed app (all pages) ----------
+   1. Card rails scroll sideways with a finger and never trap an up/down swipe. A box with
+      overflow-x:auto but no overflow-y computes to overflow-y:auto, so any card that moves a few
+      pixels makes the rail a second vertical scroller that swallows the swipe. Lock it to x only.
+   2. Phones keep :hover after a tap, so a tapped card stays lifted and pushes the rail past its box.
+      On touch screens the lift is switched off.
+   3. Drag-from-a-link/picture is disabled so a swipe that starts on a card is always a scroll. */
+html body :is(.shop-row, .cat-row, .h-row, .banner-track, .shop-category-nav, .mn-top .category-filters) {
+  max-width: 100%; min-width: 0;
+  overflow-x: auto !important; overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+}
+html body :is(.shop-row, .cat-row, .h-row, .banner-track) :is(a, img) { -webkit-user-drag: none; user-drag: none; }
+html body :is(.shop-card-compact, .cat-tile, .h-card) { flex-shrink: 0; }
+html body :is(.table, .table-wrap, .scroll) { -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; overscroll-behavior-x: contain; }
+/* Pop-ups that scroll: keep the swipe inside the pop-up and clear the phone's home bar. */
+html body .customization-modal { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+html body .messages { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+@media (hover: none) {
+  html body :is(.h-card, .shop-card, .shop-card-compact, .food-card, .account-feature-card, .quick-link, .information-links a, .active-order-banner):hover { transform: none; }
+  html body :is(.h-card, .food-card):hover :is(.h-image, .food-image) img { transform: none; }
+  html body .cat-tile:hover .cat-circle { transform: none; }
+}
+
+/* =====================================================================================
+   Consistency layer (v4)
+   One page background, one title scale, one set of buttons and form controls, three page
+   widths, and the same footer treatment. Page stylesheets keep their own layouts; this layer
+   only sets the things that should look the same on every page.
+   ===================================================================================== */
+:root {
+  --page-bg: #fbfaf6;
+  --ui-line-strong: #d5ded4;
+  --ui-green-dark: #0f3a26;
+  --ui-danger: #b3261e;
+  --ui-h1: clamp(1.6rem, 1.15rem + 1.5vw, 2.1rem);
+  --ui-radius: 10px;
+  --ui-radius-card: 16px;
+  --w-narrow: 720px;
+  --w-medium: 960px;
+  --w-wide: 1200px;
+}
+html { -webkit-text-size-adjust: 100%; }
+html body { background-color: var(--page-bg); line-height: 1.55; }
+html body img { max-width: 100%; }
+
+/* ---------- Page widths: narrow forms, medium lists, wide dashboards ---------- */
+html body[data-w] > main, html body[data-w] > .wrap {
+  width: 100%; margin-inline: auto;
+  padding: 28px clamp(16px, 4vw, 32px) 64px;
+}
+html body[data-w="narrow"] > main, html body[data-w="narrow"] > .wrap { max-width: var(--w-narrow); }
+html body[data-w="medium"] > main, html body[data-w="medium"] > .wrap { max-width: var(--w-medium); }
+html body[data-w="wide"]   > main, html body[data-w="wide"]   > .wrap { max-width: var(--w-wide); }
+
+/* ---------- Page titles: one size, one colour, one rhythm ---------- */
+html body :is(main, .wrap) h1:not(.hero-title),
+html body :is(.menu-intro, .mn-title, .go-hero, .track-hero, .agreement) h1 {
+  font-size: var(--ui-h1); line-height: 1.15; letter-spacing: -.03em; font-weight: 800; color: var(--ui-green); margin: 0 0 6px;
+}
+html body :is(main, .wrap, body) :is(.loyalty-hero, .public-hero, header.hero, .hero-dark) h1:not(.hero-title) { color: #fff; }
+html body :is(.admin-header, .vendor-header) h1 { font-size: 1.15rem; letter-spacing: -.02em; margin: 0; color: var(--ui-green); }
+html body :is(main, .wrap) :is(.hero, .heading, .page-heading, .account-heading, .cart-title, .go-top, .orders-hero, .notifications-hero) > div > p,
+html body :is(main, .wrap) :is(.hero, .heading, .page-heading) p.muted { color: var(--ui-muted); font-size: 1rem; margin: 0; }
+html body main :is(h2, h3) { letter-spacing: -.02em; }
+html body main > section > h2, html body main > h2, html body .wrap > section > h2 { font-size: 1.25rem; }
+
+/* ---------- Buttons ---------- */
+html body :is(.btn, .button, .btn-primary, .fb-button, .go-btn, .account-button, .checkout-btn, .pay-btn, .save-btn, .submit-btn, .primary-action, .review-btn, .send-code-btn, .ai-button, .primary):not(.secondary, .ghost, .danger, .link-btn, .btn-secondary, .btn-outline, .add-cart-btn, .google-btn) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border: 1px solid var(--ui-green); border-radius: var(--ui-radius);
+  background: var(--ui-green); color: #fff; font: inherit; font-size: 1rem; font-weight: 700; line-height: 1.2; text-decoration: none; cursor: pointer;
+  box-shadow: none; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+html body :is(.btn, .button, .btn-primary, .fb-button, .go-btn, .account-button, .checkout-btn, .pay-btn, .save-btn, .submit-btn, .primary-action, .review-btn, .send-code-btn, .ai-button, .primary):not(.secondary, .ghost, .danger, .link-btn, .btn-secondary, .btn-outline, .add-cart-btn, .google-btn):hover {
+  background: var(--ui-green-dark); border-color: var(--ui-green-dark); transform: none;
+}
+html body :is(a, button):is(.secondary, .ghost) {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px;
+  border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius); background: #fff; color: var(--ui-green);
+  font: inherit; font-size: 1rem; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: none;
+}
+html body :is(a, button):is(.secondary, .ghost):hover { border-color: var(--ui-green); background: var(--ui-green-soft); }
+html body :is(a, button).danger {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 18px;
+  border: 1px solid #e6bcb8; border-radius: var(--ui-radius); background: #fff; color: var(--ui-danger);
+  font: inherit; font-size: 1rem; font-weight: 700; text-decoration: none; cursor: pointer; box-shadow: none;
+}
+html body :is(a, button).danger:hover { background: var(--ui-danger); border-color: var(--ui-danger); color: #fff; }
+/* Buttons inside table rows stay compact */
+html body :is(td, th) :is(.btn, .button, .secondary, .ghost, .danger, .primary) { min-height: 34px; padding: 0 12px; font-size: .88rem; }
+html body :is(button, .btn, .button)[disabled], html body :is(button, .btn, .button)[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Form controls ---------- */
+html body :is(input:not([type=checkbox], [type=radio], [type=submit], [type=button], [type=file], [type=range], [type=hidden], [type=search]), select, textarea):not([class*="qty"], [class*="nm-"]) {
+  border: 1px solid var(--ui-line-strong); border-radius: var(--ui-radius); background-color: #fff; color: var(--ui-ink);
+}
+html body :is(main, form) :is(input:not([type=checkbox], [type=radio], [type=submit], [type=button], [type=file], [type=range], [type=hidden], [type=search]), select):not([class*="qty"], [class*="nm-"]) { min-height: 44px; }
+html body :not(.mn-top) > :is(input:not([type=checkbox], [type=radio], [type=submit], [type=button], [type=file], [type=range], [type=hidden], [type=search]), select, textarea):not([class*="qty"]) { font-size: max(1rem, 16px); }
+html body label { font-weight: 650; }
+html body ::placeholder { color: #8a978f; opacity: 1; }
+html body :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid rgba(23,74,50,.35); outline-offset: 2px; }
+html body :is(input, select, textarea):focus-visible { outline: none; }
+
+/* ---------- Cards ---------- */
+html body :is(.card, .panel, .fb-card, .account-card, .review-card) { border-radius: var(--ui-radius-card); }
+
+/* ---------- Links inside running text ---------- */
+html body main :is(p, li, .muted, .hint) a:not([class]) { color: var(--ui-green); text-decoration: underline; text-underline-offset: 2px; }
+html body main :is(p, li, .muted, .hint) a:not([class]):hover { color: var(--ui-green-dark); }
+
+/* ---------- Slim footer (sign-in, error and confirmation pages) ---------- */
+.ui-footer-slim { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; padding: 18px 16px 26px; color: var(--ui-muted); font-size: .85rem; }
+.ui-footer-slim a { color: var(--ui-muted); text-decoration: none; }
+.ui-footer-slim a:hover { color: var(--ui-green); text-decoration: underline; }
+/* A footer should sit at the bottom of short pages instead of floating mid-screen. Only on the
+   pages that have a set width (their content already fills the row, so the flex layout is safe). */
+html body[data-w]:has(> .ui-footer) { min-height: 100vh; display: flex; flex-direction: column; }
+html body[data-w] > .ui-footer { margin-top: auto; }
+
+@media (max-width: 640px) {
+  html body :is(.btn, .button, .secondary, .ghost, .danger) { min-height: 46px; }
+  html body[data-w] > main, html body[data-w] > .wrap { padding-top: 20px; padding-bottom: 48px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body *, html body *::before, html body *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+html body.ai-page { background: var(--page-bg); }
+
+/* Links on dark hero banners keep the banner's text colour */
+html body :is(main, .wrap, body) :is(.loyalty-hero, .public-hero, header.hero, .hero-dark) a:not([class]) { color: inherit; text-decoration: underline; }
+
+/* Footer on phones: the long "Company" list flows in two columns instead of one tall stack */
+@media (max-width: 760px) {
+  .ui-footer { padding-top: 26px; }
+  .ui-footer-inner { gap: 20px 16px; }
+  .ui-footer-inner > :last-child { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+  .ui-footer-inner > :last-child strong { grid-column: 1 / -1; }
+}
+
+/* Redundant brand bars: the global nav already shows the brand */
+html body[data-w] > header.fb-header,
+html body[data-w] > header.track-header{display:none}

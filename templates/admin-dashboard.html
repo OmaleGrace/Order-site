@@ -3,19 +3,19 @@
     <head>
         {{template "head-common"}}
         {{template "meta-noindex"}}
-        <title>Admin dashboard - {{brandName}}</title>
+        <title>Admin dashboard | {{brandName}}</title>
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/pages/admin-dashboard.css">
         <link rel="stylesheet" href="/static/css/portal-nav.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+        <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-    <body>
+    <body data-w="wide">
         <header class="top"><a class="brand" href="/admin">🍴 {{brandName}}<small>Platform administration</small></a>{{template "admin-nav" dict "Class" "nav" "Active" "/admin"}}
         </header>
         <main class="wrap">
             <section class="hero">
                 <div>
-                    <p class="muted">LaikiHub control center</p>
+                    <p class="muted">{{brandName}} control center</p>
                     <h1>Platform overview</h1>
                     <p class="muted">Monitor customers, shops, orders, support and delivery operations from one place.</p>
                 </div>

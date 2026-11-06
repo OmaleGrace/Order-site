@@ -3,13 +3,13 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Checkout - {{brandName}}</title>
+    <title>Checkout | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
     <link rel="stylesheet" href="/static/css/pages/checkout-details.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="medium">
 <header class="cart-header">
     <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
@@ -115,7 +115,7 @@
                             <label for="delivery_address">House address <span>*</span></label>
                             <textarea name="delivery_address" id="delivery_address" maxlength="250" placeholder="House number, street and a useful landmark" autocomplete="street-address"></textarea>
                             <p class="field-error" id="address-error" aria-live="polite"></p>
-                            <small>Only the shop and authorized LaikiHub staff need this information to fulfill your order.</small>
+                            <small>Only the shop and authorized {{brandName}} staff need this information to fulfill your order.</small>
                         </div>
                     </div>
 
@@ -146,7 +146,7 @@
                 <section class="checkout-card loyalty-checkout-card" aria-labelledby="loyalty-heading">
                     <div class="card-heading">
                         <span class="number-badge">✨</span>
-                        <div><h2 id="loyalty-heading">Use LaikiHub points</h2><p>1 point = ₦1. You can use points on food, not delivery.</p></div>
+                        <div><h2 id="loyalty-heading">Use {{brandName}} points</h2><p>1 point = ₦1. You can use points on food, not delivery.</p></div>
                     </div>
                     {{if gt .LoyaltyPoints 0}}
                     <div class="loyalty-checkout-control">
@@ -192,16 +192,16 @@
                 <div class="summary-line"><span>Food subtotal</span><strong>₦{{naira .SubtotalKobo}}</strong></div>
                 <div class="summary-line" id="coupon-discount-row" hidden><span>Promo discount</span><strong id="coupon-discount-line">-₦0</strong></div>
                 <div class="summary-line" id="loyalty-discount-row" hidden><span>Loyalty discount</span><strong id="loyalty-discount-line">-₦0</strong></div>
-                <p class="summary-note" id="commission-transparency-note" hidden>LaikiHub's commission is calculated from the food amount actually paid after your loyalty discount.</p>
+                <p class="summary-note" id="commission-transparency-note" hidden>{{brandName}}'s commission is calculated from the food amount actually paid after your loyalty discount.</p>
                 <div class="summary-line"><span>Delivery</span><strong id="fee-line">₦0</strong></div>
                 {{if .ServiceFeeKobo}}<div class="summary-line"><span>Service fee</span><strong>₦{{naira .ServiceFeeKobo}}</strong></div>{{end}}
                 <div class="summary-divider"></div>
                 <div class="total-row"><span>Total</span><strong id="total-line">₦{{naira .SubtotalKobo}}</strong></div>
                 <p class="summary-note" id="payment-note">You'll be securely redirected to Paystack to complete payment.</p>
                 {{if .WalletKobo}}<label class="wallet-opt" style="display:block;margin:10px 0"><input type="checkbox" name="use_wallet" value="1" id="use-wallet"> Pay from my wallet (balance ₦{{naira .WalletKobo}}). It only works if your balance covers the whole order. <a href="/wallet">Top up</a></label>{{end}}
-                {{if .HasPass}}<p class="summary-note">Your LaikiHub Pass is active: no service fee.</p>{{end}}
+                {{if .HasPass}}<p class="summary-note">Your {{brandName}} Pass is active: no service fee.</p>{{end}}
                 <button type="submit" class="checkout-btn" id="pay-btn" disabled>Continue to secure payment <span aria-hidden="true">→</span></button>
-                <div class="secure-note"><span aria-hidden="true">🔒</span><span>Secure payment powered by Paystack. LaikiHub never sees your card PIN.</span></div>
+                <div class="secure-note"><span aria-hidden="true">🔒</span><span>Secure payment powered by Paystack. {{brandName}} never sees your card PIN.</span></div>
             </aside>
         </div>
     </form>
@@ -403,6 +403,7 @@
 </script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 </body>
 </html>

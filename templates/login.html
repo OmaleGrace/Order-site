@@ -3,26 +3,26 @@
 <head>
     {{template "head-common"}}
     {{template "meta-desc" "Log in to your account to order food from local shops for pickup or delivery."}}
-    <title>Login - {{brandName}}</title>
+    <title>Login | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/auth.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 
 <body data-nm="public">
     <main class="auth-main">
-        <section class="auth-story" aria-label="Welcome to LaikiHub">
-            <a href="/" class="auth-brand"><img src="/static/img/laikihub-mark.svg" alt="LaikiHub logo"><span>{{brandName}}</span></a>
+        <section class="auth-story" aria-label="Welcome to {{brandName}}">
+            <a href="/" class="auth-brand"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}} logo"><span>{{brandName}}</span></a>
             <p class="auth-eyebrow">Good food. Great moments.</p>
             <h2>Your next favourite meal is just a few clicks away.</h2>
             <p>Discover local kitchens, order the meals you love, and keep every order in one easy place.</p>
             <div class="auth-perks"><span>Fresh local kitchens</span><span>Simple ordering</span><span>One account, all your favourites</span></div>
         </section>
         <div class="auth-wrapper">
-            <div class="auth-mobile-brand"><img src="/static/img/laikihub-mark.svg" alt="LaikiHub logo"><span>{{brandName}}</span></div>
+            <div class="auth-mobile-brand"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}} logo"><span>{{brandName}}</span></div>
             <p class="auth-kicker">Welcome back</p>
             <h1>Good to see you again.</h1>
-            <p class="auth-subtext">Log in to continue your LaikiHub experience.</p>
+            <p class="auth-subtext">Log in to continue your {{brandName}} experience.</p>
 
             <form action="/login" method="post" novalidate>
                 <div class="form-group">
@@ -72,6 +72,7 @@
     </main>
 
     <script src="/static/js/pages/login.js"></script>
+{{template "site-footer-slim"}}
 {{template "scripts-common"}}
 </body>
 </html>

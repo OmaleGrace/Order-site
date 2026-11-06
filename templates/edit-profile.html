@@ -3,109 +3,94 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Edit Profile - {{brandName}}</title>
+    <title>Edit Profile | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/pages/account-v3.css?v=1">
 </head>
-
-<body>
-
+<body data-w="narrow">
 <header class="account-header">
     <div class="header-inner">
-
         <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
-
         <nav aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
-
     </div>
 </header>
 
-<main class="account-container">
-
-    <section class="account-card">
-
-        <h1>Edit Profile</h1>
-
-        <form
-            action="/account/edit"
-            method="POST"
-            enctype="multipart/form-data"
-            class="profile-form"
-        >
-
-            <div class="profile-preview">
-                {{if .ProfilePicture}}
-                <img src="{{.ProfilePicture}}" alt="Profile picture" class="profile-image">
-                {{else}}
-                <div class="profile-placeholder">👤</div>
-                {{end}}
-            </div>
-
-            <label for="profile_picture">Profile picture</label>
-            <input
-                type="file"
-                id="profile_picture"
-                name="profile_picture"
-                accept="image/jpeg,image/png,image/webp"
-            >
-            <small>JPG, PNG or WEBP. Maximum size: 5MB.</small>
-
-            <label for="name">Username</label>
-            <input
-                type="text"
-                id="name"
-                name="name"
-                value="{{.Name}}"
-                maxlength="100"
-                required
-            >
-
-            <label for="email">Email</label>
-            <input
-                type="email"
-                id="email"
-                value="{{.Email}}"
-                disabled
-            >
-            <small>Your email address cannot be changed here.</small>
-
-            <div class="profile-buttons">
-                <button type="submit">Save Changes</button>
-                <a href="/account">Cancel</a>
-            </div>
-
-        </form>
-
-        <div class="phone-section">
-
-            <label for="current-phone">Phone Number</label>
-            <input
-                type="tel"
-                id="current-phone"
-                value="{{.Phone}}"
-                disabled
-                placeholder="No phone number set"
-            >
-            <small>To add or change your phone number, verify a new one below.</small>
-
-            <form action="/account/phone/send-otp" method="post" class="phone-form">
-                <input
-                    type="tel"
-                    name="phone"
-                    maxlength="20"
-                    placeholder="e.g. 08012345678"
-                    required
-                >
-                <button type="submit" class="send-code-btn">Send Code</button>
-            </form>
-
-        </div>
-
+<main class="account-container account-edit-v3">
+    <div class="account-edit-topline"><a href="/account" class="account-back-link">← Back to account</a><span>ACCOUNT SETTINGS</span></div>
+    <section class="account-edit-intro">
+        <div><p class="account-kicker">MAKE IT YOURS</p><h1>Edit your profile</h1><p>Keep your details up to date so your orders and account information stay connected.</p></div>
+        <div class="edit-intro-mark" aria-hidden="true">✦</div>
     </section>
 
+    <div class="account-edit-layout">
+        <aside class="account-edit-aside">
+            <section class="account-edit-identity">
+                <div class="edit-avatar-frame">
+                    {{if .ProfilePicture}}
+                    <img src="{{.ProfilePicture}}" alt="Current profile picture" id="profile-preview" class="edit-avatar-image">
+                    {{else}}
+                    <div class="edit-avatar-image edit-avatar-empty" id="profile-placeholder" aria-hidden="true">👤</div>
+                    <img src="" alt="Profile picture preview" id="profile-preview" class="edit-avatar-image" hidden>
+                    {{end}}
+                </div>
+                <strong>{{.Name}}</strong>
+                <span>{{.Email}}</span>
+                <small>Personal account</small>
+            </section>
+            <nav class="account-edit-nav" aria-label="Profile settings sections">
+                <a href="#personal-details" class="selected"><span>◉</span> Personal details</a>
+                <a href="#phone-verification"><span>▣</span> Phone verification</a>
+                <a href="#account-security"><span>⌑</span> Account security</a>
+            </nav>
+            <div class="account-edit-aside-note"><span aria-hidden="true">🔒</span><p>Your profile details are private. Never share your password or verification codes with anyone.</p></div>
+        </aside>
+
+        <div class="account-edit-content">
+            <section class="account-edit-card" id="personal-details">
+                <div class="edit-card-heading"><span class="edit-section-icon">◉</span><div><h2>Personal details</h2><p>Update the name and picture shown on your account.</p></div></div>
+                <form action="/account/edit" method="POST" enctype="multipart/form-data" class="profile-form account-profile-form-v3">
+                    <div class="edit-photo-control">
+                        <div class="edit-photo-preview">
+                            {{if .ProfilePicture}}
+                            <img src="{{.ProfilePicture}}" alt="Profile picture" id="profile-preview-large" class="edit-avatar-image">
+                            {{else}}
+                            <div class="edit-avatar-image edit-avatar-empty" id="profile-placeholder-large" aria-hidden="true">👤</div>
+                            <img src="" alt="Profile picture preview" id="profile-preview-large" class="edit-avatar-image" hidden>
+                            {{end}}
+                        </div>
+                        <div class="edit-photo-copy"><strong>Profile photo</strong><p>Choose a clear photo so people can recognise your account.</p><label class="edit-upload-button" for="profile_picture">Choose photo</label><input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp" hidden><small>JPG, PNG or WEBP · Maximum 5MB</small><span id="profile-file-name" class="edit-file-name" aria-live="polite">No new photo selected</span></div>
+                    </div>
+
+                    <div class="edit-field-grid">
+                        <div class="edit-field"><label for="name">Full name</label><input type="text" id="name" name="name" value="{{.Name}}" maxlength="100" autocomplete="name" required><small>This is the name shown on your account.</small></div>
+                        <div class="edit-field"><label for="email">Email address</label><input type="email" id="email" value="{{.Email}}" autocomplete="email" readonly aria-describedby="email-help"><small id="email-help">Your email address is used to sign in and cannot be changed here.</small></div>
+                    </div>
+                    <div class="edit-form-actions"><a href="/account" class="account-v3-secondary">Cancel</a><button type="submit" class="account-v3-primary">Save profile changes <span aria-hidden="true">→</span></button></div>
+                </form>
+            </section>
+
+            <section class="account-edit-card" id="phone-verification">
+                <div class="edit-card-heading"><span class="edit-section-icon">▣</span><div><h2>Phone verification</h2><p>Add or update the phone number linked to your account.</p></div></div>
+                <div class="edit-current-phone"><span>Current phone number</span><strong>{{if .Phone}}{{.Phone}}{{else}}No phone number added{{end}}</strong><small>A verified number can help shops and delivery teams contact you about an order.</small></div>
+                <form action="/account/phone/send-otp" method="post" class="account-phone-form-v3">
+                    <div class="edit-field"><label for="new-phone">New phone number</label><input type="tel" id="new-phone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="e.g. 08012345678" required><small>Enter a Nigerian mobile number, such as 08012345678 or +2348012345678.</small></div>
+                    <button type="submit" class="account-v3-primary">Send verification code <span aria-hidden="true">→</span></button>
+                </form>
+            </section>
+
+            <section class="account-edit-card account-security-edit" id="account-security">
+                <div class="edit-card-heading"><span class="edit-section-icon">⌑</span><div><h2>Account security</h2><p>Take a moment to keep your sign-in details safe.</p></div></div>
+                <div class="edit-security-row"><span class="edit-security-symbol">✉</span><div><strong>Password reset</strong><p>Request a password reset link using your account email address.</p></div><a href="/forgot-password" class="account-v3-secondary">Reset password</a></div>
+                <div class="edit-security-tip"><strong>Security reminder</strong><p>LaikiHub staff will never ask you to send your password, one-time code or full payment details in a message.</p></div>
+            </section>
+        </div>
+    </div>
 </main>
 
+{{template "site-footer"}}
+<script src="/static/js/pages/account-edit.js?v=1"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/nav-active.js"></script>

@@ -5,6 +5,8 @@ import (
 	"log"
 	"strconv"
 	"time"
+
+	"Order-site/safe"
 )
 
 // scheduledOrderBounds returns the allowed scheduling window.
@@ -60,6 +62,7 @@ func (h *Handlers) ActivateScheduledOrders() {
 			log.Printf("scheduled orders: notification failed for order %d: %v", orderID, err)
 		}
 		go func(id int) {
+			defer safe.Recover("scheduled order email")
 			if err := sendOrderPlacedEmail(h.DB, id); err != nil {
 				log.Printf("scheduled orders: email failed for order %d: %v", id, err)
 			}

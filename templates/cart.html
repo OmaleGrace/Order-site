@@ -3,12 +3,12 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Your Cart - {{brandName}}</title>
+    <title>Your Cart | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/cart.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-<body>
+<body data-w="medium">
 <header class="cart-header">
     <div class="brand">
         <a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
@@ -92,7 +92,7 @@
 
             <div class="cart-reassurance">
                 <span>✓</span>
-                <div><strong>One shop per order</strong><p>LaikiHub keeps each order with one vendor so delivery and fulfillment stay simple.</p></div>
+                <div><strong>One shop per order</strong><p>{{brandName}} keeps each order with one vendor so delivery and fulfillment stay simple.</p></div>
             </div>
         </section>
 
@@ -124,6 +124,7 @@
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/nav-active.js"></script>
+{{template "site-footer"}}
 {{template "scripts-common"}}
 </body>
 </html>

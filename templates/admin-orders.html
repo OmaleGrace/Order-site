@@ -3,14 +3,14 @@
     <head>
         {{template "head-common"}}
         {{template "meta-noindex"}}
-        <title>Admin Orders - {{brandName}}</title>
+        <title>Admin Orders | {{brandName}}</title>
         <link rel="stylesheet" href="/static/css/base.css">
         <link rel="stylesheet" href="/static/css/admin-orders.css">
         <link rel="stylesheet" href="/static/css/pages/admin-orders.css">
         <link rel="stylesheet" href="/static/css/portal-nav.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=2">
+        <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
-    <body>
+    <body data-w="medium">
         <header class="admin-header">
             <div class="brand"><a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a><span>Admin Dashboard</span></div>
             {{template "admin-nav" dict "Class" "" "Active" "/admin/orders"}}
@@ -72,7 +72,7 @@
                                     <div><span>Loyalty points</span><strong>−₦{{naira .LoyaltyDiscountKobo}}</strong></div>
                                 {{end}}
                                 <div><span>Food paid</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
-                                <div><span>LaikiHub commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div>
+                                <div><span>{{brandName}} commission</span><strong>−₦{{naira .CommissionKobo}}</strong></div>
                                 <div class="strong"><span>Vendor earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
                                 <div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>
                                 <div class="strong"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>

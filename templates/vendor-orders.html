@@ -3,14 +3,14 @@
 <head>
     {{template "head-common"}}
     {{template "meta-noindex"}}
-    <title>Orders - {{.VendorName}}</title>
+    <title>Orders | {{.VendorName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/admin-orders.css">
     <link rel="stylesheet" href="/static/css/pages/vendor-orders.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=2">
+<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 
-<body>
+<body data-w="medium">
 
 <header class="admin-header">
     <div class="brand">
@@ -133,7 +133,7 @@
                     {{if .CouponDiscountKobo}}<div><span>Coupon{{if .CouponCode}} ({{.CouponCode}}){{end}}</span><strong>-₦{{naira .CouponDiscountKobo}}</strong></div>{{end}}
                     {{if .LoyaltyDiscountKobo}}<div><span>Loyalty points</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
                     <div><span>Customer paid for food</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
-                    <div><span>LaikiHub commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
+                    <div><span>{{brandName}} commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
                     <div><span>Vendor food earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
                     {{if .DeliveryFeeKobo}}<div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>{{end}}
                     <div class="settlement-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>

@@ -40,11 +40,12 @@
         timer = setInterval(function () { go((current + 1) % slides.length); }, 5000);
     }
 
+    // Passive, so the browser never waits on this script before it starts scrolling the banner.
     ['touchstart', 'mouseenter'].forEach(function (ev) {
-        track.addEventListener(ev, function () { clearInterval(timer); });
+        track.addEventListener(ev, function () { clearInterval(timer); }, { passive: true });
     });
-    ['touchend', 'mouseleave'].forEach(function (ev) {
-        track.addEventListener(ev, restart);
+    ['touchend', 'touchcancel', 'mouseleave'].forEach(function (ev) {
+        track.addEventListener(ev, restart, { passive: true });
     });
 
     setActive(0);

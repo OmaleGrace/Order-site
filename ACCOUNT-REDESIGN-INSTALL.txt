@@ -1,0 +1,35 @@
+ENIE / LaikiHub account and profile redesign
+
+This is a full project archive based on the latest ZIP supplied for this task.
+
+Updated:
+- templates/account.html
+- templates/edit-profile.html
+- static/css/pages/account-v3.css (new)
+- static/js/pages/account-edit.js (new)
+
+Account page:
+- Reorganized the welcome/profile hero, account metrics, recent orders, quick links,
+  personal details, privacy preference, password-reset entry point, vendor tools,
+  and logout action.
+- Preserves existing links and existing server-backed actions.
+
+Edit profile:
+- New responsive two-column settings layout with personal details, phone verification,
+  and account security sections.
+- Keeps existing POST endpoints and field names.
+- Adds a local image preview and client-side image type/size feedback.
+- Email remains read-only because the existing backend does not support changing it.
+- Password reset links to the existing forgot-password flow; no new password endpoint
+  or account deletion feature was invented.
+
+Install:
+1. Back up the current working project.
+2. Extract this ZIP into the project root and replace matching files.
+3. Check `git status` and review the four changed/new files.
+4. Run `go test ./...` in Codespaces.
+5. Commit and push to GitHub; wait for Render to deploy.
+6. Hard-refresh the app/browser (Ctrl+Shift+R) and test account, edit profile,
+   phone OTP, presence preference, recent orders and vendor account links.
+
+No Go handlers, routes, database tables, or business rules were changed.

@@ -15,6 +15,7 @@ import (
 
 	"Order-site/cart"
 	"Order-site/errors"
+	"Order-site/safe"
 )
 
 var paymentHTTPClient = &http.Client{Timeout: 20 * time.Second}
@@ -206,15 +207,14 @@ func (h *Handlers) PaymentCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Clear the user's cart
-	err = cart.ClearCart(h.DB, userID)
-	if err != nil {
+	// Clear the user's cart. The payment is already saved, so a problem here is only logged:
+	// failing now would show a paid customer an error page and skip the emails and shop alert below.
+	if err := cart.ClearCart(h.DB, userID); err != nil {
 		fmt.Println("Clear cart error:", err)
-		errors.Render(w, "Could not clear cart", http.StatusInternalServerError)
-		return
 	}
 
 	go func(id int) {
+		defer safe.Recover("order confirmation (callback)")
 		if err := sendOrderPlacedEmail(h.DB, id); err != nil {
 			fmt.Println("Order confirmation email error:", err)
 		}
@@ -409,13 +409,14 @@ func (h *Handlers) PaymentWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The payment is already saved. If clearing the cart fails, only log it: answering with an error
+	// would make Paystack retry, and the retry sees the order as paid and skips the emails and shop alert.
 	if err := cart.ClearCart(h.DB, userID); err != nil {
 		fmt.Println("Webhook clear cart error:", err)
-		errors.Render(w, "Could not clear cart", http.StatusInternalServerError)
-		return
 	}
 
 	go func(id int) {
+		defer safe.Recover("order confirmation (webhook)")
 		if err := sendOrderPlacedEmail(h.DB, id); err != nil {
 			fmt.Println("Order confirmation email error:", err)
 		}

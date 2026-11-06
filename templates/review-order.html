@@ -3,8 +3,8 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
 <title>Review Order | {{brandName}}</title><link rel="stylesheet" href="/static/css/base.css">
-<link rel="stylesheet" href="/static/css/pages/review-order.css">    <link rel="stylesheet" href="/static/css/ui.css?v=2">
-</head><body data-nm="customer">
+<link rel="stylesheet" href="/static/css/pages/review-order.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+</head><body data-nm="customer" data-w="narrow">
 <main class="review-wrap"><div class="review-card">
 <p class="eyebrow">Verified purchase review</p><h1>How was your order?</h1><p class="muted">Order {{.Reference}} from <strong>{{.VendorName}}</strong></p>
 {{if .Error}}<div class="error" role="alert">{{.Error}}</div>{{end}}
@@ -14,5 +14,6 @@
 {{if .Items}}<h2>Rate your dishes</h2>{{range .Items}}{{$item := .}}<div class="item"><div class="item-title">{{$item.Name}}</div><div class="rating" aria-label="Rating for {{$item.Name}}">{{range $i := (slice 5 4 3 2 1)}}<input id="item-{{$item.MenuItemID}}-{{$i}}" type="radio" name="item_rating_{{$item.MenuItemID}}" value="{{$i}}"><label for="item-{{$item.MenuItemID}}-{{$i}}" title="{{$i}} stars">★</label>{{end}}</div></div>{{end}}{{end}}
 <div class="review-prompt"><strong>Write a review</strong><span>Share a few words about the food, service, delivery, or anything customers should know.</span></div><label for="comment"><strong>Your review</strong></label><textarea id="comment" name="comment" maxlength="1000" placeholder="What did you enjoy? Was anything especially good or disappointing?"></textarea>
 <label for="review-photo"><strong>Add a food photo (optional)</strong></label><input id="review-photo" type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif"><small>JPG, PNG, WebP or GIF · max 3 MB</small><div class="actions"><button type="submit">Submit review</button><a class="back" href="/orders">Not now</a></div>
-</form></div></main>{{template "scripts-common"}}
+</form></div></main>{{template "site-footer"}}
+{{template "scripts-common"}}
 </body></html>
