@@ -6,94 +6,133 @@
     <title>Edit Profile | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=2">
     <link rel="stylesheet" href="/static/css/ui.css?v=5">
-    <link rel="stylesheet" href="/static/css/pages/account-v3.css?v=1">
 </head>
-<body data-w="narrow">
+
+<body data-w="medium">
+
 <header class="account-header">
     <div class="header-inner">
+
         <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+
         <nav aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+
     </div>
 </header>
 
-<main class="account-container account-edit-v3">
-    <div class="account-edit-topline"><a href="/account" class="account-back-link">← Back to account</a><span>ACCOUNT SETTINGS</span></div>
-    <section class="account-edit-intro">
-        <div><p class="account-kicker">MAKE IT YOURS</p><h1>Edit your profile</h1><p>Keep your details up to date so your orders and account information stay connected.</p></div>
-        <div class="edit-intro-mark" aria-hidden="true">✦</div>
-    </section>
+<main class="ap-page ap-page-edit">
+    <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="/account">My account</a><span aria-hidden="true">/</span><span>Edit profile</span></nav>
+    <h1 class="ap-title">Account settings</h1>
+    {{if .Notice}}<div class="ap-alert ap-alert-ok" role="status">{{.Notice}}</div>{{end}}
+    {{if .Error}}<div class="ap-alert ap-alert-err" role="alert">{{.Error}}</div>{{end}}
 
-    <div class="account-edit-layout">
-        <aside class="account-edit-aside">
-            <section class="account-edit-identity">
-                <div class="edit-avatar-frame">
-                    {{if .ProfilePicture}}
-                    <img src="{{.ProfilePicture}}" alt="Current profile picture" id="profile-preview" class="edit-avatar-image">
-                    {{else}}
-                    <div class="edit-avatar-image edit-avatar-empty" id="profile-placeholder" aria-hidden="true">👤</div>
-                    <img src="" alt="Profile picture preview" id="profile-preview" class="edit-avatar-image" hidden>
-                    {{end}}
-                </div>
-                <strong>{{.Name}}</strong>
-                <span>{{.Email}}</span>
-                <small>Personal account</small>
-            </section>
-            <nav class="account-edit-nav" aria-label="Profile settings sections">
-                <a href="#personal-details" class="selected"><span>◉</span> Personal details</a>
-                <a href="#phone-verification"><span>▣</span> Phone verification</a>
-                <a href="#account-security"><span>⌑</span> Account security</a>
-            </nav>
-            <div class="account-edit-aside-note"><span aria-hidden="true">🔒</span><p>Your profile details are private. Never share your password or verification codes with anyone.</p></div>
-        </aside>
+    <div class="ap-edit-layout">
+        <nav class="ap-subnav" aria-label="Settings sections">
+            <a href="#profile">Profile</a><a href="#delivery">Delivery</a><a href="#preferences">Preferences</a><a href="#phone">Phone</a><a href="#security">Security</a>
+        </nav>
 
-        <div class="account-edit-content">
-            <section class="account-edit-card" id="personal-details">
-                <div class="edit-card-heading"><span class="edit-section-icon">◉</span><div><h2>Personal details</h2><p>Update the name and picture shown on your account.</p></div></div>
-                <form action="/account/edit" method="POST" enctype="multipart/form-data" class="profile-form account-profile-form-v3">
-                    <div class="edit-photo-control">
-                        <div class="edit-photo-preview">
-                            {{if .ProfilePicture}}
-                            <img src="{{.ProfilePicture}}" alt="Profile picture" id="profile-preview-large" class="edit-avatar-image">
-                            {{else}}
-                            <div class="edit-avatar-image edit-avatar-empty" id="profile-placeholder-large" aria-hidden="true">👤</div>
-                            <img src="" alt="Profile picture preview" id="profile-preview-large" class="edit-avatar-image" hidden>
-                            {{end}}
+        <div class="ap-edit-main">
+            <form action="/account/edit" method="POST" enctype="multipart/form-data" class="ap-form" id="profile-form">
+                <section class="ap-card" id="profile">
+                    <header class="ap-card-head"><h2>Profile</h2></header>
+                    <div class="ap-photo">
+                        {{if .ProfilePicture}}<img src="{{.ProfilePicture}}" alt="Profile picture" class="ap-avatar ap-avatar-lg" id="ap-photo-preview">{{else}}<div class="ap-avatar ap-avatar-lg ap-avatar-initial" id="ap-photo-preview" aria-hidden="true">{{.Initial}}</div>{{end}}
+                        <div>
+                            <label for="profile_picture" class="account-button secondary ap-file-btn">Choose photo</label>
+                            <input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp" class="ap-file" data-preview="#ap-photo-preview" data-max-mb="5">
+                            <p class="ap-hint" id="ap-photo-hint">JPG, PNG or WEBP, up to 5MB. Large photos are resized for you.</p>
                         </div>
-                        <div class="edit-photo-copy"><strong>Profile photo</strong><p>Choose a clear photo so people can recognise your account.</p><label class="edit-upload-button" for="profile_picture">Choose photo</label><input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp" hidden><small>JPG, PNG or WEBP · Maximum 5MB</small><span id="profile-file-name" class="edit-file-name" aria-live="polite">No new photo selected</span></div>
                     </div>
+                    <div class="ap-field">
+                        <label for="name">Display name</label>
+                        <input type="text" id="name" name="name" value="{{.Name}}" maxlength="100" autocomplete="name" required>
+                    </div>
+                    <div class="ap-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" value="{{.Email}}" disabled>
+                        <p class="ap-hint">Your email is your sign-in and cannot be changed here.</p>
+                    </div>
+                </section>
 
-                    <div class="edit-field-grid">
-                        <div class="edit-field"><label for="name">Full name</label><input type="text" id="name" name="name" value="{{.Name}}" maxlength="100" autocomplete="name" required><small>This is the name shown on your account.</small></div>
-                        <div class="edit-field"><label for="email">Email address</label><input type="email" id="email" value="{{.Email}}" autocomplete="email" readonly aria-describedby="email-help"><small id="email-help">Your email address is used to sign in and cannot be changed here.</small></div>
+                <section class="ap-card" id="delivery">
+                    <header class="ap-card-head"><h2>Delivery details</h2></header>
+                    <p class="ap-muted">Saved once, used to speed up checkout. Only shared with the shop and rider on an order.</p>
+                    <div class="ap-field">
+                        <label for="address_line">Street address</label>
+                        <input type="text" id="address_line" name="address_line" value="{{.Extras.AddressLine}}" maxlength="200" autocomplete="street-address" placeholder="House number, street, estate">
                     </div>
-                    <div class="edit-form-actions"><a href="/account" class="account-v3-secondary">Cancel</a><button type="submit" class="account-v3-primary">Save profile changes <span aria-hidden="true">→</span></button></div>
+                    <div class="ap-row2">
+                        <div class="ap-field">
+                            <label for="delivery_area">Area or neighbourhood</label>
+                            <input type="text" id="delivery_area" name="delivery_area" value="{{.Extras.DeliveryArea}}" maxlength="80" placeholder="e.g. Wuse 2">
+                        </div>
+                        <div class="ap-field">
+                            <label for="state">State</label>
+                            <input type="text" id="state" name="state" value="{{.Extras.State}}" maxlength="60" list="ng-states" autocomplete="address-level1" placeholder="Start typing">
+                            <datalist id="ng-states"><option value="Abia"><option value="Adamawa"><option value="Akwa Ibom"><option value="Anambra"><option value="Bauchi"><option value="Bayelsa"><option value="Benue"><option value="Borno"><option value="Cross River"><option value="Delta"><option value="Ebonyi"><option value="Edo"><option value="Ekiti"><option value="Enugu"><option value="FCT Abuja"><option value="Gombe"><option value="Imo"><option value="Jigawa"><option value="Kaduna"><option value="Kano"><option value="Katsina"><option value="Kebbi"><option value="Kogi"><option value="Kwara"><option value="Lagos"><option value="Nasarawa"><option value="Niger"><option value="Ogun"><option value="Ondo"><option value="Osun"><option value="Oyo"><option value="Plateau"><option value="Rivers"><option value="Sokoto"><option value="Taraba"><option value="Yobe"><option value="Zamfara"></datalist>
+                        </div>
+                    </div>
+                    <div class="ap-field">
+                        <label for="delivery_note">Note for the rider</label>
+                        <textarea id="delivery_note" name="delivery_note" maxlength="200" rows="2" placeholder="Landmark, gate colour, call on arrival">{{.Extras.DeliveryNote}}</textarea>
+                    </div>
+                </section>
+
+                <section class="ap-card" id="preferences">
+                    <header class="ap-card-head"><h2>Preferences</h2></header>
+                    <fieldset class="ap-radios">
+                        <legend>How should we reach you about orders?</legend>
+                        <label><input type="radio" name="preferred_contact" value="email" {{if ne .Extras.PreferredContact "sms"}}checked{{end}}> <span><strong>Email</strong><small>Receipts and status updates by email.</small></span></label>
+                        <label><input type="radio" name="preferred_contact" value="sms" {{if eq .Extras.PreferredContact "sms"}}checked{{end}}> <span><strong>SMS</strong><small>Text messages. Needs a verified phone number.</small></span></label>
+                    </fieldset>
+                    <label class="ap-check"><input type="checkbox" name="marketing_opt_in" {{if .Extras.MarketingOptIn}}checked{{end}}> <span><strong>Offers and news</strong><small>Occasional promotions from {{brandName}}. You can turn this off any time.</small></span></label>
+                </section>
+
+                <div class="ap-savebar">
+                    <a href="/account" class="account-button secondary">Cancel</a>
+                    <button type="submit" class="account-button primary">Save changes</button>
+                </div>
+            </form>
+
+            <section class="ap-card" id="phone">
+                <header class="ap-card-head"><h2>Phone number</h2>{{if .Phone}}<span class="ap-badge ap-badge-ok">Verified</span>{{end}}</header>
+                <p class="ap-muted">{{if .Phone}}Current number: <strong>{{.Phone}}</strong>. To change it, verify a new one below.{{else}}Add a phone number so riders and shops can reach you. We will text a 6-digit code to confirm it.{{end}}</p>
+                <form action="/account/phone/send-otp" method="post" class="ap-inline">
+                    <div class="ap-field">
+                        <label for="phone">{{if .Phone}}New phone number{{else}}Phone number{{end}}</label>
+                        <input type="tel" id="phone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="e.g. 08012345678" required>
+                    </div>
+                    <button type="submit" class="account-button primary">Send code</button>
                 </form>
             </section>
 
-            <section class="account-edit-card" id="phone-verification">
-                <div class="edit-card-heading"><span class="edit-section-icon">▣</span><div><h2>Phone verification</h2><p>Add or update the phone number linked to your account.</p></div></div>
-                <div class="edit-current-phone"><span>Current phone number</span><strong>{{if .Phone}}{{.Phone}}{{else}}No phone number added{{end}}</strong><small>A verified number can help shops and delivery teams contact you about an order.</small></div>
-                <form action="/account/phone/send-otp" method="post" class="account-phone-form-v3">
-                    <div class="edit-field"><label for="new-phone">New phone number</label><input type="tel" id="new-phone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="e.g. 08012345678" required><small>Enter a Nigerian mobile number, such as 08012345678 or +2348012345678.</small></div>
-                    <button type="submit" class="account-v3-primary">Send verification code <span aria-hidden="true">→</span></button>
+            <section class="ap-card" id="security">
+                <header class="ap-card-head"><h2>Security</h2></header>
+                {{if .CanChangePassword}}
+                <form action="/account/password" method="post" class="ap-form" autocomplete="off">
+                    <div class="ap-field"><label for="current_password">Current password</label><input type="password" id="current_password" name="current_password" autocomplete="current-password" required></div>
+                    <div class="ap-row2">
+                        <div class="ap-field"><label for="new_password">New password</label><input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required></div>
+                        <div class="ap-field"><label for="confirm_password">Confirm new password</label><input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" minlength="8" required></div>
+                    </div>
+                    <p class="ap-hint">At least 8 characters with upper and lower case letters, a number and a symbol. You will be signed out of all devices after changing it.</p>
+                    <div class="ap-actions"><button type="submit" class="account-button primary">Update password</button></div>
                 </form>
-            </section>
-
-            <section class="account-edit-card account-security-edit" id="account-security">
-                <div class="edit-card-heading"><span class="edit-section-icon">⌑</span><div><h2>Account security</h2><p>Take a moment to keep your sign-in details safe.</p></div></div>
-                <div class="edit-security-row"><span class="edit-security-symbol">✉</span><div><strong>Password reset</strong><p>Request a password reset link using your account email address.</p></div><a href="/forgot-password" class="account-v3-secondary">Reset password</a></div>
-                <div class="edit-security-tip"><strong>Security reminder</strong><p>LaikiHub staff will never ask you to send your password, one-time code or full payment details in a message.</p></div>
+                {{else}}
+                <p class="ap-muted">This account signs in with Google or Facebook, so there is no password to manage here. Protect it with that provider's own security settings.</p>
+                {{end}}
             </section>
         </div>
     </div>
 </main>
 
 {{template "site-footer"}}
-<script src="/static/js/pages/account-edit.js?v=1"></script>
 <script src="/static/js/notification-bell.js"></script>
 <script src="/static/js/bottomnav.js"></script>
 <script src="/static/js/nav-active.js"></script>
+<script src="/static/js/account.js"></script>
 {{template "scripts-common"}}
 </body>
 </html>

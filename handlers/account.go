@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"Order-site/errors"
@@ -36,6 +37,13 @@ type AccountPageData struct {
 	ActiveOrders        int
 	ActiveStatusEnabled bool
 	RecentOrders        []AccountRecentOrder
+	Extras              accountExtras
+	Initial             string
+	Completeness        int
+	Missing             []string
+	CanChangePassword   bool
+	PasswordChanged     bool
+	FirstName           string
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -194,6 +202,18 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 		}
 		data.IsVendor = vendorCount > 0
 	}
+
+	data.Extras = h.loadAccountExtras(r.Context(), userID)
+	data.Initial = "?"
+	if rs := []rune(strings.TrimSpace(data.Name)); len(rs) > 0 {
+		data.Initial = strings.ToUpper(string(rs[0]))
+	}
+	if f := strings.Fields(data.Name); len(f) > 0 {
+		data.FirstName = f[0]
+	}
+	data.CanChangePassword = data.AuthProvider == "" || data.AuthProvider == "local"
+	data.PasswordChanged = r.URL.Query().Get("pw") == "changed"
+	data.Completeness, data.Missing = accountCompleteness(strings.TrimSpace(data.Name) != "", data.ProfilePicture != "", data.Phone != "", data.Extras.AddressLine != "")
 
 	tmpl := render.MustPage("account.html", template.FuncMap{
 		"naira": naira,

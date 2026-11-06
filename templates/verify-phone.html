@@ -6,6 +6,7 @@
     <title>Verify Phone | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css">
     <link rel="stylesheet" href="/static/css/account.css">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=2">
     <link rel="stylesheet" href="/static/css/ui.css?v=5">
 </head>
 
@@ -18,28 +19,21 @@
     </div>
 </header>
 
-<main class="account-container">
-
-    <section class="account-card">
-
-        <h1>Verify Your Phone</h1>
-        <p class="verify-subtext">We sent a 6-digit code to <strong>{{.Phone}}</strong>. Enter it below to confirm.</p>
-
-        <form action="/account/phone/verify-otp" method="post" class="profile-form">
+<main class="ap-page ap-page-narrow">
+    <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="/account">My account</a><span aria-hidden="true">/</span><a href="/account/edit#phone">Edit profile</a><span aria-hidden="true">/</span><span>Verify phone</span></nav>
+    <section class="ap-card ap-verify">
+        <h1 class="ap-title">Verify your phone</h1>
+        <p class="ap-muted">We sent a 6-digit code to <strong>{{.Phone}}</strong>. It can take a minute to arrive.</p>
+        <form action="/account/phone/verify-otp" method="post" class="ap-form">
             <input type="hidden" name="phone" value="{{.Phone}}">
             <input type="hidden" name="pin_id" value="{{.PinID}}">
-
-            <label for="code">Verification Code</label>
-            <input type="text" id="code" name="code" class="code-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required autofocus>
-
-            <div class="profile-buttons">
-                <button type="submit" class="button">Verify &amp; Save</button>
-                <a href="/account/edit">Cancel</a>
+            <div class="ap-field">
+                <label for="code">Verification code</label>
+                <input type="text" id="code" name="code" class="ap-code-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" required autofocus>
             </div>
+            <div class="ap-actions"><a href="/account/edit#phone" class="account-button secondary">Use a different number</a><button type="submit" class="account-button primary">Verify and save</button></div>
         </form>
-
     </section>
-
 </main>
 
 <script src="/static/js/notification-bell.js"></script>

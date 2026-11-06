@@ -286,6 +286,8 @@ func main() {
 		middleware.Logging(middleware.RequireLogin(db, h.EditProfile)),
 	)
 
+	mux.HandleFunc("POST /account/password", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.LoginIPLimiter, h.ChangePassword))))
+
 	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))
 	mux.HandleFunc("POST /forgot-password", middleware.Logging(middleware.RateLimit(middleware.ForgotIPLimiter, h.ForgotPassword)))
 	mux.HandleFunc("GET /reset-password", middleware.Logging(h.ResetPassword))
