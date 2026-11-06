@@ -1,8 +1,0 @@
-Touch scrolling fix for the installed app
------------------------------------------
-Cause: horizontal card rails (shop.css .shop-row, menu/shop category strips) only set overflow-x:auto, which makes
-overflow-y compute to auto too, so a card that shifted a few pixels turned the rail into a second vertical scroller
-that swallowed up/down swipes. Phones also keep :hover after a tap, so tapped cards stayed lifted and caused that
-shift. Only the home page had a partial fix.
-Fix: one shared block at the end of static/css/ui.css (loaded last on every page), ui.css?v=3 in all templates to
-bypass the 1-hour static cache. If the installed app still shows old behaviour, close it fully and reopen once.

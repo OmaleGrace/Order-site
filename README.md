@@ -138,3 +138,4 @@ Old `/media/<id>` links keep working: the site forwards them to Cloudinary. Afte
 ## Live rider map
 
 The admin order page shows the rider on a zoomable Leaflet map (assets from unpkg.com, allowed in the Content Security Policy) with a circle for the GPS accuracy the rider's phone reports. The accuracy is stored in `orders.rider_location_accuracy`, added by migration `0003_rider_location_accuracy.sql`. The admin page refreshes the position every 5 seconds from `GET /admin/orders/{orderID}/rider-location`.
+
