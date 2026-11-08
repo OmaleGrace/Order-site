@@ -6,7 +6,7 @@
     <title>Edit Profile | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
     <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
-    <link rel="stylesheet" href="/static/css/account-pro.css?v=c78588e1">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=p2">
     <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 
@@ -40,7 +40,7 @@
                     <div class="ap-photo">
                         {{if .ProfilePicture}}<img src="{{.ProfilePicture}}" alt="Profile picture" class="ap-avatar ap-avatar-lg" id="ap-photo-preview">{{else}}<div class="ap-avatar ap-avatar-lg ap-avatar-initial" id="ap-photo-preview" aria-hidden="true">{{.Initial}}</div>{{end}}
                         <div>
-                            <label for="profile_picture" class="account-button secondary ap-file-btn">Choose photo</label>
+                            <label for="profile_picture" class="account-button secondary ap-file-btn">Choose photo</label>{{if .ProfilePicture}} <button type="submit" form="remove-photo-form" class="account-button secondary ap-remove-btn" data-confirm="Remove your profile photo?" data-confirm-ok="Remove" data-confirm-tone="danger">Remove photo</button>{{end}}
                             <input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp" class="ap-file" data-preview="#ap-photo-preview" data-max-mb="5">
                             <p class="ap-hint" id="ap-photo-hint">JPG, PNG or WEBP, up to 5MB. Large photos are resized for you.</p>
                         </div>
@@ -95,6 +95,7 @@
                     <button type="submit" class="account-button primary">Save changes</button>
                 </div>
             </form>
+            <form action="/account/photo/remove" method="post" id="remove-photo-form" hidden></form>
 
             <section class="ap-card" id="phone">
                 <header class="ap-card-head"><h2>Phone number</h2>{{if .Phone}}<span class="ap-badge ap-badge-ok">Verified</span>{{end}}</header>

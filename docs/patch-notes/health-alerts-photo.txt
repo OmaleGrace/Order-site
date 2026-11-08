@@ -1,0 +1,23 @@
+Health check, error alerts, remove profile photo
+------------------------------------------------
+1. GET /healthz  (handlers/health.go)
+   200 {"status":"ok"} when the site and database answer; 503 {"status":"degraded"} when the database
+   does not answer within 3 seconds. Shows nothing private. Works on the old address too.
+   Render: Settings > Health Check Path = /healthz  (Render then restarts the site if it stops answering).
+   Free uptime monitor: add https://<your-site>/healthz to UptimeRobot or Better Stack, alert by email.
+
+2. Error alerts by email  (new package alerts/)
+   Set ALERT_EMAIL on Render (falls back to MAIN_ADMIN_EMAIL; with neither set, alerts are off).
+   Uses the Brevo email setup you already have. You are emailed when:
+     - a page crashes (the visitor now gets a plain error page instead of a dropped connection)
+     - any page answers with a 5xx error
+     - a background job crashes (emails, texts, scheduled orders)
+     - the database fails 3 checks in a row (and again when it recovers)
+   The same problem is mailed at most once per 15 minutes, and never more than 10 alert emails an hour.
+   Alerts carry the method and path only: no query string, cookies, form data or IP addresses.
+
+3. Remove profile photo  (POST /account/photo/remove)
+   "Remove photo" button on Account > Edit profile, with a confirm popup. Clears the link, so the
+   person shows as their initial again (in messages too). The file stays in image storage.
+
+Tests added: alerts/alerts_test.go, handlers/health_test.go.

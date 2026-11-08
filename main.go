@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Order-site/alerts"
 	"context"
 	"fmt"
 	"net/http"
@@ -46,6 +47,12 @@ func main() {
 
 	h := handlers.New(db)
 
+	// Email the owner when something breaks (set ALERT_EMAIL; see alerts/alerts.go).
+	alerts.Install()
+	stopWatch := make(chan struct{})
+	defer close(stopWatch)
+	alerts.WatchDB(db, stopWatch)
+
 	// Lightweight in-process scheduler for scheduled customer orders. The database
 	// update is atomic, so repeated ticks cannot activate the same order twice.
 	go func() {
@@ -77,6 +84,7 @@ func main() {
 		})),
 	)
 
+	mux.HandleFunc("GET /healthz", h.Health)
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
 	mux.HandleFunc("GET /about", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /guides", middleware.Logging(h.PublicPage))
@@ -286,6 +294,7 @@ func main() {
 		middleware.Logging(middleware.RequireLogin(db, h.EditProfile)),
 	)
 
+	mux.HandleFunc("POST /account/photo/remove", middleware.Logging(middleware.RequireLogin(db, h.RemoveProfilePhoto)))
 	mux.HandleFunc("POST /account/password", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.LoginIPLimiter, h.ChangePassword))))
 
 	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))
@@ -320,7 +329,7 @@ func main() {
 	// The timeouts stop slow or stuck connections from tying up the server.
 	srv := &http.Server{
 		Addr:              ":" + port,
-		Handler:           middleware.LegacyHost(middleware.SecurityHeaders(middleware.LimitBody(middleware.SameOrigin(mux)))),
+		Handler:           alerts.Middleware(middleware.LegacyHost(middleware.SecurityHeaders(middleware.LimitBody(middleware.SameOrigin(mux))))),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      60 * time.Second,

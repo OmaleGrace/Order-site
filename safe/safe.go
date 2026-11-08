@@ -12,9 +12,20 @@ import (
 	"runtime/debug"
 )
 
+// OnPanic, when set, is told about every panic that Recover swallows (main uses it to email an
+// alert). It must not panic itself and should return quickly.
+var OnPanic func(job string, value any, stack []byte)
+
 // Recover logs a panic instead of letting it crash the program. It must be used with defer.
 func Recover(job string) {
 	if r := recover(); r != nil {
-		log.Printf("PANIC in background job %q: %v\n%s", job, r, debug.Stack())
+		stack := debug.Stack()
+		log.Printf("PANIC in background job %q: %v\n%s", job, r, stack)
+		if hook := OnPanic; hook != nil {
+			func() {
+				defer func() { _ = recover() }()
+				hook(job, r, stack)
+			}()
+		}
 	}
 }

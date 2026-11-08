@@ -162,3 +162,17 @@
 .order-vendor-link:hover {
     text-decoration: underline;
 }
+
+/* Rider map: does not grab the page's scroll until the person taps it */
+.rider-map-wrap { position: relative; margin-top: 8px; }
+.rider-map-wrap[hidden] { display: none; }
+.rider-map-wrap .rider-map { display: block; width: 100%; height: 190px; border: 0; border-radius: 10px; pointer-events: none; }
+.rider-map-wrap.is-active .rider-map { pointer-events: auto; }
+.rider-map-wrap .map-unlock { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 7px 14px; border: 0; border-radius: 999px; background: rgba(20, 40, 30, .82); color: #fff; font: inherit; font-size: .8rem; font-weight: 650; cursor: pointer; }
+.rider-map-wrap.is-active .map-unlock { display: none; }
+.timeline { min-width: 0; }
+@media (max-width: 560px) {
+  .order-card { padding: 16px; }
+  .timeline { gap: 6px; }
+  .timeline-step small { display: none; }
+}

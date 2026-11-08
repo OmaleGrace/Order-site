@@ -5,70 +5,79 @@
         {{template "meta-noindex"}}
         <title>Messages | {{brandName}}</title>
         <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
-        <link rel="stylesheet" href="/static/css/pages/messages.css?v=b647490f">
+        <link rel="stylesheet" href="/static/css/pages/messages.css?v=m3">
         <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
     <body data-w="narrow">
         <header class="top"><a class="brand" href="/"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> {{brandName}} · Messages</a><nav class="nav" aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages" class="active active-link" aria-current="page">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
         </header>
-        <main>
+        <main class="msg-page">
             {{if .Notice}}
                 <div class="notice" role="status">{{.Notice}}</div>
             {{end}}
             {{if gt .ThreadID 0}}
-                <section class="card">
+                <section class="chat-card">
                     <div class="chat-head">
+                        <a class="back" href="/messages" aria-label="Back to all messages">&larr;<span> All</span></a>
                         <div class="chat-who">
                             <span class="av-wrap{{if .OtherOnline}} is-online{{end}}"><span class="avatar lg" aria-hidden="true">{{if .OtherPicture}}<img src="{{.OtherPicture}}" alt="" width="44" height="44">{{else}}{{.OtherInitial}}{{end}}</span><i class="presence-dot" title="Active now"></i></span>
-                            <div>
+                            <div class="chat-id">
                                 <h2>{{if .IsVendor}}<button type="button" class="person-link" data-profile-photo title="View profile picture">{{.Title}}</button>{{else if .ShopURL}}<a class="person-link" href="{{.ShopURL}}" title="View shop">{{.Title}}</a>{{else}}{{.Title}}{{end}}</h2>
-                                <div class="muted chat-sub"><span class="presence-text"{{if not .OtherOnline}} hidden{{end}}><i class="presence-dot inline" aria-hidden="true"></i> Active now</span><span class="sub-text"{{if .OtherOnline}} hidden{{end}}>{{if .IsVendor}}Customer · {{.ShopName}}{{else}}Shop conversation{{end}}</span></div>
+                                <div class="chat-sub"><span class="presence-text"{{if not .OtherOnline}} hidden{{end}}><i class="presence-dot inline" aria-hidden="true"></i> Active now</span><span class="sub-text"{{if .OtherOnline}} hidden{{end}}>{{if .IsVendor}}Customer &middot; {{.ShopName}}{{else}}Shop conversation{{end}}</span></div>
                             </div>
                         </div>
-                        <div class="chat-tools"><a class="back" href="/messages">← All</a><a class="refresh" href="/messages/{{.ThreadID}}" title="Refresh" aria-label="Refresh">↻</a></div></div>
-                    <div class="messages" id="message-list" data-thread-id="{{.ThreadID}}" data-last-id="{{.LastMessageID}}" data-other-kind="{{if .OtherIsShop}}shop{{else}}user{{end}}" data-other-name="{{.OtherName}}" data-other-picture="{{.OtherPicture}}" data-shop-url="{{.ShopURL}}" aria-live="polite">
+                        <a class="refresh" href="/messages/{{.ThreadID}}" title="Refresh" aria-label="Refresh">&#8635;</a>
+                    </div>
+                    <div class="messages" id="message-list" data-thread-id="{{.ThreadID}}" data-last-id="{{.LastMessageID}}" data-other-kind="{{if .OtherIsShop}}shop{{else}}user{{end}}" data-other-name="{{.OtherName}}" data-other-picture="{{.OtherPicture}}" data-shop-url="{{.ShopURL}}" aria-live="polite" tabindex="0">
                         {{range .Messages}}
-                            <article class="bubble {{if .Mine}}mine{{end}}" data-id="{{.ID}}"><span class="sender"><span class="avatar" aria-hidden="true">{{if .Avatar}}<img src="{{.Avatar}}" alt="" loading="lazy" width="26" height="26">{{else}}{{.Initial}}{{end}}</span>{{if .Mine}}You{{else if $.OtherIsShop}}
-                                    {{if $.ShopURL}}<a class="person-link" href="{{$.ShopURL}}" title="View shop">{{.Sender}}</a>{{else}}{{.Sender}}{{end}}
-                                {{else}}<button type="button" class="person-link" data-profile-photo title="View profile picture">{{.Sender}}</button>{{end}}</span><div class="body">{{.Body}}</div>
-                                <div class="meta"><time>{{formatChatTime .CreatedAt}}</time>{{if .Mine}}<span class="ticks" data-status="{{.Status}}" role="img" aria-label="{{.Status}}"><svg viewBox="0 0 18 11" width="18" height="11" aria-hidden="true"><path class="t1" d="M1 5.8l3.2 3.2 6.6-7.2"/><path class="t2" d="M8.4 9L15 1.8"/></svg></span>{{end}}
-                                </div>
-                            </article>
+                            <article class="bubble {{if .Mine}}mine{{end}}" data-id="{{.ID}}"><span class="sender"><span class="avatar" aria-hidden="true">{{if .Avatar}}<img src="{{.Avatar}}" alt="" loading="lazy" width="26" height="26">{{else}}{{.Initial}}{{end}}</span>{{if .Mine}}You{{else if $.OtherIsShop}}{{if $.ShopURL}}<a class="person-link" href="{{$.ShopURL}}" title="View shop">{{.Sender}}</a>{{else}}{{.Sender}}{{end}}{{else}}<button type="button" class="person-link" data-profile-photo title="View profile picture">{{.Sender}}</button>{{end}}</span><div class="body">{{.Body}}</div><div class="meta"><time>{{formatChatTime .CreatedAt}}</time>{{if .Mine}}<span class="ticks" data-status="{{.Status}}" role="img" aria-label="{{.Status}}"><svg viewBox="0 0 18 11" width="18" height="11" aria-hidden="true"><path class="t1" d="M1 5.8l3.2 3.2 6.6-7.2"/><path class="t2" d="M8.4 9L15 1.8"/></svg></span>{{end}}</div></article>
                         {{else}}
-                            <p class="empty">No messages yet. Send a message to start the conversation.</p>
+                            <p class="empty-chat">No messages yet. Say hello to start the conversation.</p>
                         {{end}}
                     </div>
                     <form class="composer" action="/messages/{{.ThreadID}}/send" method="post">
-    <label for="body" class="sr-only">Your message</label>
-    <textarea id="body" name="body" maxlength="2000" rows="1" required placeholder="Write a message…" aria-describedby="message-hint"></textarea>
-    <div class="composer-row"><span id="message-hint" class="hint">Be respectful. Never share passwords, PINs or OTPs.</span><div class="row-wrap">
-                                <button class="button secondary" type="button" id="ai-draft-button">{{if .IsVendor}}✨ Draft AI reply{{else}}✨ Help me write{{end}}</button><button class="button" type="submit">Send message ↗</button></div>
+                        <div class="quick" aria-label="Quick replies">
+                            {{if .IsVendor}}
+                            <button type="button" data-quick="Your order is being prepared.">Being prepared</button>
+                            <button type="button" data-quick="Your order is ready for pickup.">Ready for pickup</button>
+                            <button type="button" data-quick="Sorry, that item is not available today.">Item unavailable</button>
+                            {{else}}
+                            <button type="button" data-quick="Hi, is my order on the way?">Is my order on the way?</button>
+                            <button type="button" data-quick="Hi, can I change my order?">Change my order</button>
+                            <button type="button" data-quick="Hi, is this available today?">Available today?</button>
+                            {{end}}
                         </div>
+                        <div class="composer-box">
+                            <label for="body" class="sr-only">Your message</label>
+                            <textarea id="body" name="body" maxlength="2000" rows="1" required placeholder="Write a message&hellip;" aria-describedby="message-hint"></textarea>
+                            <button class="ai-btn" type="button" id="ai-draft-button" title="{{if .IsVendor}}Draft a reply with AI{{else}}Help me write{{end}}">&#10024;<span>{{if .IsVendor}}AI reply{{else}}Help me write{{end}}</span></button>
+                            <button class="send-btn" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 11.5L20.5 3.5 12.5 21l-2.4-7.6z" fill="currentColor"/></svg></button>
+                        </div>
+                        <p id="message-hint" class="hint">Enter to send, Shift+Enter for a new line. Never share passwords, PINs or OTPs.</p>
                         <p id="ai-draft-status" class="hint" role="status"></p>
                     </form>
                 </section>
                 <script src="/static/js/lightbox.js?v=edc56f89"></script>
-                <script src="/static/js/pages/messages.js?v=9dd1a6ba"></script>
+                <script src="/static/js/pages/messages.js?v=m2"></script>
             {{else}}
                 <section class="heading">
                     <div>
-                        <h1>Your messages</h1>
+                        <h1>Messages</h1>
                         <p class="muted">Chat directly with {{brandName}} shops or reply to customer questions.</p>
                     </div>
+                    {{if .Threads}}<input type="search" id="thread-search" class="thread-search" placeholder="Search conversations" aria-label="Search conversations" autocomplete="off">{{end}}
                 </section>
-                <section class="card">
-                    {{if .Threads}}
-                        <div class="thread-list">
-                            {{range .Threads}}<a class="thread-link" href="/messages/{{.ID}}"><span class="av-wrap{{if .OtherOnline}} is-online{{end}}"><span class="avatar md" aria-hidden="true">{{if .OtherPicture}}<img src="{{.OtherPicture}}" alt="" width="42" height="42" loading="lazy">{{else}}{{.OtherInitial}}{{end}}</span><i class="presence-dot" title="Active now"></i></span><div class="thread-body"><div class="thread-top"><strong>{{.OtherPartyName}} <span class="muted">· {{.ShopName}}</span></strong><span class="muted">{{formatChatTime .UpdatedAt}}</span></div>
-                                <p class="thread-preview">{{.LastMessage}}</p>
-                                {{if .UnreadCount}}<span class="badge">{{.UnreadCount}} unread</span>{{end}}</div></a>{{end}}
-                        </div>
-                    {{else}}
-                        <div class="empty">
-                            <h2>No conversations yet</h2>
-                            <p>Visit a shop and select <strong>Message this shop</strong> to start a conversation.</p><a class="button" href="/vendors">Browse shops</a></div>
-                    {{end}}
-                </section>
+                {{if .Threads}}
+                    <div class="thread-list" id="thread-list">
+                        {{range .Threads}}<a class="thread-link{{if .UnreadCount}} is-unread{{end}}" href="/messages/{{.ID}}"><span class="av-wrap{{if .OtherOnline}} is-online{{end}}"><span class="avatar md" aria-hidden="true">{{if .OtherPicture}}<img src="{{.OtherPicture}}" alt="" width="48" height="48" loading="lazy">{{else}}{{.OtherInitial}}{{end}}</span><i class="presence-dot" title="Active now"></i></span><span class="thread-body"><span class="thread-top"><strong class="thread-name">{{.OtherPartyName}}</strong><time>{{formatChatTime .UpdatedAt}}</time></span>{{if ne .OtherPartyName .ShopName}}<span class="thread-shop">{{.ShopName}}</span>{{end}}<span class="thread-preview">{{.LastMessage}}</span></span>{{if .UnreadCount}}<span class="badge" aria-label="{{.UnreadCount}} unread">{{.UnreadCount}}</span>{{end}}</a>{{end}}
+                    </div>
+                    <p class="empty" id="thread-none" hidden>No conversations match your search.</p>
+                {{else}}
+                    <div class="empty-card">
+                        <div class="empty-ico" aria-hidden="true">&#128172;</div>
+                        <h2>No conversations yet</h2>
+                        <p>Visit a shop and select <strong>Message this shop</strong> to start a conversation.</p><a class="button" href="/vendors">Browse shops</a></div>
+                {{end}}
             {{end}}
         </main>
         <script src="/static/js/notification-bell.js?v=a32a1c0f"></script>

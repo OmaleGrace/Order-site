@@ -147,3 +147,7 @@ Visitors who open an old address (default `grace-ordering-site.onrender.com`) se
 
 First-launch guides for customers, vendors and riders live in `static/js/app-guide.js` (the steps are a plain list at the top). See `docs/patch-notes/app-guide.txt`.
 
+### Monitoring (health check and error alerts)
+
+- `GET /healthz` returns `{"status":"ok"}` (HTTP 200) when the site and database answer, or HTTP 503 when the database does not. Point Render's Health Check Path and an uptime monitor at it.
+- Set `ALERT_EMAIL` (or rely on `MAIN_ADMIN_EMAIL`) to be emailed about crashes, 5xx errors and a database outage. Uses the existing Brevo settings. Repeats are limited to one email per problem every 15 minutes and 10 emails an hour.

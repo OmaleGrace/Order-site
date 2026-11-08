@@ -5,7 +5,7 @@
     {{template "meta-noindex"}}
     <title>My Orders | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
-    <link rel="stylesheet" href="/static/css/orders.css?v=7db29b13">
+    <link rel="stylesheet" href="/static/css/orders.css?v=o2">
     <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="medium">
@@ -38,7 +38,7 @@
 
     <div class="orders-list">
     {{range .Orders}}
-        <article class="order-card {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}order-live{{end}}" data-status="{{.Status}}">
+        <article class="order-card {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}order-live{{end}}" data-order-id="{{.ID}}" data-status="{{.Status}}">
             <div class="order-card-header">
                 <div>
                     <div class="order-heading-line">
@@ -116,7 +116,7 @@
                     <span class="detail-label">Delivery tracking</span>
                     <strong>{{if .RiderName}}Rider: {{.RiderName}}{{else}}Rider not assigned yet{{end}}</strong>
                     {{if .RiderPhone}}<small>📞 {{.RiderPhone}}</small>{{end}}
-                    <div data-rider-live="{{.ID}}"><small class="rider-live-status">Status: {{.DeliveryStatus}}</small><small class="rider-live-note">{{if .RiderLocationAvailable}}GPS updated {{.RiderLocationUpdated}}{{else if .RiderName}}Rider location has not been shared yet.{{end}}</small><iframe title="Rider location" data-rider-map="{{.ID}}" src="{{if .RiderLocationAvailable}}{{.RiderMapEmbedURL}}{{else}}about:blank{{end}}" {{if not .RiderLocationAvailable}}hidden{{end}} loading="lazy" style="width:100%;height:190px;border:0;border-radius:10px;margin-top:8px"></iframe></div>
+                    <div data-rider-live="{{.ID}}"><small class="rider-live-status">Status: {{.DeliveryStatus}}</small><small class="rider-live-note">{{if .RiderLocationAvailable}}GPS updated {{.RiderLocationUpdated}}{{else if .RiderName}}Rider location has not been shared yet.{{end}}</small><div class="rider-map-wrap" {{if not .RiderLocationAvailable}}hidden{{end}}><iframe title="Rider location" data-rider-map="{{.ID}}" src="{{if .RiderLocationAvailable}}{{.RiderMapEmbedURL}}{{else}}about:blank{{end}}" loading="lazy" class="rider-map"></iframe><button type="button" class="map-unlock">Tap to move the map</button></div></div>
                 </div>{{end}}
                 <div class="detail-box">
                     <span class="detail-label">Payment breakdown</span>
@@ -172,12 +172,12 @@
     {{end}}
 </main>
 
-<script src="/static/js/pages/orders.js?v=77940352"></script>
+<script src="/static/js/pages/orders.js?v=o2"></script>
 <script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
 <script src="/static/js/bottomnav.js?v=686ab4b3"></script>
 <script src="/static/js/nav-active.js?v=e62c3453"></script>
 {{template "site-footer"}}
 {{template "scripts-common"}}
-<script>document.querySelectorAll('[data-rider-live]').forEach(box=>{const orderID=box.dataset.riderLive;const frame=box.querySelector('iframe[data-rider-map]');const status=box.querySelector('.rider-live-status');const note=box.querySelector('.rider-live-note');const refresh=async()=>{try{const r=await fetch('/orders/'+orderID+'/rider-location',{cache:'no-store'});if(!r.ok)return;const d=await r.json();if(status)status.textContent='Status: '+(d.delivery_status||'unassigned');if(d.available&&d.embed_url){frame.hidden=false;if(frame.src!==d.embed_url)frame.src=d.embed_url;if(note)note.textContent='GPS updated '+(d.location_updated||'just now');}else{frame.hidden=true;if(note)note.textContent='Rider location has not been shared yet.';}}catch(_){}};refresh();setInterval(refresh,20000);});</script>
+<script>document.querySelectorAll('[data-rider-live]').forEach(box=>{const orderID=box.dataset.riderLive;const frame=box.querySelector('iframe[data-rider-map]');const status=box.querySelector('.rider-live-status');const note=box.querySelector('.rider-live-note');const refresh=async()=>{try{const r=await fetch('/orders/'+orderID+'/rider-location',{cache:'no-store'});if(!r.ok)return;const d=await r.json();if(status)status.textContent='Status: '+(d.delivery_status||'unassigned');if(d.available&&d.embed_url){frame.parentElement.hidden=false;if(frame.src!==d.embed_url)frame.src=d.embed_url;if(note)note.textContent='GPS updated '+(d.location_updated||'just now');}else{frame.parentElement.hidden=true;if(note)note.textContent='Rider location has not been shared yet.';}}catch(_){}};refresh();setInterval(refresh,20000);});</script>
 </body>
 </html>

@@ -62,7 +62,7 @@
     const sender = senderLabel(m);
     const av = document.createElement('span'); av.className = 'avatar'; av.setAttribute('aria-hidden', 'true');
     if (m.avatar) {
-      const pic = document.createElement('img'); pic.src = m.avatar; pic.alt = ''; pic.width = 26; pic.height = 26; pic.loading = 'lazy';
+      const pic = document.createElement('img'); pic.src = m.avatar; pic.alt = ''; pic.width = 40; pic.height = 40; pic.loading = 'lazy';
       av.appendChild(pic);
     } else { av.textContent = m.initial || '?'; }
     sender.insertBefore(av, sender.firstChild);
@@ -211,4 +211,43 @@
   var fit = function () { box.style.height = 'auto'; box.style.height = Math.min(box.scrollHeight, 110) + 'px'; };
   box.addEventListener('input', fit);
   fit();
+})();
+
+// Quick replies, Enter-to-send, double-send guard and inbox search.
+(function () {
+  var box = document.getElementById('body');
+  var form = box ? box.closest('form') : null;
+  if (form) {
+    document.querySelectorAll('[data-quick]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        box.value = b.getAttribute('data-quick');
+        box.dispatchEvent(new Event('input'));
+        box.focus();
+      });
+    });
+    var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+    box.addEventListener('keydown', function (e) {
+      if (canHover && e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        if (box.value.trim() && form.reportValidity()) form.requestSubmit();
+      }
+    });
+    form.addEventListener('submit', function () {
+      var send = form.querySelector('.send-btn');
+      if (send) send.disabled = true;
+    });
+  }
+  var search = document.getElementById('thread-search');
+  if (search) {
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#thread-list .thread-link'));
+    var none = document.getElementById('thread-none');
+    search.addEventListener('input', function () {
+      var q = search.value.trim().toLowerCase(), shown = 0;
+      rows.forEach(function (r) {
+        var hit = !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+        r.hidden = !hit; if (hit) shown++;
+      });
+      if (none) none.hidden = shown !== 0;
+    });
+  }
 })();

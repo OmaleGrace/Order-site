@@ -238,6 +238,8 @@ func profileMessage(code string) string {
 		return "We could not change your password. Please try again."
 	case "pw-unavailable":
 		return "This account signs in with Google or Facebook, so it has no password to change."
+	case "photo-removed":
+		return "Your profile photo was removed."
 	case "phone-saved":
 		return "Your phone number is verified and saved."
 	}
@@ -295,4 +297,20 @@ func (h *Handlers) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Password change: could not end old sessions:", err)
 	}
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// RemoveProfilePhoto clears the signed-in person's profile picture, so they show as their initial
+// again. The picture file itself is left in image storage; only the link to it is removed.
+func (h *Handlers) RemoveProfilePhoto(w http.ResponseWriter, r *http.Request) {
+	userID, err := requestUserID(h, r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+	if _, err := h.DB.Exec(`UPDATE users SET profile_picture = '' WHERE id = $1`, userID); err != nil {
+		fmt.Println("Profile: could not remove photo:", err)
+		errors.Render(w, "Could not remove your photo", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/account/edit?ok=photo-removed", http.StatusSeeOther)
 }

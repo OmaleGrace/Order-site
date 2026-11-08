@@ -173,3 +173,6 @@ html body .ap-hero h1 { color: #fff !important; }
 html body .ap-hero .ap-eyebrow, html body .ap-hero .ap-meta { color: #fff; }
 html body .ap-hero a.account-button.primary { color: #174a32; }
 html body .ap-hero a.account-button.secondary { color: #fff; }
+
+.ap-remove-btn { color: #b3261e; border-color: #ecc9c4; }
+.ap-remove-btn:hover { background: #fdf1f0; }

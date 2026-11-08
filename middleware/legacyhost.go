@@ -33,6 +33,7 @@ var legacyPassThrough = map[string]bool{
 	"/wallet/callback":         true,
 	"/payment/webhook":         true,
 	"/sw.js":                   true,
+	"/healthz":                 true,
 	"/manifest.webmanifest":    true,
 }
 
