@@ -4,9 +4,9 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
     <title>Earnings | {{brandName}}</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/pages/admin-earnings.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/admin-earnings.css?v=436b8936">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="medium">
     <header class="admin-header">
@@ -54,7 +54,7 @@
                             <form action="/admin/earnings/payout" method="post" class="payout-form">
                                 <input type="hidden" name="vendor_id" value="{{.VendorID}}">
                                 <input type="number" name="amount" min="1" step="0.01" max="{{money2 .AvailableKobo}}" placeholder="₦ amount" required aria-label="Amount already sent">
-                                <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)">
+                                <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)" aria-label="Payout note (optional)">
                                 <button type="submit" class="secondary">Record</button>
                             </form>
                             {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else if gt .BalanceKobo 0}}<span class="muted">Nothing ready yet</span>{{else}}<span class="muted">nothing owed</span>{{end}}
@@ -68,7 +68,7 @@
             </div>
         </div>
     </main>
-<script src="/static/js/nav-active.js"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
 {{template "scripts-common"}}
 </body>
 </html>

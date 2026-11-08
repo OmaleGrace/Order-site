@@ -50,7 +50,7 @@
     text-transform: capitalize;
     white-space: nowrap;
 }
-.status-pending { background: #fff3cd; color: #8a6d00; }
+.status-pending { background: #fff3cd; color: #6b5400; }
 .status-paid { background: #dbeafe; color: #1e4fa3; }
 .status-preparing { background: #ffe8cc; color: #b35a00; }
 .status-ready { background: #e0f2e9; color: var(--green); }

@@ -63,7 +63,7 @@
 .nm-drawer a.nm-drawer-brand:hover{background:none}
 .nm-close{margin-left:auto;width:42px;height:42px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:26px;line-height:1;cursor:pointer;flex:0 0 auto}
 .nm-close:hover{background:rgba(255,255,255,.26)}
-.nm-drawer-sub{padding:12px 20px 4px;color:#6b7a70;font-size:.74rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+.nm-drawer-sub{padding:12px 20px 4px;color:#5b6a61;font-size:.75rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
 .nm-drawer-nav{flex:1;overflow-y:auto;padding:6px 10px 14px;display:flex;flex-direction:column;gap:2px}
 .nm-drawer a,.nm-drawer summary{display:flex;align-items:center;gap:14px;min-height:50px;padding:10px 14px;border-radius:14px;color:#24352c;
   font-size:1.02rem;font-weight:650;text-decoration:none;cursor:pointer;list-style:none}
@@ -71,7 +71,7 @@
 .nm-drawer a:hover,.nm-drawer summary:hover{background:#eef4ee}
 .nm-drawer a[aria-current="page"]{background:#dcecdf;color:var(--green,#174a32);font-weight:800;box-shadow:inset 4px 0 0 var(--green,#174a32)}
 .nm-drawer .nm-ico{width:26px;text-align:center;font-size:1.2rem;flex:0 0 auto}
-.nm-drawer .nm-badge,.nm-panel .nm-badge{margin-left:auto;min-width:22px;padding:2px 7px;border-radius:999px;background:#d9531e;color:#fff;font-size:.74rem;font-weight:800;text-align:center}
+.nm-drawer .nm-badge,.nm-panel .nm-badge{margin-left:auto;min-width:22px;padding:2px 7px;border-radius:999px;background:#b8431a;color:#fff;font-size:.75rem;font-weight:800;text-align:center}
 .nm-acc summary .nm-caret{margin-left:auto;margin-right:4px}
 .nm-acc[open]>summary .nm-caret{transform:translateY(1px) rotate(225deg)}
 .nm-acc[open]>summary{color:var(--green,#174a32);font-weight:800}

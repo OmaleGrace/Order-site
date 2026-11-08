@@ -27,7 +27,7 @@ td.row-actions { white-space: nowrap; }
 td.row-actions form { display: inline; margin: 0; }
 .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; text-transform: capitalize; }
 .badge-active { background: #e0f2e9; color: var(--green); }
-.badge-pending { background: #fff3cd; color: #8a6d00; }
+.badge-pending { background: #fff3cd; color: #6b5400; }
 .badge-suspended { background: #fdeceb; color: var(--red-dark); }
 .muted { color: var(--muted); font-size: 0.85rem; }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }

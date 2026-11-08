@@ -319,8 +319,8 @@
 }
 
 /* ===== LaikiHub Stage 3: Cart + Checkout ===== */
-.eyebrow { margin:0 0 7px; color:var(--terracotta); text-transform:uppercase; letter-spacing:.1em; font-size:.74rem; font-weight:800; }
-.checkout-steps { display:flex; align-items:center; justify-content:center; gap:10px; margin:8px auto 30px; max-width:560px; color:#78847b; font-size:.82rem; font-weight:700; }
+.eyebrow { margin:0 0 7px; color:var(--terracotta); text-transform:uppercase; letter-spacing:.1em; font-size:.75rem; font-weight:800; }
+.checkout-steps { display:flex; align-items:center; justify-content:center; gap:10px; margin:8px auto 30px; max-width:560px; color:#5b6a61; font-size:.82rem; font-weight:700; }
 .step { display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
 .step b { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:#edf0eb; color:#68746b; font-size:.78rem; }
 .step.active { color:var(--green); }
@@ -405,7 +405,7 @@
     .cart-summary { max-width:none; }
 }
 @media (max-width: 600px) {
-    .checkout-steps { gap:6px; font-size:.72rem; margin-bottom:22px; }
+    .checkout-steps { gap:6px; font-size:.75rem; margin-bottom:22px; }
     .step b { width:24px; height:24px; }
     .step-line { max-width:35px; }
     .cart-container { padding-left:4vw; padding-right:4vw; }

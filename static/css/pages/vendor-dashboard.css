@@ -3,7 +3,7 @@
   --dash-card:#fff;
   --dash-green:#174a32;
   --dash-red:#c8382a;
-  --dash-muted:#6c776f;
+  --dash-muted:#5b6a61;
   --dash-line:#e4e9e3;
 }
 
@@ -87,7 +87,7 @@ main {
   color:var(--dash-red);
   text-transform:uppercase;
   letter-spacing:.13em;
-  font-size:.72rem;
+  font-size:.75rem;
   font-weight:850;
   margin:0 0 7px;
 }
@@ -127,6 +127,8 @@ h1 {
   background:var(--dash-red);
   box-shadow:0 7px 18px rgba(200,56,42,.18);
 }
+
+button.btn { font-family:inherit; cursor:pointer; }
 
 .btn-secondary {
   color:var(--dash-green);
@@ -415,6 +417,9 @@ h1 {
   .btn {
     flex:1;
   }
+  /* the two main actions share a row; the tour button gets its own line so no label wraps */
+  .hero-actions .btn { white-space:nowrap; }
+  .hero-actions .btn[data-app-guide-open] { flex:1 1 100%; min-height:44px; }
   .metrics {
     grid-template-columns:1fr 1fr;
     gap:10px;

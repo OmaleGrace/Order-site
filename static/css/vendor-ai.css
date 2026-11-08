@@ -30,7 +30,7 @@ body.ai-page{
 .ai-brand{display:inline-flex;align-items:center;gap:11px;color:var(--ai-green);text-decoration:none;font-weight:850;letter-spacing:-.025em}
 .ai-brand .site-logo{width:38px;height:38px}
 .ai-brand-copy{display:flex;flex-direction:column;line-height:1.1}
-.ai-brand-copy small{margin-top:4px;color:var(--ai-muted);font-size:.72rem;font-weight:600;letter-spacing:.01em}
+.ai-brand-copy small{margin-top:4px;color:var(--ai-muted);font-size:.75rem;font-weight:600;letter-spacing:.01em}
 .ai-nav{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
 .ai-nav::-webkit-scrollbar{display:none}
 .ai-nav a{flex:0 0 auto;padding:9px 11px;border-radius:10px;color:#405047;text-decoration:none;font-size:.84rem;font-weight:700;white-space:nowrap}
@@ -67,7 +67,7 @@ body.ai-page{
 .ai-form{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .ai-field.full{grid-column:1/-1}
 .ai-field label{display:flex;align-items:center;gap:7px;margin:0 0 8px;color:#314239;font-size:.88rem;font-weight:800}
-.ai-field label .optional{color:#87938c;font-size:.75rem;font-weight:600}
+.ai-field label .optional{color:#5b6a61;font-size:.75rem;font-weight:600}
 .ai-field input,.ai-field select,.ai-field textarea{
   width:100%;box-sizing:border-box;padding:13px 14px;border:1px solid #d6dfd8;border-radius:12px;
   background:#fff;color:var(--ai-ink);font:inherit;outline:none;
@@ -77,7 +77,7 @@ body.ai-page{
 .ai-field input:focus,.ai-field select:focus,.ai-field textarea:focus{
   border-color:#6d927a;box-shadow:0 0 0 4px rgba(23,74,50,.08)
 }
-.ai-help{display:block;margin-top:6px;color:#7a867f;font-size:.76rem;line-height:1.5}
+.ai-help{display:block;margin-top:6px;color:#5b6a61;font-size:.76rem;line-height:1.5}
 .ai-field.chat-mode{opacity:.65}
 .ai-submit-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-top:4px}
 .ai-button{
@@ -87,7 +87,7 @@ body.ai-page{
   transition:background .18s,transform .18s,box-shadow .18s
 }
 .ai-button:hover{background:var(--ai-green-2);transform:translateY(-1px);box-shadow:0 11px 24px rgba(23,74,50,.2)}
-.ai-disclaimer{max-width:390px;color:#7b8780;font-size:.75rem;line-height:1.5}
+.ai-disclaimer{max-width:390px;color:#5b6a61;font-size:.75rem;line-height:1.5}
 
 .ai-tools{padding:22px}
 .ai-tools h2{margin:0 0 5px;color:var(--ai-green-2);font-size:1.08rem;letter-spacing:-.02em}
@@ -100,7 +100,7 @@ body.ai-page{
 .ai-tool:hover{background:#eef5ef;border-color:#d7e4d9;transform:translateY(-1px)}
 .ai-tool.active{background:#edf5ee;border-color:#b9d0bd;box-shadow:inset 3px 0 0 var(--ai-green)}
 .ai-tool strong{display:flex;align-items:center;gap:8px;font-size:.82rem}
-.ai-tool span{display:block;margin-top:4px;color:#758179;font-size:.74rem;line-height:1.4}
+.ai-tool span{display:block;margin-top:4px;color:#5b6a61;font-size:.75rem;line-height:1.4}
 
 .ai-result{padding:26px}
 .ai-result-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:15px}
@@ -114,7 +114,7 @@ body.ai-page{
 .ai-output{white-space:pre-wrap;line-height:1.75;padding:20px;border:1px solid #e0e7e1;border-radius:15px;background:#f7faf7;color:#27382e}
 .ai-copy-status{margin-left:8px;color:var(--ai-green);font-size:.78rem;font-weight:700}
 
-.ai-footer-note{display:flex;gap:11px;align-items:flex-start;margin-top:14px;color:#7a867f;font-size:.76rem;line-height:1.5}
+.ai-footer-note{display:flex;gap:11px;align-items:flex-start;margin-top:14px;color:#5b6a61;font-size:.76rem;line-height:1.5}
 .ai-footer-note span{font-size:1rem}
 
 @media(max-width:900px){
@@ -146,7 +146,7 @@ body.ai-page{
   background:linear-gradient(135deg,#f2f8f3 0%,#ffffff 70%);box-shadow:var(--ai-shadow)
 }
 .ai-insight-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:15px;background:#e2f0e5;font-size:1.35rem}
-.ai-insight-kicker{display:block;margin-bottom:5px;color:var(--ai-accent);font-size:.68rem;font-weight:900;letter-spacing:.12em}
+.ai-insight-kicker{display:block;margin-bottom:5px;color:var(--ai-accent);font-size:.75rem;font-weight:900;letter-spacing:.12em}
 .ai-insight-copy h2{margin:0 0 5px;color:var(--ai-green-2);font-size:1.05rem;letter-spacing:-.025em}
 .ai-insight-copy p{margin:0;color:var(--ai-muted);font-size:.8rem;line-height:1.55;max-width:720px}
 .ai-insight-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}

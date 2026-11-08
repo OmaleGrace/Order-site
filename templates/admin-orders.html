@@ -4,11 +4,11 @@
         {{template "head-common"}}
         {{template "meta-noindex"}}
         <title>Admin Orders | {{brandName}}</title>
-        <link rel="stylesheet" href="/static/css/base.css">
-        <link rel="stylesheet" href="/static/css/admin-orders.css">
-        <link rel="stylesheet" href="/static/css/pages/admin-orders.css">
-        <link rel="stylesheet" href="/static/css/portal-nav.css">
-        <link rel="stylesheet" href="/static/css/ui.css?v=5">
+        <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+        <link rel="stylesheet" href="/static/css/admin-orders.css?v=9a6f1ec5">
+        <link rel="stylesheet" href="/static/css/pages/admin-orders.css?v=1882c201">
+        <link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">
+        <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
     <body data-w="medium">
         <header class="admin-header">
@@ -78,7 +78,7 @@
                                 <div class="strong"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
                             </div>
                             <div class="order-bottom">
-                                <form action="/admin/orders/status" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><select name="status"><option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                                <form action="/admin/orders/status" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><select name="status" aria-label="Order status"><option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
                                     <option value="paid" {{if eq .Status "paid"}}selected{{end}}>Paid</option>
                                     <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
                                     <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
@@ -97,7 +97,7 @@
             {{end}}
         </main>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-        <script src="/static/js/nav-active.js"></script>
+        <script src="/static/js/nav-active.js?v=e62c3453"></script>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         <script>
         (() => {

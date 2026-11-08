@@ -256,3 +256,86 @@ html body :is(main, .wrap, body) :is(.loyalty-hero, .public-hero, header.hero, .
 /* Redundant brand bars: the global nav already shows the brand */
 html body[data-w] > header.fb-header,
 html body[data-w] > header.track-header{display:none}
+
+/* ---------- Touch comfort and readability (all pages) ----------
+   Every control is at least 44px tall on a phone (the usual finger-size guideline), form fields
+   are 16px so iPhones do not zoom the page when one is tapped, and taps respond instantly. */
+
+/* No 300ms tap delay or accidental double-tap zoom on controls; a soft green flash confirms a tap. */
+html body :is(a, button, input, select, textarea, label, summary, [role="button"]) {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(23, 74, 50, .12);
+}
+
+/* Logo links */
+html body :is(.nm-topbar-brand, .brand, .brand-name, .fb-brand) {
+  display: inline-flex; align-items: center; min-height: 44px;
+}
+
+/* Text links that sit on their own line or in a row: give them a finger-sized strip */
+html body :is(.back-link, .section-link, .row-link, .text-action, .continue-link, .edit-cart,
+              .map-open-link, .order-vendor-link, .home-group-link, .login-options a, .cart-links a,
+              .chat-tools .back, .chat-tools .refresh, .alert a, .row-head a, .back, .back-home,
+              .notification-logo, .track-header-link, .custom-brand, .success-box a, .person-link,
+              a[href^="tel:"], a[href^="mailto:"]) {
+  display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box;
+}
+html body .chat-tools .refresh { min-width: 44px; justify-content: center; }
+
+/* Footer links (shared footer and the shop-page footer) */
+html body .ui-footer a { display: flex; align-items: center; min-height: 44px; padding: 0; }
+html body :is(.menu-footer-links, .footer-links) a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Quantity +/- buttons in the cart */
+html body .qty-btn { min-width: 44px; min-height: 44px; }
+
+/* Tick boxes and radio buttons: bigger, in the brand colour, and the whole row is tappable */
+html body :is(input[type="checkbox"], input[type="radio"]) { width: 20px; height: 20px; accent-color: var(--ui-green); }
+html body .rating input { width: 1px; height: 1px; }
+html body label:has(> input[type="checkbox"]):not(td label):not(th label),
+html body label:has(> input[type="radio"]):not(.rating label):not(td label) {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+}
+
+/* Question-and-answer rows (help page etc.) */
+html body details:not(.nm-acc):not(.mn-filter) > summary { min-height: 44px; box-sizing: border-box; padding-top: 10px; padding-bottom: 10px; }
+
+/* 16px fields on phones: stops the automatic zoom-in on iPhones when a field is tapped */
+@media (max-width: 820px) {
+  html body :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+                select, textarea) { font-size: 16px; }
+}
+
+/* Buttons: clear pressed and unavailable states */
+html body :is(button, .btn, [role="button"]):not(:disabled):active { transform: translateY(1px); }
+html body :is(button, input[type="submit"]):disabled,
+html body :is(button, input[type="submit"])[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+
+/* Tidier text: balanced headings, no one-word last lines */
+html body :is(h1, h2, h3) { text-wrap: balance; }
+html body :is(p, li) { text-wrap: pretty; }
+
+/* Keep the focused control clear of sticky bars when tabbing or when the keyboard opens */
+html { scroll-padding-top: 76px; scroll-padding-bottom: 96px; }
+
+/* People who ask their phone for less motion get none */
+@media (prefers-reduced-motion: reduce) {
+  html *, html *::before, html *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* Logo links keep a gap between the picture and the name (they are flex boxes now) */
+html body :is(.brand, .fb-brand, .notification-logo, .track-header-link, .custom-brand) { gap: 10px; }
+
+/* Long placeholders end with "…" instead of being cut mid-word */
+html body :is(input, textarea)::placeholder { text-overflow: ellipsis; }
+html body input { text-overflow: ellipsis; }
+
+/* Touch size for the slim footer, breadcrumbs and the account page's links */
+html body :is(.ui-footer-slim a, .ap-link, .ap-crumbs a, .shop-breadcrumb a, .ap-todo a) {
+  display: inline-flex; align-items: center; min-height: 44px; box-sizing: border-box;
+}
+html body .ap-links a { min-height: 44px; box-sizing: border-box; }
+html body .chat-tools .back { min-width: 44px; justify-content: center; }

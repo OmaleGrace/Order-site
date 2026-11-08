@@ -1,0 +1,13 @@
+Merge of your Order-site.zip with the guides / UI work, plus old-address redirect
+---------------------------------------------------------------------------------
+Kept from your Order-site.zip: the account redesign (account.html, edit-profile.html, account_extras.go, profile.go,
+account.go, account-pro.css, account-v3.css, account.js, account-edit.js, migration 0004), the consistency layer
+and slim footer in ui.css, page-width attributes, "Page | Brand" titles, nav-menu.js, README additions.
+Added from the guides / UI work: customer, vendor and rider app guides, touch-size and readability fixes (also applied
+to your new components), time-of-day greeting, ENIE leftovers removed from the rider page, .env.example (restored).
+Combined: ui.css (yours first, then the touch layer), scripts-common.html, help.html, account.html (a "Take the app
+tour" row in Quick links). Every static CSS/JS reference now carries a content-hash ?v= so installed apps always load
+the current files.
+New: middleware/legacyhost.go (+ test) redirects grace-ordering-site.onrender.com to laikihub.onrender.com with a
+"we have rebranded" notice. Payment callbacks and the webhook keep working on the old address.
+After deploying, update the Paystack dashboard callback and webhook URLs to the new address.

@@ -4,10 +4,10 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
     <title>Orders | {{.VendorName}}</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/admin-orders.css">
-    <link rel="stylesheet" href="/static/css/pages/vendor-orders.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/admin-orders.css?v=9a6f1ec5">
+    <link rel="stylesheet" href="/static/css/pages/vendor-orders.css?v=2f33fdcd">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 
 <body data-w="medium">
@@ -148,7 +148,7 @@
                     {{if ne .Status "cancelled"}}
                     <form action="/vendor/orders/status" method="post" class="status-form">
                         <input type="hidden" name="order_id" value="{{.ID}}">
-                        <select name="status">
+                        <select name="status" aria-label="Order status">
                             <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
                             <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
                             <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
@@ -175,9 +175,9 @@
 
 </main>
 
-<script src="/static/js/vendor-banner.js"></script>
-<script src="/static/js/notification-bell.js"></script>
-<script src="/static/js/nav-active.js"></script>
+<script src="/static/js/vendor-banner.js?v=6ca0fab4"></script>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
 {{template "scripts-common"}}
 </body>
 </html>

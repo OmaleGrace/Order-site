@@ -26,7 +26,7 @@ body {
 .brand small {
   display:block;
   font-size:.75rem;
-  color:#68776f;
+  color:#5b6a61;
 }
 
 .nav {
@@ -69,7 +69,7 @@ body {
 }
 
 .muted {
-  color:#68776f;
+  color:#5b6a61;
 }
 
 .stats {
@@ -89,7 +89,7 @@ body {
 
 .stat span {
   display:block;
-  color:#68776f;
+  color:#5b6a61;
   font-size:.82rem;
 }
 
@@ -124,7 +124,7 @@ body {
 
 .tile p {
   margin:0;
-  color:#68776f;
+  color:#5b6a61;
   line-height:1.45;
   font-size:.88rem;
 }

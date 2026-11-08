@@ -259,7 +259,7 @@
 .recent-order-main small { margin-top: 3px; color: var(--muted); font-size: .78rem; }
 .recent-order-side { display: flex; align-items: flex-end; flex-direction: column; gap: 7px; white-space: nowrap; }
 .recent-order-side > strong { font-size: .92rem; }
-.order-status-pill { padding: 4px 9px; border-radius: 999px; font-size: .72rem; font-weight: 800; text-transform: capitalize; background: #f0eee8; color: #5e625d; }
+.order-status-pill { padding: 4px 9px; border-radius: 999px; font-size: .75rem; font-weight: 800; text-transform: capitalize; background: #f0eee8; color: #5e625d; }
 .order-status-pill.status-paid { background: #e9f5ed; color: #19713b; }
 .order-status-pill.status-preparing { background: #fff4db; color: #986500; }
 .order-status-pill.status-ready { background: #e7f1ff; color: #245e9a; }

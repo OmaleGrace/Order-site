@@ -1,6 +1,6 @@
 :root {
   --ink:#18352b;
-  --muted:#68776f;
+  --muted:#5b6a61;
   --line:#e2e9e3;
   --green:#14532d;
   --bg:#f4f7f4;
@@ -204,7 +204,7 @@ main {
 .bubble time {
   display:block;
   color:var(--muted);
-  font-size:.72rem;
+  font-size:.75rem;
   margin-top:5px;
 }
 
@@ -360,7 +360,7 @@ main {
 /* Smaller composer */
 .composer { padding-top:10px; }
 .composer-row { margin-top:6px; }
-.composer .hint { font-size:.74rem; }
+.composer .hint { font-size:.75rem; }
 .composer .button { padding:8px 13px; font-size:.9rem; }
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
@@ -384,8 +384,8 @@ main { max-width:760px; padding:18px 12px 36px; }
 .chat-tools .refresh { display:grid; place-items:center; width:30px; height:30px; border-radius:50%; background:#eef2ee; color:var(--green); text-decoration:none; font-weight:800; }
 .messages { gap:6px; max-height:46vh; min-height:150px; padding:2px 2px 10px; }
 .bubble { max-width:min(86%,520px); padding:7px 11px; border-radius:13px; font-size:.92rem; line-height:1.4; }
-.bubble .sender { font-size:.72rem; margin-bottom:2px; }
-.bubble time { margin-top:3px; font-size:.68rem; }
+.bubble .sender { font-size:.75rem; margin-bottom:2px; }
+.bubble time { margin-top:3px; font-size:.75rem; }
 .avatar { flex:0 0 22px; width:22px; height:22px; font-size:.7rem; }
 .avatar.md { flex:0 0 42px; width:42px; height:42px; font-size:1rem; }
 .avatar.lg { flex:0 0 44px; width:44px; height:44px; font-size:1.05rem; }

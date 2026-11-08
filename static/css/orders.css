@@ -20,7 +20,7 @@
 
 .orders-container { max-width: 980px; margin: 0 auto; padding: 42px 5vw 80px; }
 .orders-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
-.eyebrow { margin: 0 0 7px; color: var(--red); text-transform: uppercase; letter-spacing: .09em; font-size: .72rem; font-weight: 800; }
+.eyebrow { margin: 0 0 7px; color: var(--red); text-transform: uppercase; letter-spacing: .09em; font-size: .75rem; font-weight: 800; }
 .orders-hero h1 { margin: 0 0 7px; font-size: clamp(2rem, 5vw, 3rem); color: var(--green); letter-spacing: -.035em; }
 .orders-hero p:not(.eyebrow) { margin: 0; color: var(--muted); max-width: 590px; }
 .hero-action, .menu-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 20px; border-radius: 12px; background: var(--green); color: #fff; font-weight: 800; text-decoration: none; box-shadow: 0 8px 18px rgba(20, 83, 45, .14); }
@@ -38,7 +38,7 @@
 @keyframes pulse { 50% { opacity: .35; transform: scale(.8); } }
 
 .status-label { display: inline-flex; align-items: center; padding: 6px 11px; border-radius: 999px; background: #efe6d6; color: var(--ink); font-size: .76rem; font-weight: 800; text-transform: capitalize; white-space: nowrap; }
-.status-pending { background: #fff3cd; color: #8a6d00; }
+.status-pending { background: #fff3cd; color: #6b5400; }
 .status-paid { background: #e5efff; color: #1e4fa3; }
 .status-preparing { background: #fff0dc; color: #a85100; }
 .status-ready { background: #e3f4e9; color: var(--green); }
@@ -47,7 +47,7 @@
 
 .tracking-panel { padding: 20px; border-radius: 18px; background: linear-gradient(135deg, #f7fbf8, #f5efe4); border: 1px solid var(--line); }
 .tracking-topline { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
-.tracking-kicker { margin: 0 0 4px; color: var(--muted); font-size: .73rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.tracking-kicker { margin: 0 0 4px; color: var(--muted); font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
 .tracking-topline h3 { margin: 0 0 5px; color: var(--green); font-size: 1.2rem; }
 .tracking-topline p:not(.tracking-kicker) { margin: 0; color: var(--muted); line-height: 1.5; font-size: .9rem; max-width: 650px; }
 .fulfilment-pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 999px; background: rgba(255,255,255,.78); border: 1px solid var(--line); font-size: .78rem; font-weight: 750; white-space: nowrap; }
@@ -62,14 +62,14 @@
 .timeline-step { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; color: #9a958a; }
 .timeline-dot { display: grid; place-items: center; width: 30px; height: 30px; margin-bottom: 7px; border-radius: 50%; background: #e9e4da; color: #8d877c; border: 4px solid #f7fbf8; font-size: .7rem; font-weight: 900; }
 .timeline-step strong { font-size: .78rem; color: inherit; }
-.timeline-step small { margin-top: 3px; font-size: .67rem; color: inherit; }
+.timeline-step small { margin-top: 3px; font-size: .75rem; color: inherit; }
 .timeline-step.done { color: var(--green); }
 .timeline-step.done .timeline-dot { background: var(--green); color: #fff; }
 .timeline-step.current .timeline-dot { box-shadow: 0 0 0 5px rgba(23, 74, 50, .10); }
 
 .order-details-grid { display: grid; grid-template-columns: 1.6fr .7fr; gap: 12px; margin-top: 14px; }
 .detail-box { padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.5); min-width: 0; }
-.detail-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: .72rem; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+.detail-label { display: block; margin-bottom: 5px; color: var(--muted); font-size: .75rem; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
 .detail-box strong { display: block; color: var(--ink); font-size: .9rem; line-height: 1.45; overflow-wrap: anywhere; }
 .detail-box .total-value { color: var(--red); font-size: 1.18rem; }
 
@@ -121,7 +121,7 @@
     .timeline { gap: 5px; }
     .timeline-line { left: 8%; right: 8%; }
     .timeline-step small { display: none; }
-    .timeline-step strong { font-size: .69rem; }
+    .timeline-step strong { font-size: .75rem; }
     .timeline-dot { width: 27px; height: 27px; }
     .order-card-footer { font-size: .7rem; }
 }

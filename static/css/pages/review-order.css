@@ -20,7 +20,7 @@ body {
   color:#c8382a;
   text-transform:uppercase;
   letter-spacing:.13em;
-  font-size:.72rem;
+  font-size:.75rem;
   font-weight:850;
 }
 
@@ -30,7 +30,7 @@ body {
 }
 
 .muted {
-  color:#6c776f;
+  color:#5b6a61;
 }
 
 .rating {

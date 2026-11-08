@@ -131,11 +131,19 @@ go run ./cmd/move-images -free      # also empty the database copy afterwards
 
 Old `/media/<id>` links keep working: the site forwards them to Cloudinary. After `-free`, run `VACUUM FULL uploaded_images;` in the database to give the space back. Try it without `-free` first.
 
-**Migrations.** Database changes are numbered. Migration 1 is the baseline (everything before numbering). Every new change is a file `database/migrations/NNNN_name.sql` (next number: 0004). Each file runs once, in a transaction, in order, and is recorded in the `schema_migrations` table, so a restart only reads one small table instead of re-running about seventy statements. Never edit a released file; add a new one. The first start after this update runs the baseline once (it is safe on an existing database), then records it.
+**Migrations.** Database changes are numbered. Migration 1 is the baseline (everything before numbering). Every new change is a file `database/migrations/NNNN_name.sql` (next number: 0005). Each file runs once, in a transaction, in order, and is recorded in the `schema_migrations` table, so a restart only reads one small table instead of re-running about seventy statements. Never edit a released file; add a new one. The first start after this update runs the baseline once (it is safe on an existing database), then records it.
 
 **Tests.** Database tests use `TEST_DATABASE_URL` (default `postgresql://testuser:testpass@localhost:5433/food_ordering_test`). The database name must end in `_test`, and the suite opens many connections, so give the test Postgres a `max_connections` of at least 200.
 
 ## Live rider map
 
 The admin order page shows the rider on a zoomable Leaflet map (assets from unpkg.com, allowed in the Content Security Policy) with a circle for the GPS accuracy the rider's phone reports. The accuracy is stored in `orders.rider_location_accuracy`, added by migration `0003_rider_location_accuracy.sql`. The admin page refreshes the position every 5 seconds from `GET /admin/orders/{orderID}/rider-location`.
+
+## Old address redirect
+
+Visitors who open an old address (default `grace-ordering-site.onrender.com`) see a short "we have rebranded" page with a button to the same page on the new address (default `https://laikihub.onrender.com`), and are sent there automatically after 10 seconds. Forms and files are redirected with a permanent redirect. The payment callbacks and the Paystack webhook keep working on the old address, so payments in progress are not lost. Change the addresses with `LEGACY_HOSTS` and `CANONICAL_BASE_URL`, or set `LEGACY_HOSTS=off` to turn it off. Remember to update the Paystack dashboard (callback and webhook URLs) to the new address. The code is in `middleware/legacyhost.go`.
+
+## App guides
+
+First-launch guides for customers, vendors and riders live in `static/js/app-guide.js` (the steps are a plain list at the top). See `docs/patch-notes/app-guide.txt`.
 

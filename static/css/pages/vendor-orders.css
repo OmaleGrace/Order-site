@@ -15,7 +15,7 @@
 .scheduled-time{margin-top:5px;color:#174a32;font-weight:850}
 .scheduled-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .scheduled-meta div{padding:10px 12px;border-radius:11px;background:#f7f8f5}
-.scheduled-meta span{display:block;color:#778078;font-size:.72rem;margin-bottom:3px}
+.scheduled-meta span{display:block;color:#778078;font-size:.75rem;margin-bottom:3px}
 .scheduled-meta strong{color:#2c382f;font-size:.82rem}
 .scheduled-items{margin:13px 0 0;padding:0;list-style:none;border-top:1px solid #edf0eb}
 .scheduled-items li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #edf0eb;font-size:.83rem}

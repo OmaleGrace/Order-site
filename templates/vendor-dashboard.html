@@ -4,9 +4,9 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
     <title>Dashboard | {{.VendorName}}</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/pages/vendor-dashboard.css">
-<link rel="stylesheet" href="/static/css/portal-nav.css">    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/vendor-dashboard.css?v=4e72b99b">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="wide">
 <header class="vendor-header">
@@ -20,12 +20,13 @@
     <section class="hero">
         <div>
             <p class="eyebrow">Business overview</p>
-            <h1>Good evening, {{.VendorName}}</h1>
+            <h1><span data-greeting>Welcome back</span>, {{.VendorName}}</h1>
             <p>Keep an eye on today's orders, sales and what needs your attention.</p>
         </div>
         <div class="hero-actions">
             <a class="btn btn-primary" href="/vendor/orders">View orders</a>
             <a class="btn btn-secondary" href="/vendor/menu">Manage menu</a>
+            <button type="button" class="btn btn-secondary" data-app-guide-open="vendor">📱 App tour</button>
         </div>
     </section>
 
@@ -82,8 +83,9 @@
         </aside>
     </div>
 </main>
-<script src="/static/js/notification-bell.js"></script>
-<script src="/static/js/nav-active.js"></script>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+<script src="/static/js/greeting.js?v=0d626b87"></script>
 {{template "scripts-common"}}
 </body>
 </html>

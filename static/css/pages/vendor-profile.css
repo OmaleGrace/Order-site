@@ -27,7 +27,7 @@ small { display: block; margin-top: 5px; color: var(--muted); font-size: 0.82rem
 .save-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 .payout-card { position: relative; overflow: hidden; }
 .payout-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; }
-.payout-kicker { display:inline-block; margin-bottom:5px; color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.11em; }
+.payout-kicker { display:inline-block; margin-bottom:5px; color:var(--red); font-size:.75rem; font-weight:800; letter-spacing:.11em; }
 .payout-shield { width:42px; height:42px; display:grid; place-items:center; flex:0 0 auto; border-radius:14px; background:#eaf5ed; color:var(--green); font-size:1.15rem; font-weight:900; }
 .payout-saved,.payout-unverified { display:flex; gap:12px; align-items:flex-start; margin:0 0 18px; padding:13px 14px; border-radius:13px; }
 .payout-saved { background:#eaf7ee; border:1px solid #bfe1c8; color:var(--green); }
@@ -53,7 +53,7 @@ select#payout_bank_code:focus { outline:none; border-color:var(--green); box-sha
 .verified-account { display:flex; gap:13px; align-items:center; margin-top:16px; padding:16px; border:1px solid #bfe1c8; border-radius:14px; background:linear-gradient(135deg,#f0faf2,#f8fcf9); }
 .verified-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; background:var(--green); color:#fff; font-weight:900; }
 .verified-copy { min-width:0; }
-.verified-label { display:block; color:#67806f; font-size:.67rem; font-weight:800; letter-spacing:.08em; }
+.verified-label { display:block; color:#67806f; font-size:.75rem; font-weight:800; letter-spacing:.08em; }
 .verified-copy strong { display:block; margin-top:3px; color:var(--green); font-size:1.05rem; }
 .verified-copy small { margin-top:3px; }
 .payout-save { width:100%; margin-top:14px; background:var(--green); }

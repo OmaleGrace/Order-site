@@ -58,7 +58,7 @@ td.row-actions button { padding: 7px 14px; font-size: 0.85rem; }
 @media (max-width:600px) { table { min-width:780px; } .table-wrap { overflow-x:auto; } }
 @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 
-.notice.notice-warning { background:#fff3cd; border-color:#f0d98a; color:#8a6d00; }
+.notice.notice-warning { background:#fff3cd; border-color:#f0d98a; color:#6b5400; }
 .menu-search-form { display:grid; grid-template-columns:1fr auto; gap:10px; margin-bottom:16px; }
 .row-end { display:flex; gap:10px; align-items:end; flex-wrap:wrap; margin-bottom:12px; }
 .tag.tag-danger { background:#fbe7e5; color:#a12a20; }

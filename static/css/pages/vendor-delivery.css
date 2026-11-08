@@ -1,4 +1,4 @@
-:root { --green:#174a32; --ink:#1f2f26; --muted:#5c6b61; --line:#dfe8e1; --accent:#c2500e; --bg:#fbfaf6; }
+:root { --green:#174a32; --ink:#1f2f26; --muted:#5c6b61; --line:#dfe8e1; --accent:#b84a0c; --bg:#fbfaf6; }
 * { box-sizing:border-box; }
 body { margin:0; font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); line-height:1.55; }
 .vendor-header { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:12px 5vw; background:#fff; border-bottom:1px solid var(--line); }

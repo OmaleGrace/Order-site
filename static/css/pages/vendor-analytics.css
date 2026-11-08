@@ -3,7 +3,7 @@
   --r:#c8382a;
   --bg:#f6f7f3;
   --card:#fff;
-  --muted:#6c776f;
+  --muted:#5b6a61;
   --line:#e4e9e3;
 }
 
@@ -86,7 +86,7 @@ main {
   color:var(--r);
   text-transform:uppercase;
   letter-spacing:.13em;
-  font-size:.72rem;
+  font-size:.75rem;
   font-weight:850;
   margin:0 0 7px;
 }
@@ -160,7 +160,7 @@ h1 {
   display:block;
   margin-top:4px;
   color:var(--muted);
-  font-size:.72rem;
+  font-size:.75rem;
 }
 
 .change-up {
@@ -228,7 +228,7 @@ h1 {
 }
 
 .bar-value {
-  font-size:.68rem;
+  font-size:.75rem;
   color:var(--muted);
   font-weight:800;
 }
@@ -251,7 +251,7 @@ h1 {
   display:flex;
   justify-content:space-between;
   color:var(--muted);
-  font-size:.72rem;
+  font-size:.75rem;
   margin-top:10px;
 }
 

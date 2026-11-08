@@ -52,7 +52,7 @@
     display: block;
     margin: 0 0 12px;
     color: var(--terracotta);
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 850;
     letter-spacing: .14em;
     text-transform: uppercase;
@@ -181,7 +181,7 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, .94);
     color: var(--green-dark);
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 800;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
     pointer-events: none;
@@ -316,7 +316,7 @@
 .filter-heading strong { color:var(--green-dark); font-size:.9rem; }
 .filter-heading span { color:#849087; font-size:.78rem; }
 .advanced-filters { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
-.advanced-filters label { display:flex; flex-direction:column; gap:5px; min-width:150px; color:#65736a; font-size:.72rem; font-weight:750; }
+.advanced-filters label { display:flex; flex-direction:column; gap:5px; min-width:150px; color:#65736a; font-size:.75rem; font-weight:750; }
 .advanced-filters select,.advanced-filters input[type=number] { width:100%; min-height:42px; box-sizing:border-box; padding:9px 11px; border:1px solid #dce4db; border-radius:10px; background:#fff; color:#273a30; font:inherit; font-size:.84rem; }
 .advanced-filters select:focus,.advanced-filters input[type=number]:focus { outline:0; border-color:var(--green); box-shadow:0 0 0 3px rgba(23,74,50,.08); }
 .filter-apply { min-height:42px; padding:0 15px; border:0; border-radius:10px; background:var(--green); color:#fff; font:inherit; font-size:.82rem; font-weight:800; cursor:pointer; }

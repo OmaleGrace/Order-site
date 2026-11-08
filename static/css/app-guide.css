@@ -1,0 +1,92 @@
+/* First-launch guide for the installed app. Loaded on every page through head-common.
+   Phone: a sheet that rises from the bottom. Wider screens: a centred card. */
+
+html.ag-lock, html.ag-lock body { overflow: hidden; }
+
+.ag-overlay {
+  position: fixed; inset: 0; z-index: 4000;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(14, 34, 24, .58);
+  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: ag-fade .22s ease both;
+}
+.ag-sheet {
+  position: relative; width: 100%; max-width: 460px;
+  max-height: 94vh; max-height: 94dvh; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 30px 22px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: #fff; color: #1c2d24;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, .25);
+  animation: ag-rise .3s cubic-bezier(.2, .8, .2, 1) both;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (min-width: 600px) {
+  .ag-overlay { align-items: center; padding: 24px; }
+  .ag-sheet { border-radius: 26px; padding-bottom: 22px; box-shadow: 0 30px 80px rgba(0, 0, 0, .3); }
+}
+
+.ag-sheet:focus { outline: none; }
+.ag-skip {
+  position: absolute; top: 8px; right: 10px; min-height: 44px; padding: 0 14px;
+  border: 0; border-radius: 12px; background: none; color: #5b6a61; font: inherit; font-weight: 700; cursor: pointer;
+}
+.ag-skip:hover { background: #f0f4f0; }
+
+.ag-slide { display: flex; flex-direction: column; gap: 10px; animation: ag-slide .26s ease both; }
+.ag-slide[data-dir="back"] { animation-name: ag-slide-back; }
+
+.ag-art {
+  width: 108px; height: 108px; margin: 4px auto 6px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 3.2rem; line-height: 1;
+  background: radial-gradient(circle at 30% 25%, #fff 0, var(--ag-tone, #e7f1ea) 66%);
+  box-shadow: 0 10px 26px rgba(23, 74, 50, .14);
+}
+.ag-count { margin: 0; text-align: center; color: #5b6a61; font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.ag-title { margin: 0; text-align: center; font-size: 1.5rem; line-height: 1.2; font-weight: 800; color: #174a32; text-wrap: balance; }
+.ag-lead { margin: 0; text-align: center; color: #3d4f44; font-size: 1rem; line-height: 1.5; text-wrap: pretty; }
+
+.ag-points { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 9px; }
+.ag-points li {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 11px 13px; border-radius: 14px; background: #f6f8f5;
+  font-size: .96rem; line-height: 1.4; color: #24352c;
+}
+.ag-points li::before {
+  content: "✓"; flex: 0 0 auto; width: 22px; height: 22px; margin-top: 1px; border-radius: 50%;
+  display: grid; place-items: center; background: #174a32; color: #fff; font-size: .78rem; font-weight: 800;
+}
+
+/* Mini copy of the bottom bar, shown on the last step */
+.ag-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; padding: 10px 6px; border: 1px solid #e3e9e2; border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(23, 74, 50, .08); }
+.ag-tabs span { display: grid; justify-items: center; gap: 2px; font-size: .78rem; font-weight: 700; color: #3d4f44; }
+.ag-tabs b { font-size: 1.4rem; font-weight: 400; line-height: 1.2; }
+
+.ag-dots { display: flex; justify-content: center; gap: 7px; margin-top: 2px; }
+.ag-dots i { width: 8px; height: 8px; border-radius: 99px; background: #d3ddd5; transition: width .2s ease, background .2s ease; }
+.ag-dots i.on { width: 24px; background: #174a32; }
+
+.ag-actions { display: flex; gap: 10px; }
+.ag-btn {
+  min-height: 52px; border-radius: 14px; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+}
+.ag-back { padding: 0 20px; border: 1.5px solid #cfdcd2; background: #fff; color: #174a32; }
+.ag-next { flex: 1; border: 0; background: #174a32; color: #fff; box-shadow: 0 8px 20px rgba(23, 74, 50, .25); }
+.ag-next:active, .ag-back:active { transform: translateY(1px); }
+.ag-btn:focus-visible, .ag-skip:focus-visible { outline: 3px solid #174a32; outline-offset: 2px; }
+.ag-next:focus-visible { outline-color: #c2500e; }
+
+/* "Take the app tour" button used on the Help and Account pages */
+.ag-open-btn {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px;
+  border: 1.5px solid #174a32; border-radius: 999px; background: #fff; color: #174a32;
+  font: inherit; font-weight: 800; cursor: pointer;
+}
+.ag-open-btn:hover { background: #e7f1ea; }
+
+@keyframes ag-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ag-rise { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes ag-slide { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes ag-slide-back { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+
+@media print { .ag-overlay { display: none; } }

@@ -4,9 +4,9 @@
     {{template "head-common"}}
     {{template "meta-noindex"}}
     <title>My Orders | {{brandName}}</title>
-    <link rel="stylesheet" href="/static/css/base.css">
-    <link rel="stylesheet" href="/static/css/orders.css">
-    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/orders.css?v=7db29b13">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="medium">
 <header class="orders-header">
@@ -172,10 +172,10 @@
     {{end}}
 </main>
 
-<script src="/static/js/pages/orders.js"></script>
-<script src="/static/js/notification-bell.js"></script>
-<script src="/static/js/bottomnav.js"></script>
-<script src="/static/js/nav-active.js"></script>
+<script src="/static/js/pages/orders.js?v=77940352"></script>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/bottomnav.js?v=686ab4b3"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
 {{template "site-footer"}}
 {{template "scripts-common"}}
 <script>document.querySelectorAll('[data-rider-live]').forEach(box=>{const orderID=box.dataset.riderLive;const frame=box.querySelector('iframe[data-rider-map]');const status=box.querySelector('.rider-live-status');const note=box.querySelector('.rider-live-note');const refresh=async()=>{try{const r=await fetch('/orders/'+orderID+'/rider-location',{cache:'no-store'});if(!r.ok)return;const d=await r.json();if(status)status.textContent='Status: '+(d.delivery_status||'unassigned');if(d.available&&d.embed_url){frame.hidden=false;if(frame.src!==d.embed_url)frame.src=d.embed_url;if(note)note.textContent='GPS updated '+(d.location_updated||'just now');}else{frame.hidden=true;if(note)note.textContent='Rider location has not been shared yet.';}}catch(_){}};refresh();setInterval(refresh,20000);});</script>

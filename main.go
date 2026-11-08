@@ -316,11 +316,11 @@ func main() {
 		port = "8080"
 	}
 
-	// Order matters: headers first, then the size limit, then the forged-request check.
+	// Order matters: the old-address notice first, then headers, then the size limit, then the forged-request check.
 	// The timeouts stop slow or stuck connections from tying up the server.
 	srv := &http.Server{
 		Addr:              ":" + port,
-		Handler:           middleware.SecurityHeaders(middleware.LimitBody(middleware.SameOrigin(mux))),
+		Handler:           middleware.LegacyHost(middleware.SecurityHeaders(middleware.LimitBody(middleware.SameOrigin(mux)))),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		WriteTimeout:      60 * time.Second,

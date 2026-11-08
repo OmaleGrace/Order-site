@@ -108,7 +108,7 @@ img.zoomable { cursor: zoom-in; }
         padding: 8px 0 9px;
         text-decoration: none;
         color: var(--muted);
-        font-size: .72rem;
+        font-size: .75rem;
         font-weight: 600;
     }
     .bottom-nav a.active { color: var(--terracotta); }
@@ -123,7 +123,7 @@ img.zoomable { cursor: zoom-in; }
         border-radius: 999px;
         background: var(--terracotta);
         color: #fff;
-        font-size: .68rem;
+        font-size: .75rem;
         font-weight: 700;
         display: flex;
         align-items: center;
@@ -335,7 +335,7 @@ body .price-label { font-size: .9rem; font-weight: 700; }
     border-radius: 999px;
     background: var(--terracotta, #c95c3a);
     color: #fff;
-    font-size: .68rem;
+    font-size: .75rem;
     line-height: 1;
     font-weight: 800;
     border: 2px solid #fff;
@@ -346,7 +346,7 @@ body .price-label { font-size: .9rem; font-weight: 700; }
     .notification-nav-item { width: 38px; justify-content: center; padding: 7px !important; }
 }
 
-.messages-nav-item,.notification-nav-item{position:relative;display:inline-flex!important;align-items:center;gap:5px}.messages-unread-badge,.notification-unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#c94b3e;color:#fff;font-size:.68rem;font-weight:850;line-height:1}.messages-unread-badge[hidden],.notification-unread-badge[hidden]{display:none!important}
+.messages-nav-item,.notification-nav-item{position:relative;display:inline-flex!important;align-items:center;gap:5px}.messages-unread-badge,.notification-unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#c94b3e;color:#fff;font-size:.75rem;font-weight:850;line-height:1}.messages-unread-badge[hidden],.notification-unread-badge[hidden]{display:none!important}
 
 /* Stage 18 messaging polish */
 @media(max-width:700px){.messages-nav-label,.notification-nav-label{display:none}.messages-nav-item,.notification-nav-item{padding-left:8px!important;padding-right:8px!important}}
@@ -400,4 +400,4 @@ button[aria-busy="true"], input[aria-busy="true"] { cursor: progress; opacity: .
 .mt-22 { margin-top:22px !important; }
 .ml-8  { margin-left:8px !important; }
 
-.promoted-badge { display:inline-block; margin-right:6px; padding:2px 9px; border-radius:999px; background:#fff1dc; color:#8a4b00; font-size:.72rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }
+.promoted-badge { display:inline-block; margin-right:6px; padding:2px 9px; border-radius:999px; background:#fff1dc; color:#8a4b00; font-size:.75rem; font-weight:800; letter-spacing:.03em; text-transform:uppercase; vertical-align:middle; }

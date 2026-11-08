@@ -97,7 +97,7 @@
 .shop-logo-large { position:relative; z-index:2; width:118px; height:118px; margin-top:30px; border:5px solid #fff; box-shadow:0 12px 30px rgba(23,74,50,.16); background:#efe6d6; }
 .shop-info-modern { position:relative; z-index:2; flex:1; padding-top:22px; }
 .shop-title-row { display:flex; justify-content:space-between; gap:20px; align-items:flex-start; }
-.shop-kicker { color:var(--terracotta); font-size:.68rem; letter-spacing:.14em; font-weight:850; margin-bottom:5px; }
+.shop-kicker { color:var(--terracotta); font-size:.75rem; letter-spacing:.14em; font-weight:850; margin-bottom:5px; }
 .shop-title-row h1 { margin:0; font-size:clamp(1.8rem,4vw,2.6rem); letter-spacing:-.05em; }
 .shop-title-row .verified-badge { margin-top:3px; }
 .shop-meta-row { display:flex; flex-wrap:wrap; gap:8px 18px; margin:15px 0; color:#53635a; font-size:.86rem; font-weight:650; }
@@ -124,7 +124,7 @@
 .shop-food-image { aspect-ratio: 1.35 / 1; }
 .shop-food-content { padding:17px 18px 18px; }
 .shop-food-topline { min-height:18px; margin-bottom:3px; }
-.shop-food-category { color:var(--terracotta); font-size:.68rem; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+.shop-food-category { color:var(--terracotta); font-size:.75rem; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
 .shop-food-content h2 { font-size:1.14rem; }
 .shop-food-content .food-description { min-height:48px; }
 .food-description-muted { color:#8a948d; font-style:italic; }
@@ -157,9 +157,9 @@
     .shop-action-link,.shop-message-btn { justify-content:center; }
 }
 
-.rating-tag{background:#fff5d6;color:#8a6400}.shop-reviews{margin:34px 0 60px;padding:24px;border:1px solid #e2e8e2;border-radius:20px;background:#fff}.reviews-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.reviews-heading h2{margin:4px 0 0;color:#174a32}.review-score{display:flex;align-items:center;gap:10px;text-align:right}.review-score strong{font-size:1.8rem;color:#174a32}.review-score span{color:#6c776f;font-size:.8rem;line-height:1.35}.reviews-note{margin:8px 0 0;color:#6c776f}@media(max-width:600px){.shop-reviews{padding:18px}.reviews-heading{align-items:flex-start;flex-direction:column}.review-score{text-align:left}}
+.rating-tag{background:#fff5d6;color:#8a6400}.shop-reviews{margin:34px 0 60px;padding:24px;border:1px solid #e2e8e2;border-radius:20px;background:#fff}.reviews-heading{display:flex;align-items:center;justify-content:space-between;gap:20px}.reviews-heading h2{margin:4px 0 0;color:#174a32}.review-score{display:flex;align-items:center;gap:10px;text-align:right}.review-score strong{font-size:1.8rem;color:#174a32}.review-score span{color:#5b6a61;font-size:.8rem;line-height:1.35}.reviews-note{margin:8px 0 0;color:#5b6a61}@media(max-width:600px){.shop-reviews{padding:18px}.reviews-heading{align-items:flex-start;flex-direction:column}.review-score{text-align:left}}
 
-.review-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.review-card{padding:17px;border:1px solid #e5ebe5;border-radius:15px;background:#fbfcfa}.review-card-top{display:flex;justify-content:space-between;gap:10px;color:#27342c}.review-card-top span{font-size:.74rem;color:#7b857d}.review-stars{margin:7px 0;color:#d99d00;letter-spacing:1px}.review-card p{margin:0 0 10px;color:#4f5b53;line-height:1.55}.verified-review{font-size:.72rem;color:#287446;font-weight:800}@media(max-width:700px){.review-list{grid-template-columns:1fr}}
+.review-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}.review-card{padding:17px;border:1px solid #e5ebe5;border-radius:15px;background:#fbfcfa}.review-card-top{display:flex;justify-content:space-between;gap:10px;color:#27342c}.review-card-top span{font-size:.75rem;color:#5b6a61}.review-stars{margin:7px 0;color:#d99d00;letter-spacing:1px}.review-card p{margin:0 0 10px;color:#4f5b53;line-height:1.55}.verified-review{font-size:.75rem;color:#287446;font-weight:800}@media(max-width:700px){.review-list{grid-template-columns:1fr}}
 
 .customization-modal{position:fixed;inset:0;background:rgba(13,35,25,.62);z-index:1000;padding:18px;overflow:auto}
 .customization-modal[hidden]{display:none}

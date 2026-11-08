@@ -1,7 +1,7 @@
 .success-page { min-height: 100vh; display: grid; place-items: center; padding: 28px 5vw; background: radial-gradient(circle at top, #f4faf6 0, #fdf8f0 45%, #f7efe3 100%); }
 .success-wrapper { width: min(620px, 100%); text-align: center; background: rgba(255,255,255,.78); border: 1px solid var(--line); border-radius: 28px; padding: 48px 28px; box-shadow: var(--shadow); }
 .success-icon { width: 72px; height: 72px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: var(--green); color: #fff; font-size: 2rem; font-weight: 900; box-shadow: 0 12px 28px rgba(23,74,50,.18); }
-.success-eyebrow { margin: 0 0 8px; color: var(--red); text-transform: uppercase; letter-spacing: .09em; font-size: .74rem; font-weight: 800; }
+.success-eyebrow { margin: 0 0 8px; color: var(--red); text-transform: uppercase; letter-spacing: .09em; font-size: .75rem; font-weight: 800; }
 .success-wrapper h1 { margin: 0 auto 12px; max-width: 520px; color: var(--green); font-size: clamp(2rem, 6vw, 3rem); line-height: 1.08; letter-spacing: -.04em; }
 .success-wrapper > p:not(.success-eyebrow) { margin: 0 auto; max-width: 500px; color: var(--muted); line-height: 1.6; }
 .success-note { display: flex; align-items: center; justify-content: center; gap: 7px; margin: 24px auto; padding: 13px 15px; border-radius: 14px; background: #f2f7f3; border: 1px solid #d9e9df; color: var(--green); font-size: .9rem; }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     {{template "head-common"}}
-    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
     <meta name="robots" content="noindex,nofollow">
     <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,10 +40,12 @@
         .step{height:5px;border-radius:99px;background:#e6eee8}
         .step.active{background:#42a66d}
         .secure-note{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--amber);color:#77520b;font-size:.88rem}
+        .hero .ag-open-btn{margin-top:4px;border-color:#fff;background:#fff}
+        .brand-mark{object-fit:cover}
         .footer{text-align:center;color:var(--muted);font-size:.8rem;padding:22px 8px}
         @media(max-width:520px){.page{padding:16px 12px 36px}.hero{padding:22px 19px;border-radius:18px}.card{padding:18px 16px}.card-head{display:block}.badge{display:inline-block;margin-top:10px}.steps{gap:5px}}
     </style>
-    <link rel="stylesheet" href="/static/css/ui.css?v=5">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="narrow">
 <main class="page">
@@ -53,6 +55,7 @@
         <h1>Hello, {{.RiderName}}</h1>
         <p>Use this page to update the customer on their delivery.</p>
         <span class="order-chip">Order #{{.OrderID}}</span>
+        <p><button type="button" class="ag-open-btn" data-app-guide-open="rider">How this page works</button></p>
     </header>
 
     <section class="card" aria-labelledby="progress-title">
@@ -228,5 +231,6 @@
     if (!window.isSecureContext) byId("secure-note").style.display = "block";
 })();
 </script>
+<script src="/static/js/app-guide.js?v=37f3d5f3" defer></script>
 </body>
 </html>
