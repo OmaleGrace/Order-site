@@ -306,6 +306,9 @@ func main() {
 	)
 
 	mux.HandleFunc("POST /account/photo/remove", middleware.Logging(middleware.RequireLogin(db, h.RemoveProfilePhoto)))
+	mux.HandleFunc("POST /account/delete", middleware.Logging(middleware.RequireLogin(db, h.DeleteAccount)))
+	mux.HandleFunc("GET /account/deleted", middleware.Logging(h.AccountDeleted))
+	mux.HandleFunc("POST /account/theme", middleware.Logging(middleware.RequireLogin(db, h.SaveTheme)))
 	mux.HandleFunc("POST /account/password", middleware.Logging(middleware.RequireLogin(db, middleware.RateLimit(middleware.LoginIPLimiter, h.ChangePassword))))
 
 	mux.HandleFunc("GET /forgot-password", middleware.Logging(h.ForgotPassword))

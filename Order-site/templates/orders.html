@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>My Orders | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/orders.css?v=o2">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-w="medium">
+<header class="orders-header">
+    <a href="/" class="brand-name"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+    <nav aria-label="Order navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders" class="active active-link" aria-current="page">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+</header>
+
+<main class="orders-container">
+    <section class="orders-hero">
+        <div>
+            <p class="eyebrow">Your {{brandName}} activity</p>
+            <h1>My Orders</h1>
+            <p>Follow your order from payment to preparation and completion.</p>
+        </div>
+        <a href="/menu" class="hero-action">Order food</a>
+    </section>
+
+    {{if .Orders}}
+    {{if .Message}}<div class="orders-message" role="status">{{$.Message}}</div>{{end}}
+    {{else}}
+        <section class="empty-orders">
+            <div class="empty-icon" aria-hidden="true">🍽️</div>
+            <p class="eyebrow">Ready when you are</p>
+            <h2>No orders yet</h2>
+            <p>Your orders will appear here with their status and details after checkout.</p>
+            <a href="/menu" class="menu-btn">Browse Menu</a>
+        </section>
+    {{end}}
+
+    <div class="orders-list">
+    {{range .Orders}}
+        <article class="order-card {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}order-live{{end}}" data-order-id="{{.ID}}" data-status="{{.Status}}">
+            <div class="order-card-header">
+                <div>
+                    <div class="order-heading-line">
+                        <h2>Order {{.Reference}}</h2>
+                        {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}
+                            <span class="live-dot"><span></span> Live</span>
+                        {{end}}
+                    </div>
+                    <p class="order-meta">Placed {{date .CreatedAt}}</p>
+                    {{if .ScheduledFor}}<p class="order-meta"><strong>Scheduled for {{date .ScheduledFor}}</strong></p>{{end}}
+                    <div class="order-vendor">
+                        <span class="order-vendor-label">Ordered from</span>
+                        {{if .VendorSlug}}<a href="/v/{{.VendorSlug}}" class="order-vendor-link">{{.VendorName}}</a>{{else}}<strong>{{.VendorName}}</strong>{{end}}
+                    </div>
+                </div>
+                <span class="status-label status-{{.Status}}">{{.Status}}</span>
+            </div>
+
+            <div class="tracking-panel">
+                <div class="tracking-topline">
+                    <div>
+                        <p class="tracking-kicker">Order progress</p>
+                        {{if eq .Status "scheduled"}}
+                            <h3>Scheduled order confirmed</h3>
+                            <p>Your payment is confirmed. We'll activate this order at the scheduled time.</p>
+                        {{else if eq .Status "paid"}}
+                            <h3>Order confirmed</h3>
+                            <p>Your order has been received and is waiting for the vendor to start preparing it.</p>
+                        {{else if eq .Status "preparing"}}
+                            <h3>Being prepared</h3>
+                            <p>The vendor is currently preparing your food.</p>
+                        {{else if eq .Status "ready"}}
+                            <h3>Ready for {{if eq .DeliveryMethod "delivery"}}delivery{{else}}pickup{{end}}</h3>
+                            <p>Your food is ready for the next fulfilment step.</p>
+                        {{else if eq .Status "completed"}}
+                            <h3>Order completed</h3>
+                            <p>Your order has been completed. Thanks for ordering with {{brandName}}.</p>
+                        {{else if eq .Status "cancelled"}}
+                            <h3>Order cancelled</h3>
+                            <p>This order is no longer active.</p>
+                        {{else}}
+                            <h3>Payment pending</h3>
+                            <p>We're waiting for payment confirmation before the vendor can begin.</p>
+                        {{end}}
+                    </div>
+                    <div class="fulfilment-pill">
+                        <span aria-hidden="true">{{if eq .DeliveryMethod "delivery"}}🚚{{else}}🏪{{end}}</span>
+                        {{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}
+                    </div>
+                </div>
+
+                <div class="timeline" aria-label="Order progress">
+                    <div class="timeline-line" aria-hidden="true"><span class="timeline-fill status-fill-{{.Status}}"></span></div>
+                    <div class="timeline-step {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "paid"}}current{{end}}">
+                        <span class="timeline-dot">✓</span><strong>Confirmed</strong><small>Payment received</small>
+                    </div>
+                    <div class="timeline-step {{if or (eq .Status "preparing") (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "preparing"}}current{{end}}">
+                        <span class="timeline-dot">2</span><strong>Preparing</strong><small>Food is being made</small>
+                    </div>
+                    <div class="timeline-step {{if or (eq .Status "ready") (eq .Status "completed")}}done{{end}} {{if eq .Status "ready"}}current{{end}}">
+                        <span class="timeline-dot">3</span><strong>Ready</strong><small>Fulfilment next</small>
+                    </div>
+                    <div class="timeline-step {{if eq .Status "completed"}}done current{{end}}">
+                        <span class="timeline-dot">4</span><strong>Completed</strong><small>Enjoy your meal</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-details-grid">
+                <div class="detail-box">
+                    <span class="detail-label">{{if eq .DeliveryMethod "delivery"}}Delivery address{{else}}Fulfilment{{end}}</span>
+                    <strong>{{if eq .DeliveryMethod "delivery"}}{{if .DeliveryAddress}}{{.DeliveryAddress}}{{else}}Address provided at checkout{{end}}{{else}}Pickup from the vendor{{end}}</strong>
+                </div>
+                {{if eq .DeliveryMethod "delivery"}}<div class="detail-box">
+                    <span class="detail-label">Delivery tracking</span>
+                    <strong>{{if .RiderName}}Rider: {{.RiderName}}{{else}}Rider not assigned yet{{end}}</strong>
+                    {{if .RiderPhone}}<small>📞 {{.RiderPhone}}</small>{{end}}
+                    <div data-rider-live="{{.ID}}"><small class="rider-live-status">Status: {{.DeliveryStatus}}</small><small class="rider-live-note">{{if .RiderLocationAvailable}}GPS updated {{.RiderLocationUpdated}}{{else if .RiderName}}Rider location has not been shared yet.{{end}}</small><div class="rider-map-wrap" {{if not .RiderLocationAvailable}}hidden{{end}}><iframe title="Rider location" data-rider-map="{{.ID}}" src="{{if .RiderLocationAvailable}}{{.RiderMapEmbedURL}}{{else}}about:blank{{end}}" loading="lazy" class="rider-map"></iframe><button type="button" class="map-unlock">Tap to move the map</button></div></div>
+                </div>{{end}}
+                <div class="detail-box">
+                    <span class="detail-label">Payment breakdown</span>
+                    <strong>Food: ₦{{naira .FoodSubtotalKobo}}</strong>
+                    {{if .LoyaltyDiscountKobo}}<small>Loyalty discount: -₦{{naira .LoyaltyDiscountKobo}}</small>{{end}}
+                    {{if .DeliveryFeeKobo}}<small>Delivery: ₦{{naira .DeliveryFeeKobo}}</small>{{end}}
+                    <strong class="total-value">Paid: ₦{{naira .TotalKobo}}</strong>
+                </div>
+            </div>
+
+            <details class="order-items-details">
+                <summary><span>Order items</span><strong>{{len .Items}} item{{if ne (len .Items) 1}}s{{end}}</strong></summary>
+                <ul class="order-items">
+                    {{range .Items}}
+                        <li>
+                            <div class="order-item-info">
+                                {{if .ImageURL}}<img class="order-item-image" src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}<span class="order-item-placeholder" aria-hidden="true">🍽️</span>{{end}}
+                                <span><strong>{{.Name}}</strong><small>Qty {{.Quantity}}</small>{{range .Options}}<small>• {{.}}</small>{{end}}</span>
+                            </div>
+                            <span>₦{{naira .PriceKobo}}</span>
+                        </li>
+                    {{end}}
+                </ul>
+            </details>
+
+            <div class="order-card-footer">
+                <span class="order-support">Reference: <strong>{{.Reference}}</strong> · <a href="/help?order_id={{.ID}}">Need help?</a></span>
+                <div class="order-footer-actions">
+                    {{if eq .Status "completed"}}
+                        {{if .Reviewed}}<span class="reviewed-badge">★ Reviewed</span>{{else}}<a class="review-btn" href="/orders/{{.ID}}/review">★ Rate & review</a>{{end}}
+                    {{end}}
+                    {{if not (or (eq .Status "pending") (eq .Status "cancelled"))}}
+                    <form action="/orders/reorder" method="post">
+                        <input type="hidden" name="order_id" value="{{.ID}}">
+                        <button type="submit" class="reorder-btn">↻ Order again</button>
+                    </form>
+                    {{end}}
+                    {{if or (eq .Status "paid") (eq .Status "preparing") (eq .Status "ready")}}
+                        <span class="refresh-note">Status refreshes automatically</span>
+                    {{else}}
+                        <span class="refresh-note">Keep this reference for support</span>
+                    {{end}}
+                </div>
+            </div>
+        </article>
+    {{end}}
+    </div>
+
+    {{if .Orders}}
+    <div class="orders-footer-actions">
+        <a class="back-link" href="/menu">← Continue browsing</a>
+    </div>
+    {{end}}
+</main>
+
+<script src="/static/js/pages/orders.js?v=o2"></script>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/bottomnav.js?v=686ab4b3"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "site-footer"}}
+{{template "scripts-common"}}
+<script>document.querySelectorAll('[data-rider-live]').forEach(box=>{const orderID=box.dataset.riderLive;const frame=box.querySelector('iframe[data-rider-map]');const status=box.querySelector('.rider-live-status');const note=box.querySelector('.rider-live-note');const refresh=async()=>{try{const r=await fetch('/orders/'+orderID+'/rider-location',{cache:'no-store'});if(!r.ok)return;const d=await r.json();if(status)status.textContent='Status: '+(d.delivery_status||'unassigned');if(d.available&&d.embed_url){frame.parentElement.hidden=false;if(frame.src!==d.embed_url)frame.src=d.embed_url;if(note)note.textContent='GPS updated '+(d.location_updated||'just now');}else{frame.parentElement.hidden=true;if(note)note.textContent='Rider location has not been shared yet.';}}catch(_){}};refresh();setInterval(refresh,20000);});</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+package handlers
+
+import (
+	"database/sql"
+	"fmt"
+	"html/template"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"Order-site/menu"
+
+	"Order-site/brand"
+	"Order-site/errors"
+	"Order-site/render"
+)
+
+type ShopDish struct {
+	ID          int
+	Name        string
+	Description string
+	PriceKobo   int
+	ImageURL    string
+	Category    string
+	Rating      float64
+	ReviewCount int
+	HasOptions  bool
+}
+
+type ShopReview struct {
+	Customer  string
+	Rating    int
+	Comment   string
+	CreatedAt string
+	PhotoURL  string
+}
+
+type ShopPage struct {
+	VendorID        int
+	Name            string
+	Description     string
+	Area            string
+	Address         string
+	Phone           string
+	PhoneLink       template.URL
+	LogoURL         string
+	Verified        bool
+	OffersPickup    bool
+	OffersDelivery  bool
+	DeliveryFeeKobo int
+	Completed       int
+	ReviewAverage   float64
+	ReviewCount     int
+	Reviews         []ShopReview
+	Dishes          []ShopDish
+	Categories      []string
+	Offers          []ShopOffer
+	ShareURL        string
+	ShareText       string
+	OpenKnown       bool
+	OpenNow         bool
+	OpenLabel       string
+	Hours           []ShopHoursRow
+}
+
+// ShopOffer is a public coupon shown on the shop page.
+type ShopOffer struct {
+	Code    string
+	Summary string
+}
+
+func (h *Handlers) VendorShop(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+
+	var vendorID int
+	var p ShopPage
+	err := h.DB.QueryRow(`
+		SELECT id, name, description, area, address, phone, logo_url,
+		       verified, offers_pickup, offers_delivery, delivery_fee_kobo
+		FROM vendors
+		WHERE slug = $1 AND status = 'active' AND paid_until > NOW()
+	`, slug).Scan(&vendorID, &p.Name, &p.Description, &p.Area, &p.Address, &p.Phone,
+		&p.LogoURL, &p.Verified, &p.OffersPickup, &p.OffersDelivery, &p.DeliveryFeeKobo)
+	p.VendorID = vendorID
+	if err == sql.ErrNoRows {
+		errors.Render(w, "We couldn't find that shop.", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("shop: vendor query failed: %v", err)
+		errors.Render(w, "Could not load this shop", http.StatusInternalServerError)
+		return
+	}
+
+	if p.Phone != "" && validPhone(p.Phone) {
+		p.PhoneLink = template.URL("tel:" + strings.NewReplacer(" ", "", "-", "").Replace(p.Phone))
+	}
+
+	h.DB.QueryRow("SELECT count(*) FROM orders WHERE vendor_id = $1 AND status = 'completed'", vendorID).Scan(&p.Completed)
+	h.DB.QueryRow("SELECT COALESCE(AVG(rating),0), COUNT(*) FROM order_reviews WHERE vendor_id = $1", vendorID).Scan(&p.ReviewAverage, &p.ReviewCount)
+	reviewRows, err := h.DB.Query(`SELECT COALESCE(u.name, 'Customer'), r.rating, r.comment, TO_CHAR(r.created_at, 'DD Mon YYYY'), COALESCE(r.photo_url,'') FROM order_reviews r JOIN users u ON u.id=r.user_id WHERE r.vendor_id=$1 AND (r.comment <> '' OR COALESCE(r.photo_url,'') <> '') ORDER BY r.created_at DESC LIMIT 5`, vendorID)
+	if err == nil {
+		defer reviewRows.Close()
+		for reviewRows.Next() {
+			var review ShopReview
+			if scanErr := reviewRows.Scan(&review.Customer, &review.Rating, &review.Comment, &review.CreatedAt, &review.PhotoURL); scanErr == nil {
+				p.Reviews = append(p.Reviews, review)
+			}
+		}
+	}
+
+	if week, herr := h.vendorWeekHours(vendorID); herr != nil {
+		log.Printf("shop: opening hours query failed: %v", herr)
+	} else {
+		p.OpenKnown, p.OpenNow, p.OpenLabel = openStatus(week, time.Now())
+		p.Hours = hoursRows(week)
+	}
+
+	p.ShareURL = strings.TrimRight(brand.SiteURL(), "/") + "/v/" + slug
+	p.ShareText = "Order from " + p.Name + " on " + brand.Name() + ": " + p.ShareURL
+	if offerRows, oerr := h.DB.Query(`
+		SELECT code, discount_type, discount_value, min_order_kobo, max_discount_kobo
+		FROM coupons
+		WHERE vendor_id = $1 AND active = TRUE AND starts_at <= NOW()
+		  AND (expires_at IS NULL OR expires_at > NOW())
+		  AND (usage_limit = 0 OR used_count + reserved_count < usage_limit)
+		ORDER BY created_at DESC LIMIT 3`, vendorID); oerr == nil {
+		for offerRows.Next() {
+			var code, kind string
+			var value, minKobo, maxKobo int
+			if offerRows.Scan(&code, &kind, &value, &minKobo, &maxKobo) != nil {
+				continue
+			}
+			text := fmt.Sprintf("₦%s off", nairaText(value))
+			if kind == "percentage" {
+				text = fmt.Sprintf("%d%% off", value)
+				if maxKobo > 0 {
+					text += fmt.Sprintf(" (up to ₦%s)", nairaText(maxKobo))
+				}
+			}
+			if minKobo > 0 {
+				text += fmt.Sprintf(" orders over ₦%s", nairaText(minKobo))
+			}
+			p.Offers = append(p.Offers, ShopOffer{Code: code, Summary: text})
+		}
+		offerRows.Close()
+	}
+
+	rows, err := h.DB.Query(`
+		SELECT id, name, COALESCE(description, ''), price_kobo,
+		       COALESCE(image_url, ''), COALESCE(category, ''),
+               COALESCE((SELECT AVG(r.rating) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
+               COALESCE((SELECT COUNT(*) FROM order_item_reviews r WHERE r.menu_item_id = menu_items.id),0),
+               `+strings.ReplaceAll(menu.HasOptionsSQL, "m.id", "menu_items.id")+`
+		FROM menu_items
+		WHERE vendor_id = $1 AND COALESCE(available, TRUE) = TRUE
+		ORDER BY category, name
+	`, vendorID)
+	if err != nil {
+		log.Printf("shop: dishes query failed: %v", err)
+		errors.Render(w, "Could not load this shop", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	seenCategories := make(map[string]bool)
+	for rows.Next() {
+		var d ShopDish
+		if err := rows.Scan(&d.ID, &d.Name, &d.Description, &d.PriceKobo, &d.ImageURL, &d.Category, &d.Rating, &d.ReviewCount, &d.HasOptions); err != nil {
+			log.Printf("shop: dishes scan failed: %v", err)
+			errors.Render(w, "Could not read this shop", http.StatusInternalServerError)
+			return
+		}
+		p.Dishes = append(p.Dishes, d)
+		category := strings.TrimSpace(d.Category)
+		if category != "" && !seenCategories[category] {
+			seenCategories[category] = true
+			p.Categories = append(p.Categories, category)
+		}
+	}
+
+	tmpl, err := render.Page("shop.html", template.FuncMap{"naira": naira})
+	if err != nil {
+		log.Printf("shop: template failed: %v", err)
+		errors.Render(w, "Could not display this shop", http.StatusInternalServerError)
+		return
+	}
+	if err := tmpl.Execute(w, p); err != nil {
+		log.Printf("shop: execute failed: %v", err)
+	}
+}

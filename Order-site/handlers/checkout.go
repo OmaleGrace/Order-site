@@ -1,0 +1,531 @@
+package handlers
+
+import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"Order-site/cart"
+	"Order-site/errors"
+	"Order-site/render"
+)
+
+var httpClient = &http.Client{Timeout: 20 * time.Second}
+
+func (h *Handlers) Checkout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// A logged-in customer, or a guest shopper with a cart session.
+	userID, isGuest, err := h.cartUser(w, r, false)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			errors.Render(w, "Your cart is empty", http.StatusBadRequest)
+			return
+		}
+		fmt.Println("Checkout owner error:", err)
+		errors.Render(w, "Could not load your cart", http.StatusInternalServerError)
+		return
+	}
+
+	// The email Paystack sends the receipt to. A guest types theirs on the checkout page.
+	var email string
+	var guestName, guestPhone string
+	if isGuest {
+		guestName = strings.Join(strings.Fields(r.FormValue("guest_name")), " ")
+		email = strings.ToLower(strings.TrimSpace(r.FormValue("guest_email")))
+		guestPhone = normalizeNigerianPhone(strings.TrimSpace(r.FormValue("guest_phone")))
+		if n := len([]rune(guestName)); n < 2 || n > 80 {
+			errors.Render(w, "Enter your name (2 to 80 characters).", http.StatusBadRequest)
+			return
+		}
+		if len(email) > 254 || validateEmail(email) != nil {
+			errors.Render(w, "Enter a valid email address. We send your order tracking link there.", http.StatusBadRequest)
+			return
+		}
+		if guestPhone == "" {
+			errors.Render(w, "Enter a valid Nigerian phone number: 11 digits starting with 0 (for example 08012345678), or starting with +234.", http.StatusBadRequest)
+			return
+		}
+	} else {
+		err = h.DB.QueryRow(
+			"SELECT email FROM users WHERE id = $1",
+			userID,
+		).Scan(&email)
+
+		if err != nil {
+			fmt.Println("Get user email error:", err)
+			errors.Render(w, "Could not get user information", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Get cart items
+	items, err := cart.GetItems(h.DB, userID)
+	if err != nil {
+		errors.Render(w, "Could not load cart", http.StatusInternalServerError)
+		return
+	}
+
+	if len(items) == 0 {
+		errors.Render(w, "Your cart is empty", http.StatusBadRequest)
+		return
+	}
+
+	var unavailableCount int
+	if err := h.DB.QueryRow(`SELECT COUNT(*) FROM cart_items ci JOIN menu_items m ON m.id = ci.menu_item_id WHERE ci.user_id = $1 AND COALESCE(m.available, TRUE) = FALSE`, userID).Scan(&unavailableCount); err != nil {
+		errors.Render(w, "Could not validate cart availability", http.StatusInternalServerError)
+		return
+	}
+	if unavailableCount > 0 {
+		errors.Render(w, "One or more items in your cart are currently unavailable. Please remove them and try again.", http.StatusBadRequest)
+		return
+	}
+
+	// Calculate total
+	var totalKobo int
+
+	for _, item := range items {
+		totalKobo += item.PriceKobo * item.Quantity
+	}
+
+	// One vendor per order, and that vendor must be live
+	vendorRows, err := h.DB.Query(`
+		SELECT DISTINCT m.vendor_id,
+		       COALESCE(v.status = 'active' AND v.paid_until > NOW(), false)
+		FROM cart_items ci
+		JOIN menu_items m ON m.id = ci.menu_item_id
+		JOIN vendors v ON v.id = m.vendor_id
+		WHERE ci.user_id = $1
+	`, userID)
+	if err != nil {
+		fmt.Println("Vendor check error:", err)
+		errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+		return
+	}
+
+	var vendorIDs []int
+	allLive := true
+	for vendorRows.Next() {
+		var vid int
+		var live bool
+		if err := vendorRows.Scan(&vid, &live); err != nil {
+			vendorRows.Close()
+			fmt.Println("Vendor check scan error:", err)
+			errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+			return
+		}
+		vendorIDs = append(vendorIDs, vid)
+		if !live {
+			allLive = false
+		}
+	}
+	if err := vendorRows.Err(); err != nil {
+		vendorRows.Close()
+		fmt.Println("Vendor check read error:", err)
+		errors.Render(w, "Could not check your cart", http.StatusInternalServerError)
+		return
+	}
+	vendorRows.Close()
+
+	if len(vendorIDs) != 1 {
+		errors.Render(w, "Your cart has dishes from more than one vendor. Please order from one vendor at a time.", http.StatusBadRequest)
+		return
+	}
+	if !allLive {
+		errors.Render(w, "This vendor is not taking orders right now.", http.StatusBadRequest)
+		return
+	}
+	vendorID := vendorIDs[0]
+
+	// Delivery choice, checked against what this vendor really offers
+	var offersPickup, offersDelivery bool
+	var deliveryFeeKobo int
+	err = h.DB.QueryRow(`
+		SELECT offers_pickup, offers_delivery, delivery_fee_kobo
+		FROM vendors WHERE id = $1
+	`, vendorID).Scan(&offersPickup, &offersDelivery, &deliveryFeeKobo)
+	if err != nil {
+		fmt.Println("Vendor delivery options error:", err)
+		errors.Render(w, "Could not check delivery options", http.StatusInternalServerError)
+		return
+	}
+
+	method := r.FormValue("delivery_method")
+	state := strings.TrimSpace(r.FormValue("delivery_state"))
+	lga := strings.TrimSpace(r.FormValue("delivery_lga"))
+	address := strings.TrimSpace(r.FormValue("delivery_address"))
+	deliveryPhone := strings.TrimSpace(r.FormValue("delivery_phone"))
+	if isGuest && deliveryPhone == "" {
+		deliveryPhone = guestPhone // the rider can reach a guest on the number they gave
+	}
+	scheduledForText := strings.TrimSpace(r.FormValue("scheduled_for"))
+	var scheduledFor *time.Time
+	if scheduledForText != "" {
+		loc, locErr := time.LoadLocation("Africa/Lagos")
+		if locErr != nil {
+			errors.Render(w, "Could not read the scheduled time.", http.StatusInternalServerError)
+			return
+		}
+		t, parseErr := time.ParseInLocation("2006-01-02T15:04", scheduledForText, loc)
+		if parseErr != nil {
+			errors.Render(w, "Choose a valid scheduled date and time.", http.StatusBadRequest)
+			return
+		}
+		minTime, maxTime := scheduledOrderBounds(time.Now())
+		if t.Before(minTime) {
+			errors.Render(w, "Scheduled orders must be at least 15 minutes from now.", http.StatusBadRequest)
+			return
+		}
+		if t.After(maxTime) {
+			errors.Render(w, "Scheduled orders can only be placed up to 30 days ahead.", http.StatusBadRequest)
+			return
+		}
+		scheduledFor = &t
+	}
+	loyaltyPoints, err := strconv.Atoi(strings.TrimSpace(r.FormValue("loyalty_points")))
+	if err != nil || isGuest {
+		loyaltyPoints = 0 // guests have no points to spend
+	}
+	if loyaltyPoints < 0 {
+		errors.Render(w, "Invalid loyalty points amount", http.StatusBadRequest)
+		return
+	}
+	if loyaltyPoints > totalKobo/100 {
+		errors.Render(w, "You cannot use more loyalty points than the food subtotal", http.StatusBadRequest)
+		return
+	}
+	if loyaltyPoints > 0 {
+		var availablePoints int
+		if err := h.DB.QueryRow(`
+			SELECT COALESCE(SUM(CASE WHEN type = 'earned' THEN points ELSE -points END), 0)
+			FROM loyalty_transactions
+			WHERE user_id = $1
+		`, userID).Scan(&availablePoints); err != nil {
+			errors.Render(w, "Could not verify loyalty points", http.StatusInternalServerError)
+			return
+		}
+		if loyaltyPoints > availablePoints {
+			errors.Render(w, "You do not have enough loyalty points", http.StatusBadRequest)
+			return
+		}
+	}
+
+	couponCode := normalizeCouponCode(r.FormValue("coupon_code"))
+	couponID, couponDiscountKobo, err := h.validateCoupon(vendorID, couponCode, totalKobo)
+	if err != nil {
+		errors.Render(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	switch method {
+	case "pickup":
+		if !offersPickup {
+			errors.Render(w, "This shop does not offer pickup.", http.StatusBadRequest)
+			return
+		}
+		state, lga, address = "", "", ""
+		deliveryFeeKobo = 0
+	case "delivery":
+		if !offersDelivery {
+			errors.Render(w, "This shop does not offer delivery.", http.StatusBadRequest)
+			return
+		}
+		canonical, ok := canonicalState(state)
+		if !ok {
+			errors.Render(w, "Choose your state.", http.StatusBadRequest)
+			return
+		}
+		state = canonical
+		if n := len([]rune(lga)); n < 3 || n > 60 {
+			errors.Render(w, "Enter your local government area.", http.StatusBadRequest)
+			return
+		}
+		if n := len([]rune(address)); n < 8 || n > 250 {
+			errors.Render(w, "Enter your house address (8 to 250 characters).", http.StatusBadRequest)
+			return
+		}
+		var areaConfigured bool
+		if err := h.DB.QueryRow(`
+			SELECT EXISTS (
+				SELECT 1 FROM vendor_delivery_areas
+				WHERE vendor_id = $1
+				  AND LOWER(TRIM(state)) = LOWER(TRIM($2))
+				  AND LOWER(TRIM(lga)) = LOWER(TRIM($3))
+			)
+		`, vendorID, state, lga).Scan(&areaConfigured); err != nil {
+			fmt.Println("Delivery area check error:", err)
+			errors.Render(w, "Could not verify this shop's delivery area", http.StatusInternalServerError)
+			return
+		}
+		if !areaConfigured {
+			errors.Render(w, "This shop does not deliver to the selected state and LGA. Choose another area or select pickup.", http.StatusBadRequest)
+			return
+		}
+
+		// Per-area pricing: the shop may charge a different fee for this area, require a
+		// minimum order, or offer free delivery above an amount. The server decides the
+		// fee here; the checkout page only previews it. totalKobo is still the food subtotal.
+		areaFeeKobo, blockedReason, rateErr := resolveDeliveryFee(h.DB, vendorID, state, lga, totalKobo, deliveryFeeKobo)
+		if rateErr != nil {
+			fmt.Println("Delivery rate error:", rateErr)
+			errors.Render(w, "Could not work out the delivery fee for this area", http.StatusInternalServerError)
+			return
+		}
+		if blockedReason != "" {
+			errors.Render(w, blockedReason, http.StatusBadRequest)
+			return
+		}
+		deliveryFeeKobo = areaFeeKobo
+		if deliveryPhone == "" {
+			errors.Render(w, "Enter a phone number the rider can reach you on.", http.StatusBadRequest)
+			return
+		}
+	default:
+		errors.Render(w, "Choose pickup or delivery.", http.StatusBadRequest)
+		return
+	}
+
+	if deliveryPhone != "" {
+		normalized := normalizeNigerianPhone(deliveryPhone)
+		if normalized == "" {
+			errors.Render(w, "Enter a valid Nigerian phone number: 11 digits starting with 0 (for example 08012345678), or starting with +234.", http.StatusBadRequest)
+			return
+		}
+		deliveryPhone = normalized
+	}
+
+	// Loyalty points reduce the amount the customer actually pays for food.
+	// The vendor/platform split is then calculated from that post-discount food
+	// amount. Delivery remains outside the commission calculation.
+	foodSubtotalKobo := totalKobo
+	loyaltyDiscountKobo := loyaltyPoints * 100 // 1 point = ₦1 = 100 kobo
+	foodPaidKobo := foodSubtotalKobo - loyaltyDiscountKobo - couponDiscountKobo
+	if foodPaidKobo < 0 {
+		foodPaidKobo = 0
+	}
+	commission := commissionKoboFor(h.DB, vendorID, foodPaidKobo)
+
+	// The delivery fee is part of what the customer pays. Loyalty discounts
+	// apply to food only, never to the delivery fee.
+	totalKobo = foodPaidKobo + deliveryFeeKobo
+	// The service fee is charged on top and kept by the platform; it is not part of total_kobo.
+	orderServiceFeeKobo := 0
+	if totalKobo > 0 {
+		orderServiceFeeKobo = serviceFeeKobo()
+	}
+	// Members with an active pass pay no service fee.
+	if orderServiceFeeKobo > 0 && !isGuest && h.hasPass(userID) {
+		orderServiceFeeKobo = 0
+	}
+	// Paying from the wallet only works when the balance covers the whole order.
+	useWallet := !isGuest && r.FormValue("use_wallet") == "1"
+	if useWallet && walletBalance(h.DB, userID) < totalKobo+orderServiceFeeKobo {
+		errors.Render(w, "Your wallet balance is too low for this order. Top up your wallet, or pay by card.", http.StatusBadRequest)
+		return
+	}
+	tx, err := h.DB.Begin()
+	if err != nil {
+		errors.Render(w, "Could not start order", http.StatusInternalServerError)
+		return
+	}
+
+	defer tx.Rollback()
+
+	if isGuest {
+		// Show the guest's name wherever the shop and the admins look at this order.
+		if _, err := tx.Exec(`UPDATE users SET name = $1 WHERE id = $2 AND is_guest`, guestName, userID); err != nil {
+			fmt.Println("Save guest name error:", err)
+			errors.Render(w, "Could not create order", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if couponID > 0 {
+		if err := h.reserveCoupon(tx, couponID); err != nil {
+			errors.Render(w, "This coupon is no longer available", http.StatusBadRequest)
+			return
+		}
+	}
+
+	var orderID int
+
+	// coupon_id is nullable. Never insert 0 for "no coupon" because 0 is
+	// still a real foreign-key value and cannot match coupons.id.
+	var couponIDValue interface{}
+	if couponID > 0 {
+		couponIDValue = couponID
+	}
+
+	initialStatus := "pending"
+	err = tx.QueryRow(`
+	INSERT INTO orders (user_id, total_kobo, status, vendor_id,
+	                    delivery_method, delivery_state, delivery_lga, delivery_address,
+	                    delivery_phone, delivery_fee_kobo, commission_kobo, loyalty_points_redeemed,
+	                    coupon_id, coupon_code, coupon_discount_kobo, coupon_reserved, scheduled_for,
+	                    guest_name, guest_email, guest_phone, service_fee_kobo)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+	RETURNING id
+`, userID, totalKobo, initialStatus, vendorID, method, state, lga, address, deliveryPhone, deliveryFeeKobo, commission, loyaltyPoints, couponIDValue, couponCode, couponDiscountKobo, couponID > 0, scheduledFor, guestName, guestEmailValue(isGuest, email), guestPhone, orderServiceFeeKobo).Scan(&orderID)
+
+	if err != nil {
+		fmt.Println("Create order error:", err)
+		errors.Render(w, "Could not create order", http.StatusInternalServerError)
+		return
+	}
+
+	for _, item := range items {
+		var orderItemID int
+		_, err = tx.Exec(`
+		INSERT INTO order_items
+		(order_id, menu_item_id, quantity, price_kobo)
+		VALUES ($1, $2, $3, $4)
+	`, orderID, item.MenuItemID, item.Quantity, item.PriceKobo)
+		if err != nil {
+			fmt.Println("Create order item error:", err)
+			errors.Render(w, "Could not create order items", http.StatusInternalServerError)
+			return
+		}
+		if err = tx.QueryRow(`SELECT id FROM order_items WHERE order_id=$1 AND menu_item_id=$2 ORDER BY id DESC LIMIT 1`, orderID, item.MenuItemID).Scan(&orderItemID); err != nil {
+			fmt.Println("Find order item error:", err)
+			errors.Render(w, "Could not save item customizations", http.StatusInternalServerError)
+			return
+		}
+		for _, option := range item.Options {
+			if _, err = tx.Exec(`INSERT INTO order_item_options(order_item_id,name,price_kobo) VALUES ($1,$2,$3)`, orderItemID, option.Name, option.PriceKobo); err != nil {
+				fmt.Println("Create order item option error:", err)
+				errors.Render(w, "Could not save item customizations", http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		fmt.Println("Commit order error:", err)
+		errors.Render(w, "Could not save order", http.StatusInternalServerError)
+		return
+	}
+
+	if useWallet {
+		if err := h.payOrderWithWallet(orderID, userID); err != nil {
+			if err == errWalletInsufficient {
+				errors.Render(w, "Your wallet balance is too low for this order. Top up your wallet, or pay by card.", http.StatusBadRequest)
+				return
+			}
+			fmt.Println("Wallet payment error:", err)
+			errors.Render(w, "Could not pay from your wallet", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/order-success", http.StatusSeeOther)
+		return
+	}
+
+	// Paystack request
+	paystackData := map[string]interface{}{
+		"email":        email,
+		"amount":       totalKobo + orderServiceFeeKobo,
+		"reference":    fmt.Sprintf("ORDER-%d-%d", orderID, time.Now().UnixNano()),
+		"callback_url": os.Getenv("PAYSTACK_CALLBACK_URL"),
+	}
+
+	requestBody, err := json.Marshal(paystackData)
+	if err != nil {
+		errors.Render(w, "Could not prepare payment", http.StatusInternalServerError)
+		return
+	}
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		"https://api.paystack.co/transaction/initialize",
+		bytes.NewBuffer(requestBody),
+	)
+
+	if err != nil {
+		errors.Render(w, "Could not create payment request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("PAYSTACK_SECRET_KEY"))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Paystack request error:", err)
+		errors.Render(w, "Could not connect to payment service", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	var paystackResponse struct {
+		Status  bool   `json:"status"`
+		Message string `json:"message"`
+		Data    struct {
+			AuthorizationURL string `json:"authorization_url"`
+			AccessCode       string `json:"access_code"`
+			Reference        string `json:"reference"`
+		} `json:"data"`
+	}
+
+	err = json.NewDecoder(resp.Body).Decode(&paystackResponse)
+	if err != nil {
+		errors.Render(w, "Could not read payment response", http.StatusInternalServerError)
+		return
+	}
+
+	if !paystackResponse.Status {
+		fmt.Println("Paystack error:", paystackResponse.Message)
+		errors.Render(w, "Could not initialize payment", http.StatusInternalServerError)
+		return
+	}
+
+	// Save Paystack reference
+	_, err = h.DB.Exec(`
+		UPDATE orders
+		SET payment_reference = $1
+		WHERE id = $2
+	`,
+		paystackResponse.Data.Reference,
+		orderID,
+	)
+
+	if err != nil {
+		fmt.Println("Save payment reference error:", err)
+		errors.Render(w, "Could not save payment information", http.StatusInternalServerError)
+		return
+	}
+
+	// Send customer to Paystack
+	http.Redirect(
+		w,
+		r,
+		paystackResponse.Data.AuthorizationURL,
+		http.StatusSeeOther,
+	)
+}
+
+func (h *Handlers) OrderSuccess(w http.ResponseWriter, r *http.Request) {
+	tmpl := render.MustPage("order-success.html")
+
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		errors.Render(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+}
+
+// guestEmailValue is what is stored in orders.guest_email: the guest's address for a guest
+// order, and an empty string for a normal customer's order (whose email lives on their account).
+func guestEmailValue(isGuest bool, email string) string {
+	if isGuest {
+		return email
+	}
+	return ""
+}

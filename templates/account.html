@@ -6,7 +6,7 @@
     <title>My Account | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
     <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
-    <link rel="stylesheet" href="/static/css/account-pro.css?v=p3">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=p5">
     <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="wide">
@@ -149,6 +149,20 @@
                     <a href="/help"><span>Help and support</span><b>&rarr;</b></a>
                     <a href="/help?tour=1" data-app-guide-open><span>Take the app tour</span><b>&rarr;</b></a>
                 </nav>
+            </section>
+
+            <section class="ap-card" id="appearance" data-theme-panel data-theme-saved="{{.Theme}}">
+                <header class="ap-card-head"><h2>Appearance</h2></header>
+                <form method="post" action="/account/theme" class="ap-theme-form">
+                    <fieldset class="ap-theme">
+                        <legend class="sr-only">Theme</legend>
+                        <label><input type="radio" name="theme" value="light" {{if eq .Theme "light"}}checked{{end}}><span><i class="ap-sw ap-sw-light" aria-hidden="true"></i>Light</span></label>
+                        <label><input type="radio" name="theme" value="dark" {{if eq .Theme "dark"}}checked{{end}}><span><i class="ap-sw ap-sw-dark" aria-hidden="true"></i>Dark</span></label>
+                        <label><input type="radio" name="theme" value="system" {{if or (eq .Theme "system") (eq .Theme "")}}checked{{end}}><span><i class="ap-sw ap-sw-system" aria-hidden="true"></i>Device</span></label>
+                    </fieldset>
+                    <button type="submit" class="account-button secondary ap-theme-save">Save</button>
+                </form>
+                <p class="ap-small">&ldquo;Device&rdquo; follows your phone or computer setting.</p>
             </section>
 
             <section class="ap-card" data-push-panel>

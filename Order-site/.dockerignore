@@ -1,0 +1,10 @@
+# Keep secrets and clutter out of the image build context.
+.env
+.env.*
+!.env.example
+.git
+*.zip
+*.save
+*.tmp
+*.bak
+grace_kitchen_backup.sql

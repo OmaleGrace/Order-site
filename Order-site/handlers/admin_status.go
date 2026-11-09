@@ -1,0 +1,85 @@
+package handlers
+
+import (
+	"Order-site/errors"
+	"Order-site/safe"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+)
+
+func (h *Handlers) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		errors.Render(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	orderID, err := strconv.Atoi(r.FormValue("order_id"))
+	if err != nil {
+		errors.Render(w, "Invalid order ID", http.StatusBadRequest)
+		return
+	}
+
+	status := r.FormValue("status")
+
+	validStatuses := map[string]bool{
+		"pending":   true,
+		"paid":      true,
+		"preparing": true,
+		"ready":     true,
+		"completed": true,
+		"cancelled": true,
+	}
+
+	if !validStatuses[status] {
+		errors.Render(w, "Invalid order status", http.StatusBadRequest)
+		return
+	}
+
+	_, err = h.DB.Exec(`
+	UPDATE orders
+	SET status = $1,
+	    completed_at = CASE WHEN $3::text = 'completed' THEN COALESCE(completed_at, NOW()) ELSE NULL END,
+        rider_status_updated_at = CASE WHEN delivery_method='delivery' THEN NOW() ELSE rider_status_updated_at END
+	WHERE id = $2
+`, status, orderID, status)
+
+	if err != nil {
+		errors.Render(w, "Could not update order", http.StatusInternalServerError)
+		return
+	}
+
+	if status == "cancelled" {
+		h.refundWalletOrder(orderID) // money paid from the wallet goes back to the wallet
+	}
+
+	if status == "completed" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' THEN 'delivered' ELSE delivery_status END WHERE id=$1`, orderID)
+	} else if status == "preparing" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' AND rider_id IS NOT NULL THEN 'preparing' ELSE delivery_status END WHERE id=$1`, orderID)
+	} else if status == "ready" {
+		_, _ = h.DB.Exec(`UPDATE orders SET delivery_status = CASE WHEN delivery_method='delivery' AND rider_id IS NOT NULL THEN 'ready_for_delivery' ELSE delivery_status END WHERE id=$1`, orderID)
+	}
+
+	if status == "completed" {
+		if err := h.awardLoyaltyForOrder(orderID); err != nil {
+			fmt.Printf("Loyalty award error: %v\n", err)
+		}
+	}
+
+	var customerID int
+	if err := h.DB.QueryRow(`SELECT user_id FROM orders WHERE id=$1`, orderID).Scan(&customerID); err == nil {
+		statusLabel := strings.Title(strings.ReplaceAll(status, "_", " "))
+		_ = createNotification(h.DB, customerID, "order", "Order status updated", "Your order is now "+statusLabel+".", "/orders")
+	}
+
+	go func(id int, newStatus string) {
+		defer safe.Recover("admin status notification")
+		if err := sendOrderStatusEmail(h.DB, id, newStatus); err != nil {
+			fmt.Println("Order status email error:", err)
+		}
+	}(orderID, status)
+
+	http.Redirect(w, r, "/admin/orders", http.StatusSeeOther)
+}

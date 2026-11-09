@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Invite friends | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/feedback.css?v=bdfada4f">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-nm="customer" data-w="narrow">
+<header class="fb-header"><a href="/" class="fb-brand"><img src="/static/img/laikihub-mark.svg" alt="" width="34" height="34"> <span>{{brandName}}</span></a></header>
+<main class="fb-page">
+    <section class="fb-card">
+        <h1>Invite friends, earn points</h1>
+        <p class="fb-lead">When a friend signs up with your link and completes their first order of ₦{{.MinOrder}} or more, you each get <strong>{{.Bonus}} points</strong> (worth ₦{{.Bonus}} off food).</p>
+        <p>Your referral code: <strong style="font-size:1.4rem;letter-spacing:2px">{{.Code}}</strong></p>
+        <p class="fb-note">Friends can also type this code in the "Referral code" box when they sign up.</p>
+        <label for="ref-link">Your invite link</label>
+        <input type="text" id="ref-link" readonly value="{{.Link}}">
+        <p>
+            <button type="button" class="fb-button" id="ref-copy">Copy link</button>
+            <a class="fb-button" id="ref-wa" href="https://wa.me/?text=Order%20great%20food%20on%20{{brandName}}%3A%20{{.Link}}" target="_blank" rel="noopener">Share on WhatsApp</a>
+            <span id="ref-status" role="status"></span>
+        </p>
+        <p class="fb-note">Friends invited: <strong>{{.Invited}}</strong> · Rewards earned: <strong>{{.Rewarded}}</strong> ({{.PointsEarn}} points). Accounts must be real; bonuses may be removed for abuse.</p>
+        <p><a href="/loyalty">← Back to my rewards</a></p>
+    </section>
+</main>
+<script src="/static/js/pages/referrals.js?v=2e13260f"></script>
+{{template "site-footer"}}
+{{template "scripts-common"}}
+</body>
+</html>

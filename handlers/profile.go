@@ -238,6 +238,24 @@ func profileMessage(code string) string {
 		return "We could not change your password. Please try again."
 	case "pw-unavailable":
 		return "This account signs in with Google or Facebook, so it has no password to change."
+	case "del-confirm":
+		return "To delete your account, type DELETE in the box."
+	case "del-wrong":
+		return "That password is not correct, so your account was not deleted."
+	case "del-slow":
+		return "Too many wrong passwords. Please wait a few minutes and try again."
+	case "del-admin":
+		return "Administrator accounts cannot be deleted here."
+	case "del-vendor":
+		return "Your account owns a shop. Close or transfer the shop first (contact support), then you can delete your account."
+	case "del-active":
+		return "You have an order in progress. Wait until it is completed or cancelled, then try again."
+	case "del-wallet":
+		return "You still have money in your wallet. Use it or contact support to withdraw it, then you can delete your account."
+	case "del-error":
+		return "We could not delete your account. Please try again."
+	case "theme-saved":
+		return "Appearance updated."
 	case "photo-removed":
 		return "Your profile photo was removed."
 	case "phone-saved":

@@ -1,0 +1,13 @@
+[hidden] { display: none !important; }
+.loyalty-checkout-control { display: grid; gap: 12px; }
+#loyalty-input-wrap { padding: 14px; border: 1px solid #dfe8e2; border-radius: 14px; background: #f7faf8; }
+#loyalty-input-wrap label { display:block; margin-bottom:6px; font-weight:800; }
+#loyalty_points { width:100%; max-width:260px; padding:11px 12px; border:1px solid #cfdad2; border-radius:10px; font:inherit; }
+
+.coupon-row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+.coupon-field { flex:1; min-width:220px; }
+.loyalty-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.checkout-btn.checkout-btn-compact { min-height:42px; padding:0 16px; }
+.option-hint { display:block; color:#6b746e; margin-left:22px; }
+form input.checkout-input { width:100%; padding:11px 12px; border:1px solid #cfdad2; border-radius:10px; font:inherit; box-sizing:border-box; }
+form input.checkout-input-upper { text-transform:uppercase; }

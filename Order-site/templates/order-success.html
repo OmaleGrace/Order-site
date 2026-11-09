@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Order Confirmed | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/order-success.css?v=ccf9ca6c">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-nm="customer">
+<main class="success-page">
+    <div class="success-wrapper">
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <p class="success-eyebrow">Payment confirmed</p>
+        <h1>Your order is on its way to being prepared.</h1>
+        <p>Your payment was successful and your order has been received by the vendor.</p>
+        <div class="success-note"><span>↻</span><strong>Next step:</strong> track your order for live status updates.</div>
+        <div class="success-actions">
+            <a href="/orders" class="btn-primary">Track My Order</a>
+            <a href="/menu" class="btn-outline">Order more food</a>
+        </div>
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+</main>
+<div class="success-box"><a href="/help">Help & Support</a></div>{{template "site-footer-slim"}}
+{{template "scripts-common"}}
+</body>
+</html>

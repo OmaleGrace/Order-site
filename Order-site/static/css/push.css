@@ -1,0 +1,10 @@
+.push-card { position: fixed; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 200; max-width: 460px; margin: 0 auto; display: grid; grid-template-columns: auto 1fr; gap: 12px; padding: 14px 16px; background: #fff; border: 1px solid #d5ded4; border-radius: 16px; box-shadow: 0 14px 40px rgba(20, 40, 30, .22); }
+.push-ico { font-size: 1.6rem; line-height: 1; padding-top: 2px; }
+.push-text { display: flex; flex-direction: column; gap: 3px; font-size: .92rem; color: #1c2d24; }
+.push-text span { color: #5b6a61; font-size: .85rem; }
+.push-actions { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
+.push-actions button { font: inherit; font-weight: 700; border-radius: 10px; padding: 10px 16px; cursor: pointer; border: 1px solid #cfe0d3; background: #fff; color: #174a32; min-height: 44px; }
+.push-actions .push-on { background: #174a32; color: #fff; border-color: #174a32; }
+.push-actions button:disabled { opacity: .6; }
+.push-toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 210; max-width: calc(100% - 32px); background: #18352b; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: .88rem; font-weight: 600; }
+@media (min-width: 761px) { .push-card { bottom: 20px; right: 20px; left: auto; margin: 0; } }

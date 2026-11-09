@@ -1,0 +1,129 @@
+/* LaikiHub Premium UI System — global, backend-safe visual layer */
+:root{
+  --lh-ink:#172b21;--lh-muted:#66756b;--lh-green:#174a32;--lh-green-2:#216344;
+  --lh-green-soft:#eaf2eb;--lh-orange:#ed7a2d;--lh-orange-soft:#fff1e6;
+  --lh-cream:#faf8f3;--lh-paper:#fff;--lh-line:#e7e9e2;
+  --lh-shadow:0 12px 32px rgba(25,55,37,.07);--lh-shadow-hover:0 18px 42px rgba(25,55,37,.13);
+  --lh-radius:18px;--lh-radius-lg:26px;--lh-content:1240px;
+}
+html{scroll-behavior:smooth}
+html body{background:var(--lh-cream);color:var(--lh-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+body *{box-sizing:border-box}
+body a{transition:color .18s ease,background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+body img{max-width:100%}
+body :focus-visible{outline:3px solid rgba(237,122,45,.55);outline-offset:3px}
+body h1,body h2,body h3,body h4{color:var(--lh-ink);letter-spacing:-.035em;line-height:1.18}
+body h1{font-size:clamp(2rem,4vw,3.15rem);font-weight:820}
+body h2{font-size:clamp(1.4rem,2.6vw,2rem);font-weight:780}
+body p{color:inherit}
+body main,body .wrap,body .container,body .page-container{max-width:var(--lh-content);margin-inline:auto}
+body main{padding:clamp(18px,3vw,34px)}
+body .wrap{padding-inline:clamp(16px,3vw,30px)}
+body .muted,body small{color:var(--lh-muted)}
+/* Navigation and portal headers */
+body .top,body .vendor-header,body .admin-header,body header.site-header{
+ background:rgba(255,255,255,.94);border-bottom:1px solid var(--lh-line);
+ box-shadow:0 5px 24px rgba(24,54,36,.045);backdrop-filter:blur(14px)
+}
+body .top,body .vendor-header,body .admin-header{position:sticky;top:0;z-index:50}
+body .top a,body .vendor-header a,body .admin-header a{font-weight:650}
+body .home-sidebar{background:#123c29;box-shadow:10px 0 40px rgba(13,48,31,.12)}
+body .home-sidebar a{border-radius:12px}
+body .home-sidebar a:hover{background:rgba(255,255,255,.12);transform:translateX(2px)}
+body .bottom-nav{background:rgba(255,255,255,.96);border-top:1px solid var(--lh-line);backdrop-filter:blur(16px);box-shadow:0 -8px 30px rgba(20,48,31,.08)}
+/* Buttons */
+body button,body input[type=submit],body .btn,body .button,body a.button,body .btn-primary{
+ border-radius:12px;font-weight:750;letter-spacing:-.01em;transition:transform .18s ease,box-shadow .18s ease,background .18s ease
+}
+body button:hover:not(:disabled),body input[type=submit]:hover,body .btn:hover,body .button:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(23,74,50,.13)}
+body button:disabled{opacity:.55;cursor:not-allowed}
+body .btn-primary,body .button-primary,body button.primary{background:var(--lh-green);border-color:var(--lh-green);color:#fff}
+body .btn-primary:hover,body .button-primary:hover{background:var(--lh-green-2)}
+/* Inputs */
+body input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]),
+body select,body textarea{max-width:100%;min-height:44px;border:1px solid #dce4da;border-radius:12px;background:#fff;color:var(--lh-ink);font:inherit;padding:10px 13px;box-shadow:0 1px 2px rgba(20,40,25,.025)}
+body textarea{min-height:110px}
+body input:focus,body select:focus,body textarea:focus{border-color:var(--lh-green);outline:0;box-shadow:0 0 0 4px rgba(23,74,50,.1)}
+body label{font-weight:650;color:#34483b}
+/* Panels, cards and product tiles */
+body .card,body .panel,body .stat,body .tile,body .account-card,body .auth-wrapper,
+body .vendor-card,body .menu-card,body .dish-card,body .order-card,body .message-card,
+body .shop-card,body .quick-link,body .section-card,body .content-card{
+ border:1px solid rgba(30,68,43,.09);border-radius:var(--lh-radius);background:var(--lh-paper);box-shadow:var(--lh-shadow)
+}
+body .card:hover,body .tile:hover,body .shop-card:hover,body .menu-card:hover,body .dish-card:hover{box-shadow:var(--lh-shadow-hover)}
+body .stat{padding:20px;gap:8px}
+body .stat strong{font-size:clamp(1.45rem,2.5vw,2rem);letter-spacing:-.04em;color:var(--lh-green)}
+body .stats{gap:16px}
+body .tiles{gap:16px}
+body .tile{padding:20px}
+body .tile h3{font-size:1.08rem}
+body .empty,body .empty-state{border:1px dashed #cbd8cb;border-radius:var(--lh-radius);background:#fff;padding:28px;color:var(--lh-muted)}
+/* Hero and public marketplace */
+body .hero-home{isolation:isolate;overflow:hidden;background:linear-gradient(118deg,#123b29 0%,#1b5a3b 58%,#2b704b 100%);border-radius:0 0 34px 34px}
+body .hero-home h1,body .hero-home h2,body .hero-home p{color:#fff}
+body .hero-home h1{max-width:780px;font-size:clamp(2.5rem,6vw,4.6rem);line-height:1.02;letter-spacing:-.06em}
+body .hero-home p{max-width:650px;color:rgba(255,255,255,.82);font-size:clamp(1rem,1.5vw,1.16rem)}
+body .hero-pill{border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);backdrop-filter:blur(10px)}
+body .hero-search{max-width:700px;border-radius:16px;background:#fff;padding:6px;box-shadow:0 16px 42px rgba(0,0,0,.18)}
+body .hero-search input{border:0!important;box-shadow:none!important;min-height:48px}
+body .hero-search button{border-radius:12px;background:var(--lh-orange);color:#fff;padding:12px 22px}
+body .hero-actions{gap:12px}
+body .hero-actions .btn-secondary{border-color:rgba(255,255,255,.55);color:#fff}
+body .home-quick-links{max-width:var(--lh-content);margin:26px auto;padding:0 clamp(16px,3vw,30px);gap:14px}
+body .quick-link{padding:17px 18px}
+body .quick-link:hover{transform:translateY(-3px);border-color:#cbd9cd}
+body .home-section{max-width:var(--lh-content);margin:42px auto;padding-inline:clamp(16px,3vw,30px)}
+body .row-title{font-size:clamp(1.45rem,2.5vw,2rem)}
+body .shop-card,body .menu-card,body .dish-card{overflow:hidden}
+body .shop-card img,body .menu-card img,body .dish-card img{transition:transform .35s ease}
+body .shop-card:hover img,body .menu-card:hover img,body .dish-card:hover img{transform:scale(1.035)}
+body .home-group{border-radius:var(--lh-radius-lg);box-shadow:var(--lh-shadow)}
+/* Tables and status */
+body table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--lh-line);border-radius:14px;overflow:hidden}
+body th{background:#f1f5f0;color:#58695d;font-size:.78rem;font-weight:800;letter-spacing:.045em;text-transform:uppercase}
+body td,body th{padding:13px 15px;border-bottom:1px solid #edf0ea}
+body tbody tr:hover td{background:#fafcf9}
+body .table-wrap,body .table-responsive{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+body .badge,body .pill,body .status-label{border-radius:999px;font-weight:750}
+/* Auth and focused flows */
+body .auth-wrapper{max-width:520px;margin:clamp(24px,6vh,70px) auto;padding:clamp(22px,4vw,36px)}
+body .auth-wrapper h1{font-size:2rem}
+body .ui-footer{background:#103b29;color:#e5eee7}
+body .ui-footer p,body .ui-footer a{color:#d5e4d9}
+body .ui-footer a:hover{color:#fff}
+/* Toasts and dialogs */
+body .toast,body .toast-message{border-radius:12px;box-shadow:var(--lh-shadow)}
+body dialog,body .modal{border:1px solid var(--lh-line);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.22)}
+/* Mobile */
+@media(max-width:800px){
+ body main{padding:18px 14px}
+ body .wrap{padding-inline:14px}
+ body .home-sidebar{display:none}
+ body .hero-home{border-radius:0 0 24px 24px}
+ body .hero-content{padding:48px 20px 38px}
+ body .hero-home h1{font-size:clamp(2.25rem,10vw,3.25rem)}
+ body .hero-search{display:flex;gap:5px}
+ body .hero-search input{min-width:0;width:100%}
+ body .hero-search button{padding-inline:15px}
+ body .home-quick-links{grid-template-columns:repeat(2,minmax(0,1fr));margin:18px auto}
+ body .quick-link{min-width:0;padding:14px}
+ body .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body .tiles{grid-template-columns:1fr}
+ body .table-wrap,body .table-responsive{margin-inline:-2px}
+ body table{min-width:620px}
+ body .ui-footer-inner{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+}
+@media(max-width:480px){
+ body .stats{gap:10px}
+ body .stat{padding:14px}
+ body .stat strong{font-size:1.35rem}
+ body .home-quick-links{gap:9px}
+ body .quick-link small{font-size:.75rem}
+ body .ui-footer-inner{grid-template-columns:1fr 1fr}
+ body button,body .btn,body .button{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

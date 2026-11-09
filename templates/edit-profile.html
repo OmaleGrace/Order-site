@@ -6,7 +6,7 @@
     <title>Edit Profile | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
     <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
-    <link rel="stylesheet" href="/static/css/account-pro.css?v=p3">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=p5">
     <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 
@@ -30,7 +30,7 @@
 
     <div class="ap-edit-layout">
         <nav class="ap-subnav" aria-label="Settings sections">
-            <a href="#profile">Profile</a><a href="#delivery">Delivery</a><a href="#preferences">Preferences</a><a href="#phone">Phone</a><a href="#security">Security</a>
+            <a href="#profile">Profile</a><a href="#delivery">Delivery</a><a href="#preferences">Preferences</a><a href="#phone">Phone</a><a href="#security">Security</a><a href="#danger">Delete account</a>
         </nav>
 
         <div class="ap-edit-main">
@@ -124,6 +124,21 @@
                 {{else}}
                 <p class="ap-muted">This account signs in with Google or Facebook, so there is no password to manage here. Protect it with that provider's own security settings.</p>
                 {{end}}
+            </section>
+
+            <section class="ap-card ap-danger" id="danger">
+                <header class="ap-card-head"><h2>Delete account</h2></header>
+                <p class="ap-muted">This closes your account for good and cannot be undone.</p>
+                <ul class="ap-bullets">
+                    <li><strong>Erased:</strong> your name, email, phone, photo, saved address, favourites, cart, notifications and sign-in details.</li>
+                    <li><strong>Kept without your name:</strong> past order records and chat messages stay with the shops, because they need them for their sales and payouts.</li>
+                    <li><strong>Before you can delete:</strong> finish any order in progress and use up your wallet balance.</li>
+                </ul>
+                <form action="/account/delete" method="post" class="ap-form" autocomplete="off">
+                    {{if .CanChangePassword}}<div class="ap-field"><label for="del_password">Your password</label><input type="password" id="del_password" name="password" autocomplete="current-password" required></div>{{end}}
+                    <div class="ap-field"><label for="del_confirm">Type <strong>DELETE</strong> to confirm</label><input type="text" id="del_confirm" name="confirm" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE" required pattern="DELETE"></div>
+                    <div class="ap-actions"><button type="submit" class="account-button ap-danger-btn" data-confirm="Delete your account permanently? This cannot be undone." data-confirm-ok="Delete my account" data-confirm-tone="danger">Delete my account</button></div>
+                </form>
             </section>
         </div>
     </div>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Orders | {{.VendorName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/admin-orders.css?v=9a6f1ec5">
+    <link rel="stylesheet" href="/static/css/pages/vendor-orders.css?v=2f33fdcd">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+
+<body data-w="medium">
+
+<header class="admin-header">
+    <div class="brand">
+        <a href="/" class="brand-name">🍴 {{.VendorName}}</a>
+        <span>Vendor Dashboard</span>
+    </div>
+
+    {{template "vendor-nav" dict "Class" "" "Active" "/vendor/orders"}}
+</header>
+
+<main class="admin-container">
+
+    <div class="page-heading">
+        <div>
+            <h1>Your Orders</h1>
+            <p>Paid orders for {{.VendorName}}.</p>
+        </div>
+    </div>
+
+    {{if .ScheduledOrders}}
+    <section class="scheduled-section" aria-labelledby="scheduled-orders-title">
+        <div class="scheduled-head">
+            <div>
+                <h2 id="scheduled-orders-title">Scheduled Orders</h2>
+                <p>These orders are paid and reserved for a future time. They will move into your active orders when the scheduled time arrives.</p>
+            </div>
+            <span class="scheduled-count">{{len .ScheduledOrders}}</span>
+        </div>
+        <div class="scheduled-list">
+            {{range .ScheduledOrders}}
+            <article class="scheduled-card">
+                <div class="scheduled-top">
+                    <div>
+                        <h3>Order #{{.ID}} · {{.Name}}</h3>
+                        <div class="scheduled-time">🕒 Scheduled for {{dateTime .ScheduledFor}}</div>
+                    </div>
+                    <span class="status status-scheduled">Scheduled</span>
+                </div>
+                <div class="scheduled-meta">
+                    <div><span>Customer</span><strong>{{.Name}}</strong></div>
+                    <div><span>Order type</span><strong>{{if eq .DeliveryMethod "delivery"}}Delivery{{else}}Pickup{{end}}</strong></div>
+                    <div><span>Phone</span><strong>{{if .Phone}}{{.Phone}}{{else}}Not provided{{end}}</strong></div>
+                </div>
+                {{if .Items}}
+                <ul class="scheduled-items">
+                    {{range .Items}}<li><span>{{.Name}} × {{.Quantity}}</span><strong>₦{{naira .PriceKobo}}</strong></li>{{end}}
+                </ul>
+                {{end}}
+                <div class="scheduled-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                {{if eq .DeliveryMethod "delivery"}}<div class="scheduled-note">🛵 Delivery: {{.DeliveryAddress}} · {{.DeliveryPhone}}{{if .RiderName}} · Rider: {{.RiderName}} ({{.RiderPhone}}) · {{.DeliveryStatus}}{{end}}</div>{{else}}<div class="scheduled-note">🛍️ Pickup order — have the meal ready at the scheduled time.</div>{{end}}
+            </article>
+            {{end}}
+        </div>
+    </section>
+    {{end}}
+
+    {{if .Orders}}
+
+        <section class="orders-list">
+
+            {{range .Orders}}
+            <article class="order-card">
+
+                <div class="order-top">
+                    <div>
+                        <h2>Order #{{.ID}}</h2>
+                        <span class="order-date">{{.CreatedAt}}</span>
+                        {{if .ScheduledFor}}<span class="order-date"><strong>Scheduled for {{dateTime .ScheduledFor}}</strong></span>{{end}}
+                    </div>
+                    <span class="status status-{{.Status}}">{{.Status}}</span>
+                </div>
+
+                <div class="customer-info">
+                    <div>
+                        <span class="label">Customer</span>
+                        <strong>{{.Name}}</strong>
+                    </div>
+                    <div>
+                        <span class="label">Phone</span>
+                        <strong>{{if .Phone}}{{.Phone}}{{else}}Not provided{{end}}</strong>
+                    </div>
+                    <div>
+                        <span class="label">Email</span>
+                        <strong>{{.Email}}</strong>
+                    </div>
+                </div>
+                {{if eq .DeliveryMethod "delivery"}}
+                <div class="delivery-box">
+                    <strong>🛵 Deliver to</strong>
+                    <p>{{.DeliveryAddress}}</p>
+                    <p>📞 <a href="tel:{{.DeliveryPhone}}">{{.DeliveryPhone}}</a></p>
+                    {{if .DeliveryFeeKobo}}<p class="delivery-fee">Delivery fee: ₦{{naira .DeliveryFeeKobo}}</p>{{end}}
+                    <p><strong>Rider:</strong> {{if .RiderName}}{{.RiderName}} · {{.RiderPhone}} · {{.DeliveryStatus}}{{else}}Not assigned{{end}}</p>
+                    {{if ne .Status "cancelled"}}<form action="/vendor/orders/rider" method="post" class="status-form"><input type="hidden" name="order_id" value="{{.ID}}"><label>Assign rider <select name="rider_id"><option value="0">Unassigned</option>{{range $.Riders}}<option value="{{.ID}}">{{.Name}} · {{.Phone}}</option>{{end}}</select></label><button type="submit">Save rider</button></form>{{end}}
+                </div>
+                {{else}}
+                <div class="delivery-box pickup">
+                    <strong>🛍️ Pickup</strong>
+                    <p>The customer will collect this order.</p>
+                </div>
+                {{end}}
+
+
+
+                <div class="order-items">
+                    <h3>Items</h3>
+                    <ul>
+                        {{range .Items}}
+                        <li>
+                            <span>{{.Name}} × {{.Quantity}}</span>
+                            <strong>₦{{naira .PriceKobo}}</strong>
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+
+                                <div class="settlement-breakdown">
+                    <h3>Transparent settlement</h3>
+                    <div><span>Meal price</span><strong>₦{{naira .FoodSubtotalKobo}}</strong></div>
+                    {{if .CouponDiscountKobo}}<div><span>Coupon{{if .CouponCode}} ({{.CouponCode}}){{end}}</span><strong>-₦{{naira .CouponDiscountKobo}}</strong></div>{{end}}
+                    {{if .LoyaltyDiscountKobo}}<div><span>Loyalty points</span><strong>-₦{{naira .LoyaltyDiscountKobo}}</strong></div>{{end}}
+                    <div><span>Customer paid for food</span><strong>₦{{naira (sub (sub .FoodSubtotalKobo .CouponDiscountKobo) .LoyaltyDiscountKobo)}}</strong></div>
+                    <div><span>{{brandName}} commission ({{commissionPercent}}% of food paid)</span><strong>-₦{{naira .CommissionKobo}}</strong></div>
+                    <div><span>Vendor food earnings</span><strong>₦{{naira .VendorFoodEarningsKobo}}</strong></div>
+                    {{if .DeliveryFeeKobo}}<div><span>Delivery fee</span><strong>₦{{naira .DeliveryFeeKobo}}</strong></div>{{end}}
+                    <div class="settlement-total"><span>Customer total</span><strong>₦{{naira .TotalKobo}}</strong></div>
+                </div>
+
+                <div class="order-bottom">
+                    <div class="total">
+                        <span>Total</span>
+                        <strong>₦{{naira .TotalKobo}}</strong>
+                    </div>
+
+                    {{if ne .Status "cancelled"}}
+                    <form action="/vendor/orders/status" method="post" class="status-form">
+                        <input type="hidden" name="order_id" value="{{.ID}}">
+                        <select name="status" aria-label="Order status">
+                            <option value="preparing" {{if eq .Status "preparing"}}selected{{end}}>Preparing</option>
+                            <option value="ready" {{if eq .Status "ready"}}selected{{end}}>Ready</option>
+                            <option value="completed" {{if eq .Status "completed"}}selected{{end}}>Completed</option>
+                        </select>
+                        <button type="submit">Update Status</button>
+                    </form>
+                    {{end}}
+                </div>
+
+            </article>
+            {{end}}
+
+        </section>
+
+    {{else}}
+
+        <section class="empty-orders">
+            <div class="empty-icon">📦</div>
+            <h2>No paid orders yet</h2>
+            <p>Paid orders and scheduled orders will appear here. Scheduled orders are shown above until their fulfilment time arrives.</p>
+        </section>
+
+    {{end}}
+
+</main>
+
+<script src="/static/js/vendor-banner.js?v=6ca0fab4"></script>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "scripts-common"}}
+</body>
+</html>

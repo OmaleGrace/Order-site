@@ -44,6 +44,7 @@ type AccountPageData struct {
 	CanChangePassword   bool
 	PasswordChanged     bool
 	FirstName           string
+	Theme               string
 }
 
 func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
@@ -204,6 +205,7 @@ func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data.Extras = h.loadAccountExtras(r.Context(), userID)
+	data.Theme = h.themeFromDB(userID)
 	data.Initial = "?"
 	if rs := []rune(strings.TrimSpace(data.Name)); len(rs) > 0 {
 		data.Initial = strings.ToUpper(string(rs[0]))

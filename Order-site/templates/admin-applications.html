@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Applications | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/admin-applications.css?v=9fc43f47">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-w="medium">
+    <header class="admin-header">
+        <h1><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span> · Admin</h1>
+        {{template "admin-nav" dict "Class" "portal-nav" "Active" "/admin/applications"}}
+</header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <h2 class="section">Waiting for review ({{len .Pending}})</h2>
+
+        {{range .Pending}}
+        <article class="card">
+            <div class="card-top">
+                <div>
+                    <h3>{{.BusinessName}}</h3>
+                    <span class="muted">Applied {{.CreatedAt}}</span>
+                </div>
+            </div>
+
+            <div class="details">
+                <div><span class="label">Owner's name (must match the ID)</span><strong>{{.OwnerName}}</strong></div>
+                <div><span class="label">Phone (call this number)</span><a href="{{.PhoneLink}}">📞 {{.Phone}}</a></div>
+                <div><span class="label">ID they will show</span><strong>{{.IDTypeLabel}}</strong></div>
+                <div><span class="label">Account email</span><strong>{{.Email}}</strong></div>
+                <div class="full"><span class="label">Vendor agreement</span>{{if .AgreementAt}}<strong>✅ Accepted {{.AgreementAt}} (version {{.AgreementVer}})</strong>{{else}}<strong>⚠️ Not accepted yet. You cannot approve until they accept it.</strong>{{end}}</div>
+                <div><span class="label">Area</span><strong>{{.Area}}</strong></div>
+                <div><span class="label">Shop address</span><strong>{{.Address}}</strong></div>
+                {{if .OnlineLink}}<div class="full"><span class="label">Business page</span><a href="{{.OnlineLink}}" target="_blank" rel="noopener noreferrer">{{.OnlineLink}}</a></div>{{end}}
+                {{if .Notes}}<div class="full"><span class="label">Notes</span><strong>{{.Notes}}</strong></div>{{end}}
+            </div>
+
+            <form action="/admin/applications/review" method="post" class="review review-form" data-name="{{.BusinessName}}">
+                <input type="hidden" name="application_id" value="{{.ID}}">
+
+                <h4>Identity check. Tick each one only after you have done it.</h4>
+                <label class="check-item"><input type="checkbox" name="seen_id"> I saw the original ID, in person or on a live video call</label>
+                <label class="check-item"><input type="checkbox" name="name_match"> The name on the ID matches "{{.OwnerName}}"</label>
+                <label class="check-item"><input type="checkbox" name="face_match"> The photo on the ID matches the person</label>
+                <label class="check-item"><input type="checkbox" name="phone_reached"> I reached them on {{.Phone}}</label>
+
+                <div class="row">
+                    <div>
+                        <label class="field" for="method-{{.ID}}">How did you check the ID?</label>
+                        <select name="review_method" id="method-{{.ID}}">
+                            <option value="">Choose one</option>
+                            <option value="in_person">In person</option>
+                            <option value="video_call">Live video call</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field" for="note-{{.ID}}">Note (needed to reject. The applicant sees it)</label>
+                        <textarea name="admin_note" id="note-{{.ID}}" maxlength="500" placeholder="For example: the name on the ID did not match the name on the application"></textarea>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" name="action" value="approve" class="approve" disabled>Approve</button>
+                    <button type="submit" name="action" value="reject" class="reject" disabled>Reject</button>
+                </div>
+            </form>
+        </article>
+        {{else}}
+        <div class="empty">No applications waiting.</div>
+        {{end}}
+
+        {{if .Reviewed}}
+        <h2 class="section">Reviewed</h2>
+        {{range .Reviewed}}
+        <article class="card">
+            <div class="card-top">
+                <div>
+                    <h3>{{.BusinessName}}</h3>
+                    <span class="muted">{{.OwnerName}} · {{.Phone}} · applied {{.CreatedAt}}</span>
+                </div>
+                <span class="badge badge-{{.Status}}">{{.Status}}</span>
+            </div>
+            {{if eq .Status "approved"}}<p class="muted">ID checked {{if eq .ReviewMethod "in_person"}}in person{{else if eq .ReviewMethod "video_call"}}on a live video call{{end}}.</p>{{end}}
+            {{if .AdminNote}}<p class="muted">Note: {{.AdminNote}}</p>{{end}}
+        </article>
+        {{end}}
+        {{end}}
+    </main>
+
+    <script src="/static/js/pages/admin-applications.js?v=3eb346f6"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "scripts-common"}}
+</body>
+</html>

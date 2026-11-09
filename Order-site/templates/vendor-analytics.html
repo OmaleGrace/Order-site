@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {{template "head-common"}}
+        {{template "meta-noindex"}}
+        <title>Analytics | {{.VendorName}}</title>
+        <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+        <link rel="stylesheet" href="/static/css/pages/vendor-analytics.css?v=0ae297dc">
+        <link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">
+        <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+    <body data-w="wide">
+        <header class="vendor-header">
+            <div class="vendor-brand"><a href="/vendor/dashboard">🍴 {{.VendorName}}</a><span>Vendor Analytics</span></div>
+            {{template "vendor-nav" dict "Class" "vendor-nav" "Active" "/vendor/analytics"}}
+        </header>
+        <main>
+            <section class="hero">
+                <div>
+                    <p class="eyebrow">Business intelligence</p>
+                    <h1>Know what is selling.</h1>
+                    <p>Track revenue, order volume and your strongest menu items at a glance.</p>
+                </div>
+                <div class="filters" aria-label="Analytics period"><a class="filter {{if eq .Period "today"}}active{{end}}" href="/vendor/analytics?period=today">Today</a><a class="filter {{if eq .Period "week"}}active{{end}}" href="/vendor/analytics?period=week">7 days</a><a class="filter {{if eq .Period "month"}}active{{end}}" href="/vendor/analytics?period=month">30 days</a></div>
+            </section>
+            <section class="metrics" aria-label="Analytics summary">
+                <article class="metric"><span class="metric-label">Sales</span><strong class="metric-value">₦{{money .SalesKobo}}</strong><span class="metric-note">{{.PeriodLabel}} · paid orders</span></article>
+                <article class="metric"><span class="metric-label">Orders</span><strong class="metric-value">{{.Orders}}</strong><span class="metric-note">Completed/active paid orders</span></article>
+                <article class="metric"><span class="metric-label">Average order</span><strong class="metric-value">₦{{money .AverageOrderKobo}}</strong><span class="metric-note">Sales ÷ paid orders</span></article>
+                <article class="metric"><span class="metric-label">Commission</span><strong class="metric-value">₦{{money .CommissionKobo}}</strong><span class="metric-note">Recorded platform commission</span></article>
+                <article class="metric"><span class="metric-label">Estimated balance</span><strong class="metric-value">₦{{money .BalanceKobo}}</strong><span class="metric-note">After recorded payouts</span></article>
+            </section>
+            <div class="grid">
+                <section class="card">
+                    <div class="card-head">
+                        <h2>Sales trend</h2><span>Last 7 days</span></div>
+                    <div class="chart">
+                        <div class="bars">
+                            {{range .Days}}
+                                <div class="bar-col" data-sales="{{.SalesKobo}}"><span class="bar-value">₦{{money .SalesKobo}}</span><div class="bar bar-thin">
+                                    </div><span class="bar-label">{{.Label}}</span></div>
+                            {{end}}
+                        </div>
+                        <div class="chart-foot"><span>Daily paid sales</span><span>Hover not required — values shown above</span></div>
+                    </div>
+                    <div class="insight"><strong>Performance:</strong> {{if gt .SalesChange 0}}Sales are up {{.SalesChange}}% versus the previous comparable period.{{else if lt .SalesChange 0}}Sales are down {{abs .SalesChange}}% versus the previous comparable period.{{else}}There is not enough previous-period data for a meaningful sales comparison.{{end}}
+                    </div>
+                </section>
+                <aside class="card">
+                    <div class="card-head">
+                        <h2>Order mix</h2><span>{{.PeriodLabel}}</span></div>
+                    <div class="split">
+                        <div class="split-row"><span>Delivery</span><strong>{{.DeliveryOrders}}</strong></div>
+                        <div class="progress"><span style="width:{{if add .DeliveryOrders .PickupOrders}}{{percent .DeliveryOrders (add .DeliveryOrders .PickupOrders)}}{{else}}0{{end}}%"></span></div>
+                        <div class="split-row"><span>Pickup</span><strong>{{.PickupOrders}}</strong></div>
+                        <div class="progress"><span style="width:{{if add .DeliveryOrders .PickupOrders}}{{percent .PickupOrders (add .DeliveryOrders .PickupOrders)}}{{else}}0{{end}}%"></span></div>
+                        <div class="split-row"><span>Completed</span><strong>{{.CompletedOrders}}</strong></div>
+                        <div class="split-row"><span>Cancelled</span><strong>{{.CancelledOrders}}</strong></div>
+                    </div>
+                </aside>
+            </div>
+            <section class="card mt-18">
+                <div class="card-head">
+                    <h2>Top-selling menu items</h2><span>{{.PeriodLabel}}</span></div>
+                {{if .TopItems}}
+                    <div class="items">
+                        {{range .TopItems}}
+                            <div class="item-row">
+                                <div class="item-name"><strong>{{.Name}}</strong><span>Revenue generated by this item</span></div><span class="item-qty">{{.Quantity}} sold</span><span class="item-sales">₦{{money .SalesKobo}}</span></div>
+                        {{end}}
+                    </div>
+                {{else}}
+                    <div class="empty">No paid menu-item sales in this period yet.</div>
+                {{end}}
+            </section>
+        </main>
+        <script src="/static/js/pages/vendor-analytics.js?v=f4e08f93"></script>
+        <script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+        <script src="/static/js/nav-active.js?v=e62c3453"></script>
+        {{template "scripts-common"}}
+    </body>
+</html>

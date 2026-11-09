@@ -1,0 +1,1 @@
+(function(){var input=document.getElementById('user-search');var rows=Array.from(document.querySelectorAll('#user-rows tr[data-search]'));input.addEventListener('input',function(){var q=input.value.trim().toLowerCase();rows.forEach(function(row){row.hidden=!row.dataset.search.toLowerCase().includes(q);});});})();

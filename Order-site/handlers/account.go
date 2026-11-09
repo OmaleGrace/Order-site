@@ -1,0 +1,227 @@
+package handlers
+
+import (
+	"context"
+	"database/sql"
+	"html/template"
+	"log"
+	"net/http"
+	"strings"
+	"time"
+
+	"Order-site/errors"
+	"Order-site/render"
+)
+
+type AccountRecentOrder struct {
+	ID             int
+	Reference      string
+	TotalKobo      int
+	Status         string
+	CreatedAt      string
+	DeliveryMethod string
+}
+
+type AccountPageData struct {
+	Name                string
+	Email               string
+	AuthProvider        string
+	ProfilePicture      string
+	Phone               string
+	MemberSince         string
+	OrderCount          int
+	TotalSpentKobo      int
+	Updated             bool
+	IsVendor            bool
+	FavoriteCount       int
+	ActiveOrders        int
+	ActiveStatusEnabled bool
+	RecentOrders        []AccountRecentOrder
+	Extras              accountExtras
+	Initial             string
+	Completeness        int
+	Missing             []string
+	CanChangePassword   bool
+	PasswordChanged     bool
+	FirstName           string
+	Theme               string
+}
+
+func (h *Handlers) Account(w http.ResponseWriter, r *http.Request) {
+	userID, err := requestUserID(h, r)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	var data AccountPageData
+	var phone *string
+	data.ActiveStatusEnabled = true
+	if err := h.DB.QueryRow(`SELECT COALESCE(active_status_enabled, TRUE) FROM users WHERE id=$1`, userID).Scan(&data.ActiveStatusEnabled); err != nil {
+		log.Printf("account: presence preference lookup failed: %v", err)
+	}
+
+	// One round trip for everything the top of the page needs. On a hosted database every
+	// extra query costs a network trip, and this page used to make seven of them in a row.
+	loadedFast := false
+	{
+		ctx, cancel := context.WithTimeout(r.Context(), 8*time.Second)
+		var name, email sql.NullString
+		var vendorCount int
+		qerr := h.DB.QueryRowContext(ctx, `
+			SELECT u.name, u.email,
+			       COALESCE(to_jsonb(u)->>'auth_provider', 'local'),
+			       COALESCE(to_jsonb(u)->>'profile_picture', ''),
+			       NULLIF(to_jsonb(u)->>'phone', ''),
+			       COALESCE(TO_CHAR(u.created_at, 'FMMonth YYYY'), 'LaikiHub member'),
+			       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
+			       (SELECT COALESCE(SUM(o.total_kobo), 0) FROM orders o WHERE o.user_id = u.id AND o.status != 'pending'),
+			       (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id),
+			       (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id AND o.status IN ('paid', 'preparing', 'ready')),
+			       (SELECT COUNT(*) FROM vendors v WHERE v.owner_user_id = u.id)
+			FROM users u WHERE u.id = $1
+		`, userID).Scan(&name, &email, &data.AuthProvider, &data.ProfilePicture, &phone, &data.MemberSince,
+			&data.OrderCount, &data.TotalSpentKobo, &data.FavoriteCount, &data.ActiveOrders, &vendorCount)
+		cancel()
+		if qerr == nil {
+			data.Name, data.Email = name.String, email.String
+			data.IsVendor = vendorCount > 0
+			data.Updated = r.URL.Query().Get("updated") == "true"
+			if phone != nil {
+				data.Phone = *phone
+			}
+			loadedFast = true
+		} else {
+			log.Printf("account: combined query failed for user %d, using step-by-step load: %v", userID, qerr)
+			phone = nil
+		}
+	}
+
+	if !loadedFast {
+
+		err = h.DB.QueryRow(`
+		SELECT name, email,
+		       COALESCE(to_jsonb(users)->>'auth_provider', 'local'),
+		       COALESCE(to_jsonb(users)->>'profile_picture', ''),
+		       NULLIF(to_jsonb(users)->>'phone', ''),
+		       COALESCE(TO_CHAR(created_at, 'FMMonth YYYY'), 'LaikiHub member')
+		FROM users
+		WHERE id = $1
+	`, userID).Scan(
+			&data.Name,
+			&data.Email,
+			&data.AuthProvider,
+			&data.ProfilePicture,
+			&phone,
+			&data.MemberSince,
+		)
+
+		if err != nil {
+			log.Printf("account: extended profile query failed for user %d: %v", userID, err)
+			// Older deployed databases may not yet have every optional profile column.
+			// Fall back to the stable core fields so the account page remains accessible.
+			if fallbackErr := h.DB.QueryRow(`SELECT name, email FROM users WHERE id = $1`, userID).Scan(&data.Name, &data.Email); fallbackErr != nil {
+				log.Printf("account: fallback profile query failed for user %d: %v", userID, fallbackErr)
+				errors.Render(w, "Could not load account", http.StatusInternalServerError)
+				return
+			}
+			data.AuthProvider = "local"
+			data.MemberSince = "LaikiHub member"
+			phone = nil
+		}
+
+		if phone != nil {
+			data.Phone = *phone
+		}
+
+		err = h.DB.QueryRow(`
+		SELECT COUNT(*), COALESCE(SUM(total_kobo), 0)
+		FROM orders
+		WHERE user_id = $1 AND status != 'pending'
+	`, userID).Scan(&data.OrderCount, &data.TotalSpentKobo)
+
+		if err != nil {
+			log.Printf("account: order summary query failed for user %d: %v", userID, err)
+			// Keep the account usable even if historical order-summary data is unavailable.
+			data.OrderCount = 0
+			data.TotalSpentKobo = 0
+		}
+
+		data.Updated = r.URL.Query().Get("updated") == "true"
+
+		// These dashboard counts are intentionally separate from the main profile query
+		// so older deployments remain usable if optional account data is unavailable.
+		if err := h.DB.QueryRow(`SELECT COUNT(*) FROM favorites WHERE user_id = $1`, userID).Scan(&data.FavoriteCount); err != nil {
+			log.Printf("account: favorites count failed for user %d: %v", userID, err)
+			data.FavoriteCount = 0
+		}
+
+		if err := h.DB.QueryRow(`
+		SELECT COUNT(*) FROM orders
+		WHERE user_id = $1 AND status IN ('paid', 'preparing', 'ready')
+	`, userID).Scan(&data.ActiveOrders); err != nil {
+			log.Printf("account: active order count failed for user %d: %v", userID, err)
+			data.ActiveOrders = 0
+		}
+
+	}
+
+	recentRows, err := h.DB.Query(`
+		SELECT id, total_kobo, status, created_at, delivery_method
+		FROM orders
+		WHERE user_id = $1
+		ORDER BY created_at DESC
+		LIMIT 3
+	`, userID)
+	if err == nil {
+		defer recentRows.Close()
+		for recentRows.Next() {
+			var orderID, totalKobo int
+			var status, deliveryMethod string
+			var createdAt time.Time
+			if err := recentRows.Scan(&orderID, &totalKobo, &status, &createdAt, &deliveryMethod); err != nil {
+				log.Printf("account: recent order scan failed for user %d: %v", userID, err)
+				break
+			}
+			data.RecentOrders = append(data.RecentOrders, AccountRecentOrder{
+				ID:             orderID,
+				Reference:      publicOrderReference(orderID, createdAt),
+				TotalKobo:      totalKobo,
+				Status:         status,
+				CreatedAt:      createdAt.Format("02 Jan 2006, 3:04 PM"),
+				DeliveryMethod: deliveryMethod,
+			})
+		}
+	} else {
+		log.Printf("account: recent orders query failed for user %d: %v", userID, err)
+	}
+
+	if !loadedFast {
+		var vendorCount int
+		if err := h.DB.QueryRow("SELECT count(*) FROM vendors WHERE owner_user_id = $1", userID).Scan(&vendorCount); err != nil {
+			log.Printf("account: vendor lookup failed for user %d: %v", userID, err)
+		}
+		data.IsVendor = vendorCount > 0
+	}
+
+	data.Extras = h.loadAccountExtras(r.Context(), userID)
+	data.Theme = h.themeFromDB(userID)
+	data.Initial = "?"
+	if rs := []rune(strings.TrimSpace(data.Name)); len(rs) > 0 {
+		data.Initial = strings.ToUpper(string(rs[0]))
+	}
+	if f := strings.Fields(data.Name); len(f) > 0 {
+		data.FirstName = f[0]
+	}
+	data.CanChangePassword = data.AuthProvider == "" || data.AuthProvider == "local"
+	data.PasswordChanged = r.URL.Query().Get("pw") == "changed"
+	data.Completeness, data.Missing = accountCompleteness(strings.TrimSpace(data.Name) != "", data.ProfilePicture != "", data.Phone != "", data.Extras.AddressLine != "")
+
+	tmpl := render.MustPage("account.html", template.FuncMap{
+		"naira": naira,
+	})
+
+	if err := tmpl.Execute(w, data); err != nil {
+		errors.Render(w, "Could not render account page", http.StatusInternalServerError)
+	}
+}

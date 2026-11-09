@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Earnings | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/admin-earnings.css?v=436b8936">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-w="medium">
+    <header class="admin-header">
+        <h1><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span> · Admin</h1>
+        {{template "admin-nav" dict "Class" "portal-nav" "Active" "/admin/earnings"}}
+</header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+
+        <div class="totals">
+            <div class="total-box"><span>Customers paid (all shops)</span><strong>₦{{money .TotalSalesKobo}}</strong></div>
+            <div class="total-box"><span>Your commission</span><strong>₦{{money .TotalCommission}}</strong></div>
+            <div class="total-box"><span>Service fees you keep</span><strong>₦{{money .TotalServiceFees}}</strong></div>
+            <div class="total-box"><span>Customer wallets (owed to customers)</span><strong>₦{{money .WalletHeldKobo}}</strong></div>
+            <div class="total-box"><span>You still owe vendors</span><strong>₦{{money .TotalOwedKobo}}</strong></div>
+            <div class="total-box"><span>Ready to send now</span><strong>₦{{money .TotalAvailable}}</strong></div>
+        </div>
+
+        <div class="card">
+            <h2>Money per vendor</h2>
+            <p class="muted">Customers pay into your Paystack account. The commission is yours; the rest belongs to the vendor. Money is released {{.HoldHours}} hours after an order is marked completed. Use <strong>Send with Paystack</strong> to pay the vendor's verified account automatically, or <strong>Record</strong> if you sent it yourself. The commission is on food only, not delivery fees.</p>
+            <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Vendor / verified bank account</th><th>Orders</th><th>Customers paid</th><th>Your cut</th><th>Sent</th><th>Owed</th><th>Ready / on hold</th><th>Pay vendor</th></tr>
+                </thead>
+                <tbody>
+                    {{range .Rows}}
+                    <tr>
+                        <td><strong>{{.Name}}</strong>{{if .AccountVerified}}<div class="muted">✅ {{.AccountName}} · {{.BankName}} ({{.BankCode}})<br>Account: <strong>{{.AccountNumber}}</strong></div>{{else}}<div class="muted">⚠️ Bank account not verified</div>{{end}}</td>
+                        <td>{{.Orders}}</td>
+                        <td>₦{{money .SalesKobo}}</td>
+                        <td>₦{{money .CommissionKobo}}</td>
+                        <td>₦{{money .PaidOutKobo}}</td>
+                        <td class="owed">₦{{money .BalanceKobo}}</td>
+                        <td>₦{{money .AvailableKobo}}<div class="muted">on hold ₦{{money .HeldKobo}}<br>in progress ₦{{money .InProgressKobo}}</div></td>
+                        <td>
+                            {{if and (gt .AvailableKobo 0) .AccountVerified}}
+                            <form action="/admin/earnings/transfer" method="post" class="payout-form" data-confirm="Send this money to the vendor's bank account through Paystack now?">
+                                <input type="hidden" name="vendor_id" value="{{.VendorID}}">
+                                <input type="number" name="amount" min="100" step="0.01" max="{{money2 .AvailableKobo}}" value="{{money2 .AvailableKobo}}" required aria-label="Amount in naira">
+                                <button type="submit">Send with Paystack</button>
+                            </form>
+                            <form action="/admin/earnings/payout" method="post" class="payout-form">
+                                <input type="hidden" name="vendor_id" value="{{.VendorID}}">
+                                <input type="number" name="amount" min="1" step="0.01" max="{{money2 .AvailableKobo}}" placeholder="₦ amount" required aria-label="Amount already sent">
+                                <input type="text" name="note" class="note" maxlength="200" placeholder="Note (optional)" aria-label="Payout note (optional)">
+                                <button type="submit" class="secondary">Record</button>
+                            </form>
+                            {{else if not .AccountVerified}}<span class="muted">Awaiting verified bank account</span>{{else if gt .BalanceKobo 0}}<span class="muted">Nothing ready yet</span>{{else}}<span class="muted">nothing owed</span>{{end}}
+                        </td>
+                    </tr>
+                    {{else}}
+                    <tr><td colspan="8" class="muted">No vendors yet.</td></tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </main>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "scripts-common"}}
+</body>
+</html>

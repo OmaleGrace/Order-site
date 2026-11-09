@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-desc" "The agreement every shop accepts before selling on the platform: fees, payouts, food safety and rules."}}
+    <title>Vendor agreement | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/menu.css?v=c0fd76a3">
+    <link rel="stylesheet" href="/static/css/public-pages.css?v=fa6f1461">
+    <link rel="stylesheet" href="/static/css/pages/vendor-agreement.css?v=779caed4">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-nm="public" data-w="narrow">
+<main class="agreement">
+    <a class="back-home" href="/become-a-vendor">← Back to the application</a>
+    <h1>Vendor agreement</h1>
+    <p class="meta">Version {{.Version}}. Please read it fully before you apply.</p>
+
+    <section>
+        <h2>1. What this is</h2>
+        <p>This agreement is between you (the vendor) and {{brandName}} (the platform). By ticking "I accept" when you apply, you agree to it. We save the version, the date and time, and your connection address as proof of your acceptance.</p>
+    </section>
+
+    <section>
+        <h2>2. Fees</h2>
+        <ul>
+            <li>A one-time setup fee of <strong>₦{{naira .SetupFeeKobo}}</strong>, paid only after your application is approved. There is no monthly fee.</li>
+            <li>On every completed sale the platform keeps <strong>{{.CommissionPercent}}%</strong> of the food total. Delivery fees are not part of the commission.</li>
+            <li>The setup fee is not refunded once your shop has been opened, unless the platform closes your shop without a breach of this agreement.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>3. How you are paid</h2>
+        <ul>
+            <li>Customers pay the platform through Paystack. The platform pays you your share after the order is marked <strong>completed</strong> and a hold of <strong>{{.HoldHours}} hours</strong> has passed. The hold gives customers time to report a problem.</li>
+            <li>We pay only into a bank account in your own name. We check the account name with Paystack, and it must match the name on the ID you showed us. If you change your bank account, it must be checked again.</li>
+            <li>If a customer is refunded because of your fault (for example the wrong or spoiled food), the refund can be taken from money you are owed.</li>
+            <li>Bank or transfer charges, if any, are shown before they apply to you.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. Your food and your shop</h2>
+        <ul>
+            <li>You prepare food in clean conditions and follow the food safety rules that apply to your business in Nigeria.</li>
+            <li>Names, photos, descriptions, prices and allergy information on your shop must be true. Prices include everything the customer will pay for the food.</li>
+            <li>You only list dishes you can actually make. If something is sold out, mark it unavailable.</li>
+            <li>You do not sell alcohol to minors, illegal items, or anything you are not allowed to sell.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. Orders</h2>
+        <ul>
+            <li>Accept and prepare paid orders promptly, and keep their status up to date (preparing, ready, completed). Marking an order completed is what starts your payout.</li>
+            <li>Do not mark an order completed before the customer has received it.</li>
+            <li>If you cannot fulfil an order, tell the customer and the platform straight away so a refund can be arranged.</li>
+            <li>Be polite to customers. You may use customers' contact details only to complete their order.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Your identity</h2>
+        <p>You confirm that the name, phone number and ID you give us are your own and true. The platform checks your identity by phone or video call before approving you. Giving false details is a breach of this agreement.</p>
+    </section>
+
+    <section>
+        <h2>7. Suspension and ending</h2>
+        <ul>
+            <li>The platform can suspend or close a shop for repeated complaints, false information, unsafe food, fraud or any breach of this agreement.</li>
+            <li>You can close your shop at any time. Money you are owed is paid out after the normal hold, minus any refunds due.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>8. Responsibility</h2>
+        <p>You are responsible for the food you sell and for your taxes and licences. The platform provides the ordering and payment service and is not responsible for the quality of your food. Nothing in this agreement limits rights that Nigerian law gives either side.</p>
+    </section>
+
+    <section>
+        <h2>9. Changes and law</h2>
+        <p>If we change this agreement we will publish a new version and ask for your acceptance again before it applies to you. This agreement is governed by the laws of the Federal Republic of Nigeria.</p>
+    </section>
+
+    <p class="foot">Questions? <a href="/contact">Contact us</a> before you apply.</p>
+</main>
+{{template "site-footer"}}
+{{template "scripts-common"}}
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        {{template "head-common"}}
+        {{template "meta-noindex"}}
+        <title>Riders | {{brandName}}</title>
+        <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+        <link rel="stylesheet" href="/static/css/pages/admin-riders.css?v=68f9a09b">
+        <link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">
+        <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+    <body data-w="wide">
+        <header class="top"><a href="/admin">🍴 {{brandName}} <small>Admin</small></a>{{template "admin-nav" dict "Class" "nav" "Active" "/admin/riders"}}
+        </header>
+        <main class="wrap">
+            <p class="muted">Stage 22 · Delivery operations</p>
+            <h1>Delivery riders</h1>
+            <p class="muted">Add trusted riders and assign them to delivery orders from the admin order dashboard.</p>
+            {{if .Notice}}
+                <div class="notice">{{.Notice}}</div>
+            {{end}}
+            <div class="grid">
+                <section class="card">
+                    <h2>Add rider</h2>
+                    <form class="form" method="post" action="/admin/riders/save">
+                        <div><label for="rider-name">Name</label><input id="rider-name" name="name" required placeholder="Rider name"></div>
+                        <div><label for="rider-phone">Phone</label><input id="rider-phone" name="phone" required placeholder="080..." inputmode="tel"></div>
+                        <div><label for="rider-vehicle">Vehicle</label><input id="rider-vehicle" name="vehicle" placeholder="Bike / Car"></div><button type="submit">Add rider</button></form>
+                </section>
+                <section class="card">
+                    <h2>Rider team</h2>
+                    {{if .Riders}}
+                        {{range .Riders}}
+                            <article class="rider">
+                                <div><strong>{{.Name}}</strong> <span class="pill {{if not .Active}}off{{end}}">{{if .Active}}Active{{else}}Inactive{{end}}</span><div class="stats">{{.Phone}}{{if .Vehicle}} · {{.Vehicle}}{{end}} · {{.Assigned}} active · {{.Completed}} completed</div>
+                                </div>
+                                <div class="actions">
+                                    <form method="post" action="/admin/riders/save" class="rider-edit-form"><input type="hidden" name="id" value="{{.ID}}"><label>Name <input name="name" value="{{.Name}}" required></label><label>Phone <input name="phone" value="{{.Phone}}" required></label><label>Vehicle <input name="vehicle" value="{{.Vehicle}}"></label><label><input type="checkbox" name="active" {{if .Active}}checked{{end}}> Active</label><button type="submit">Save changes</button></form>
+                                    <form method="post" action="/admin/riders/toggle"><input type="hidden" name="id" value="{{.ID}}"><button class="secondary" type="submit">{{if .Active}}Deactivate{{else}}Activate{{end}}</button></form>
+                                </div>
+                            </article>
+                        {{end}}
+                    {{else}}
+                        <p class="muted">No riders added yet.</p>
+                    {{end}}
+                </section>
+            </div>
+        </main>
+        <script src="/static/js/nav-active.js?v=e62c3453"></script>
+        {{template "scripts-common"}}
+    </body>
+</html>

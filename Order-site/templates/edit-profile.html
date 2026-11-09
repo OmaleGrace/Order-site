@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Edit Profile | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=p5">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+</head>
+
+<body data-w="medium">
+
+<header class="account-header">
+    <div class="header-inner">
+
+        <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+
+        <nav aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+
+    </div>
+</header>
+
+<main class="ap-page ap-page-edit">
+    <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="/account">My account</a><span aria-hidden="true">/</span><span>Edit profile</span></nav>
+    <h1 class="ap-title">Account settings</h1>
+    {{if .Notice}}<div class="ap-alert ap-alert-ok" role="status">{{.Notice}}</div>{{end}}
+    {{if .Error}}<div class="ap-alert ap-alert-err" role="alert">{{.Error}}</div>{{end}}
+
+    <div class="ap-edit-layout">
+        <nav class="ap-subnav" aria-label="Settings sections">
+            <a href="#profile">Profile</a><a href="#delivery">Delivery</a><a href="#preferences">Preferences</a><a href="#phone">Phone</a><a href="#security">Security</a><a href="#danger">Delete account</a>
+        </nav>
+
+        <div class="ap-edit-main">
+            <form action="/account/edit" method="POST" enctype="multipart/form-data" class="ap-form" id="profile-form">
+                <section class="ap-card" id="profile">
+                    <header class="ap-card-head"><h2>Profile</h2></header>
+                    <div class="ap-photo">
+                        {{if .ProfilePicture}}<img src="{{.ProfilePicture}}" alt="Profile picture" class="ap-avatar ap-avatar-lg" id="ap-photo-preview">{{else}}<div class="ap-avatar ap-avatar-lg ap-avatar-initial" id="ap-photo-preview" aria-hidden="true">{{.Initial}}</div>{{end}}
+                        <div>
+                            <label for="profile_picture" class="account-button secondary ap-file-btn">Choose photo</label>{{if .ProfilePicture}} <button type="submit" form="remove-photo-form" class="account-button secondary ap-remove-btn" data-confirm="Remove your profile photo?" data-confirm-ok="Remove" data-confirm-tone="danger">Remove photo</button>{{end}}
+                            <input type="file" id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp" class="ap-file" data-preview="#ap-photo-preview" data-max-mb="5">
+                            <p class="ap-hint" id="ap-photo-hint">JPG, PNG or WEBP, up to 5MB. Large photos are resized for you.</p>
+                        </div>
+                    </div>
+                    <div class="ap-field">
+                        <label for="name">Display name</label>
+                        <input type="text" id="name" name="name" value="{{.Name}}" maxlength="100" autocomplete="name" required>
+                    </div>
+                    <div class="ap-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" value="{{.Email}}" disabled>
+                        <p class="ap-hint">Your email is your sign-in and cannot be changed here.</p>
+                    </div>
+                </section>
+
+                <section class="ap-card" id="delivery">
+                    <header class="ap-card-head"><h2>Delivery details</h2></header>
+                    <p class="ap-muted">Saved once, used to speed up checkout. Only shared with the shop and rider on an order.</p>
+                    <div class="ap-field">
+                        <label for="address_line">Street address</label>
+                        <input type="text" id="address_line" name="address_line" value="{{.Extras.AddressLine}}" maxlength="200" autocomplete="street-address" placeholder="House number, street, estate">
+                    </div>
+                    <div class="ap-row2">
+                        <div class="ap-field">
+                            <label for="delivery_area">Area or neighbourhood</label>
+                            <input type="text" id="delivery_area" name="delivery_area" value="{{.Extras.DeliveryArea}}" maxlength="80" placeholder="e.g. Wuse 2">
+                        </div>
+                        <div class="ap-field">
+                            <label for="state">State</label>
+                            <input type="text" id="state" name="state" value="{{.Extras.State}}" maxlength="60" list="ng-states" autocomplete="address-level1" placeholder="Start typing">
+                            <datalist id="ng-states"><option value="Abia"><option value="Adamawa"><option value="Akwa Ibom"><option value="Anambra"><option value="Bauchi"><option value="Bayelsa"><option value="Benue"><option value="Borno"><option value="Cross River"><option value="Delta"><option value="Ebonyi"><option value="Edo"><option value="Ekiti"><option value="Enugu"><option value="FCT Abuja"><option value="Gombe"><option value="Imo"><option value="Jigawa"><option value="Kaduna"><option value="Kano"><option value="Katsina"><option value="Kebbi"><option value="Kogi"><option value="Kwara"><option value="Lagos"><option value="Nasarawa"><option value="Niger"><option value="Ogun"><option value="Ondo"><option value="Osun"><option value="Oyo"><option value="Plateau"><option value="Rivers"><option value="Sokoto"><option value="Taraba"><option value="Yobe"><option value="Zamfara"></datalist>
+                        </div>
+                    </div>
+                    <div class="ap-field">
+                        <label for="delivery_note">Note for the rider</label>
+                        <textarea id="delivery_note" name="delivery_note" maxlength="200" rows="2" placeholder="Landmark, gate colour, call on arrival">{{.Extras.DeliveryNote}}</textarea>
+                    </div>
+                </section>
+
+                <section class="ap-card" id="preferences">
+                    <header class="ap-card-head"><h2>Preferences</h2></header>
+                    <fieldset class="ap-radios">
+                        <legend>How should we reach you about orders?</legend>
+                        <label><input type="radio" name="preferred_contact" value="email" {{if ne .Extras.PreferredContact "sms"}}checked{{end}}> <span><strong>Email</strong><small>Receipts and status updates by email.</small></span></label>
+                        <label><input type="radio" name="preferred_contact" value="sms" {{if eq .Extras.PreferredContact "sms"}}checked{{end}}> <span><strong>SMS</strong><small>Text messages. Needs a verified phone number.</small></span></label>
+                    </fieldset>
+                    <label class="ap-check"><input type="checkbox" name="marketing_opt_in" {{if .Extras.MarketingOptIn}}checked{{end}}> <span><strong>Offers and news</strong><small>Occasional promotions from {{brandName}}. You can turn this off any time.</small></span></label>
+                </section>
+
+                <div class="ap-savebar">
+                    <a href="/account" class="account-button secondary">Cancel</a>
+                    <button type="submit" class="account-button primary">Save changes</button>
+                </div>
+            </form>
+            <form action="/account/photo/remove" method="post" id="remove-photo-form" hidden></form>
+
+            <section class="ap-card" id="phone">
+                <header class="ap-card-head"><h2>Phone number</h2>{{if .Phone}}<span class="ap-badge ap-badge-ok">Verified</span>{{end}}</header>
+                <p class="ap-muted">{{if .Phone}}Current number: <strong>{{.Phone}}</strong>. To change it, verify a new one below.{{else}}Add a phone number so riders and shops can reach you. We will text a 6-digit code to confirm it.{{end}}</p>
+                <form action="/account/phone/send-otp" method="post" class="ap-inline">
+                    <div class="ap-field">
+                        <label for="phone">{{if .Phone}}New phone number{{else}}Phone number{{end}}</label>
+                        <input type="tel" id="phone" name="phone" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="e.g. 08012345678" required>
+                    </div>
+                    <button type="submit" class="account-button primary">Send code</button>
+                </form>
+            </section>
+
+            <section class="ap-card" id="security">
+                <header class="ap-card-head"><h2>Security</h2></header>
+                {{if .CanChangePassword}}
+                <form action="/account/password" method="post" class="ap-form" autocomplete="off">
+                    <div class="ap-field"><label for="current_password">Current password</label><input type="password" id="current_password" name="current_password" autocomplete="current-password" required></div>
+                    <div class="ap-row2">
+                        <div class="ap-field"><label for="new_password">New password</label><input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required></div>
+                        <div class="ap-field"><label for="confirm_password">Confirm new password</label><input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" minlength="8" required></div>
+                    </div>
+                    <p class="ap-hint">At least 8 characters with upper and lower case letters, a number and a symbol. You will be signed out of all devices after changing it.</p>
+                    <div class="ap-actions"><button type="submit" class="account-button primary">Update password</button></div>
+                </form>
+                {{else}}
+                <p class="ap-muted">This account signs in with Google or Facebook, so there is no password to manage here. Protect it with that provider's own security settings.</p>
+                {{end}}
+            </section>
+
+            <section class="ap-card ap-danger" id="danger">
+                <header class="ap-card-head"><h2>Delete account</h2></header>
+                <p class="ap-muted">This closes your account for good and cannot be undone.</p>
+                <ul class="ap-bullets">
+                    <li><strong>Erased:</strong> your name, email, phone, photo, saved address, favourites, cart, notifications and sign-in details.</li>
+                    <li><strong>Kept without your name:</strong> past order records and chat messages stay with the shops, because they need them for their sales and payouts.</li>
+                    <li><strong>Before you can delete:</strong> finish any order in progress and use up your wallet balance.</li>
+                </ul>
+                <form action="/account/delete" method="post" class="ap-form" autocomplete="off">
+                    {{if .CanChangePassword}}<div class="ap-field"><label for="del_password">Your password</label><input type="password" id="del_password" name="password" autocomplete="current-password" required></div>{{end}}
+                    <div class="ap-field"><label for="del_confirm">Type <strong>DELETE</strong> to confirm</label><input type="text" id="del_confirm" name="confirm" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="DELETE" required pattern="DELETE"></div>
+                    <div class="ap-actions"><button type="submit" class="account-button ap-danger-btn" data-confirm="Delete your account permanently? This cannot be undone." data-confirm-ok="Delete my account" data-confirm-tone="danger">Delete my account</button></div>
+                </form>
+            </section>
+        </div>
+    </div>
+</main>
+
+{{template "site-footer"}}
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/bottomnav.js?v=686ab4b3"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+<script src="/static/js/account.js?v=039f3f98"></script>
+{{template "scripts-common"}}
+</body>
+</html>

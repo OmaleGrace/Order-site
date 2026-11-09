@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Verify Phone | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=c78588e1">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+
+<body data-w="narrow">
+
+<header class="account-header">
+    <div class="header-inner">
+        <a href="/menu" class="logo"><img src="/static/img/laikihub-mark.svg" alt="{{brandName}}" class="site-logo"> <span>{{brandName}}</span></a>
+        <nav aria-label="Main navigation"><a href="/menu">Menu</a><a href="/vendors">Shops</a><a href="/favorites">Favourites</a><a href="/orders">My Orders</a><a href="/loyalty">Rewards</a><a href="/cart" class="cart-link">🛒 Cart</a><a href="/messages">Messages</a><a href="/account" class="active active-link" aria-current="page">Account</a><a href="/help">Help &amp; Support</a><a href="/logout">Logout</a></nav>
+    </div>
+</header>
+
+<main class="ap-page ap-page-narrow">
+    <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="/account">My account</a><span aria-hidden="true">/</span><a href="/account/edit#phone">Edit profile</a><span aria-hidden="true">/</span><span>Verify phone</span></nav>
+    <section class="ap-card ap-verify">
+        <h1 class="ap-title">Verify your phone</h1>
+        <p class="ap-muted">We sent a 6-digit code to <strong>{{.Phone}}</strong>. It can take a minute to arrive.</p>
+        <form action="/account/phone/verify-otp" method="post" class="ap-form">
+            <input type="hidden" name="phone" value="{{.Phone}}">
+            <input type="hidden" name="pin_id" value="{{.PinID}}">
+            <div class="ap-field">
+                <label for="code">Verification code</label>
+                <input type="text" id="code" name="code" class="ap-code-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" required autofocus>
+            </div>
+            <div class="ap-actions"><a href="/account/edit#phone" class="account-button secondary">Use a different number</a><button type="submit" class="account-button primary">Verify and save</button></div>
+        </form>
+    </section>
+</main>
+
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "site-footer"}}
+{{template "scripts-common"}}
+</body>
+</html>

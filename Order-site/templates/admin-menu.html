@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    {{template "meta-noindex"}}
+    <title>Manage Menu | {{brandName}}</title>
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    <link rel="stylesheet" href="/static/css/pages/admin-menu.css?v=1db98c46">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-w="medium">
+        <header class="admin-header">
+        <h1>🍴 {{if .IsAdmin}}{{brandName}} · Admin{{else}}{{.VendorName}}{{end}}</h1>
+        {{if .IsAdmin}}{{template "admin-nav" dict "Class" "portal-nav" "Active" "/admin/menu"}}
+{{else}}{{template "vendor-nav" dict "Class" "portal-nav" "Active" "/vendor/menu"}}{{end}}
+</header>
+
+    <main>
+        {{if .Notice}}<div class="notice">{{.Notice}}</div>{{end}}
+        {{if .Warning}}<div class="notice notice-warning">{{.Warning}}</div>{{end}}
+
+        <div class="card">
+            <h2 id="form-title">Add a menu item</h2>
+            <form action="{{.Base}}/menu/save" method="post" id="item-form" enctype="multipart/form-data">
+                <input type="hidden" name="id" id="item-id">
+                <div class="grid">
+                    <div>
+                        <label for="name">Name</label>
+                        <input type="text" name="name" id="name" required>
+                    </div>
+                    <div>
+                        <label for="price">Price (₦)</label>
+                        <input type="number" name="price" id="price" min="1" step="0.01" required>
+                    </div>
+                    <div>
+                        <label for="category">Category</label>
+                        <input type="text" name="category" id="category" placeholder="e.g. Rice, Drinks">
+                    </div>
+                    <div class="full">
+                        <label for="image_file">Dish photo (optional)</label>
+                        <input type="file" name="image_file" id="image_file" accept="image/*" data-image-upload>
+                        <img data-image-preview="image_file" alt="Preview of the chosen photo" hidden style="max-width:160px;max-height:120px;border-radius:10px;margin-top:8px;object-fit:cover">
+                        <p class="muted" data-image-status="image_file" role="status"></p>
+                        <label for="image_url">Or paste a picture link (optional)</label>
+                        <input type="text" name="image_url" id="image_url">
+                    </div>
+                    <div class="full">
+                        <label for="description">Description</label>
+                        <textarea name="description" id="description"></textarea>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button type="submit" id="save-btn">Add item</button>
+                    <button type="button" class="secondary" id="cancel-btn" style="display:none;">Cancel edit</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            {{if not .IsAdmin}}<form method="get" class="menu-search-form">
+                <input id="menu-filter" type="search" placeholder="Search your menu by name or category…" aria-label="Search menu">
+                <a href="/vendor/menu" class="secondary link-btn-center">Reset</a>
+            </form>{{end}}
+            <h2>Menu items ({{len .Items}})</h2>
+            {{if .Items}}
+            <div class="table-wrap">
+            <form action="/vendor/menu/bulk" method="post" id="bulk-form">
+            <div class="row-end">
+                <div><label for="bulk-category">Set category for selected</label><input id="bulk-category" name="category" placeholder="e.g. Rice"></div>
+                <button type="submit">Apply to selected</button>
+            </div>
+            <div class="table-wrap"><table>
+                <thead>
+                    <tr><th><input type="checkbox" id="select-all" aria-label="Select all"></th><th>Item</th><th>Category</th><th>Price</th><th>Availability</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {{range .Items}}
+                    <tr class="menu-row" data-search="{{.Name}} {{.Category}}">
+                        <td><input type="checkbox" name="item_id" value="{{.ID}}" class="item-check" aria-label="Select {{.Name}}"></td><td>
+                            <div class="item-cell">
+                                {{if .ImageURL}}
+                                <img src="{{.ImageURL}}" alt="{{.Name}}" class="thumb zoomable" loading="lazy">
+                                {{else}}
+                                <div class="thumb thumb-empty">🍽️</div>
+                                {{end}}
+                                <div>
+                                    <strong>{{.Name}}</strong>
+                                    {{if .Description}}<div class="muted">{{.Description}}</div>{{end}}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{if .Category}}<span class="tag">{{.Category}}</span>{{else}}<span class="muted">none</span>{{end}}</td>
+                        <td class="price">₦{{.PriceNaira}}</td>
+                        <td>{{if .Available}}<span class="tag">Available</span>{{else}}<span class="tag tag-danger">Hidden</span>{{end}}</td>
+                        <td class="row-actions">
+                            {{if not $.IsAdmin}}<a class="secondary link-btn-inline" href="/vendor/menu/customizations?item_id={{.ID}}">Customize</a>{{end}}
+                            <button type="button" class="secondary edit-btn"
+                                data-id="{{.ID}}"
+                                data-name="{{.Name}}"
+                                data-price="{{.PriceNaira}}"
+                                data-category="{{.Category}}"
+                                data-image="{{.ImageURL}}"
+                                data-description="{{.Description}}">Edit</button>
+                            <form action="{{$.Base}}/menu/delete" method="post"
+                                  data-confirm="Delete {{.Name}}?" data-confirm-title="Delete this dish?" data-confirm-ok="Delete" data-confirm-tone="danger">
+                                <input type="hidden" name="id" value="{{.ID}}">
+                                <button type="submit" class="danger">Delete</button>
+                            </form>
+                            {{if not $.IsAdmin}}<form action="/vendor/menu/availability" method="post"><input type="hidden" name="id" value="{{.ID}}"><button type="submit" class="secondary">{{if .Available}}Hide{{else}}Show{{end}}</button></form><form action="/vendor/menu/duplicate" method="post"><input type="hidden" name="id" value="{{.ID}}"><button type="submit" class="secondary">Duplicate</button></form>{{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div></form>
+            {{else}}
+            <p class="muted">No items yet. Add your first one above.</p>
+            {{end}}
+        </div>
+    </main>
+
+    <script src="/static/js/image-upload.js?v=87b90b0e"></script>
+    <script src="/static/js/pages/admin-menu.js?v=703eea64"></script>
+    <script src="/static/js/lightbox.js?v=edc56f89"></script>
+<script src="/static/js/vendor-banner.js?v=6ca0fab4"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "scripts-common"}}
+</body>
+</html>

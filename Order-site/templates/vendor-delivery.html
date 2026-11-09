@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {{template "head-common"}}
+    <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
+    {{template "meta-noindex"}}
+<title>Delivery pricing | {{brandName}}</title>
+<link rel="stylesheet" href="/static/css/pages/vendor-delivery.css?v=421d8feb">
+<link rel="stylesheet" href="/static/css/portal-nav.css?v=201381d1">
+    <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
+    <link rel="stylesheet" href="/static/css/premium-system.css?v=20261109">
+</head>
+<body data-w="medium">
+<header class="vendor-header">
+  <a class="vendor-brand" href="/vendor/dashboard"><img src="/static/img/laikihub-mark.svg" alt=""><span>{{.VendorName}}</span></a>
+  {{template "vendor-nav" dict "Class" "vendor-nav" "Active" "/vendor/delivery"}}
+</header>
+<main>
+  <h1>Delivery pricing</h1>
+  <p class="lead">Choose what customers pay for delivery to each area you serve. Anything you leave blank uses your normal rules, so you only need to fill in what is different.</p>
+
+  {{if .Notice}}<div class="notice" role="status">{{.Notice}}</div>{{end}}
+  {{if not .OffersDelivery}}<div class="warn">Delivery is switched off for your shop, so customers cannot choose it yet. You can turn it on in <a href="/vendor/profile">Shop profile</a>.</div>{{end}}
+
+  <div class="how">
+    <div><strong>Delivery fee</strong><span>The fee for this area. Blank means your shop default, {{.DefaultFee}}.</span></div>
+    <div><strong>Minimum order</strong><span>Orders below this amount cannot be delivered to the area.</span></div>
+    <div><strong>Free delivery over</strong><span>Delivery costs nothing once the food total reaches this amount.</span></div>
+  </div>
+
+  {{if .Rows}}
+  <form class="card" method="post" action="/vendor/delivery/save">
+    <div class="head" aria-hidden="true"><span>Area</span><span>Delivery fee</span><span>Minimum order</span><span>Free delivery over</span></div>
+    {{range .Rows}}<div class="row">
+      <div class="area"><strong>{{.LGA}}</strong><small>{{.State}}</small>
+        <input type="hidden" name="state" value="{{.State}}"><input type="hidden" name="lga" value="{{.LGA}}"></div>
+      <div class="field"><label>Delivery fee</label><div class="money"><input type="text" inputmode="decimal" name="fee" value="{{.Fee}}" placeholder="Shop default" maxlength="12" aria-label="Delivery fee for {{.LGA}}"></div></div>
+      <div class="field"><label>Minimum order</label><div class="money"><input type="text" inputmode="decimal" name="min_order" value="{{.MinOrder}}" placeholder="None" maxlength="12" aria-label="Minimum order for {{.LGA}}"></div></div>
+      <div class="field"><label>Free delivery over</label><div class="money"><input type="text" inputmode="decimal" name="free_over" value="{{.FreeOver}}" placeholder="Never" maxlength="12" aria-label="Free delivery threshold for {{.LGA}}"></div></div>
+    </div>{{end}}
+    <div class="bar"><p>Amounts are in naira. Clearing all three boxes for an area puts it back on your shop default.</p><button class="save" type="submit">Save pricing</button></div>
+  </form>
+  {{else}}
+  <div class="empty"><strong>You have not chosen any delivery areas yet.</strong><br>Add the states and local governments you deliver to in <a href="/vendor/profile">Shop profile</a>, then come back here to set a price for each.</div>
+  {{end}}
+</main>
+<script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
+<script src="/static/js/nav-active.js?v=e62c3453"></script>
+{{template "scripts-common"}}
+</body>
+</html>

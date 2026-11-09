@@ -177,3 +177,22 @@ html body .ap-hero a.account-button.secondary { color: #fff; }
 .ap-remove-btn { color: #b3261e; border-color: #ecc9c4; }
 .ap-remove-btn:hover { background: #fdf1f0; }
 .ap-push-actions { justify-content: flex-start; margin-top: 10px; }
+
+/* Delete account */
+.ap-danger { border-color: #ecc9c4; }
+.ap-bullets { margin: 0 0 14px; padding-left: 18px; color: var(--muted); font-size: .92rem; display: grid; gap: 6px; }
+.ap-danger-btn { background: #b3261e; color: #fff; border: 1px solid #b3261e; }
+.ap-danger-btn:hover { background: #8f1d17; }
+
+/* Appearance chooser */
+.ap-theme { border: 0; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ap-theme label { cursor: pointer; }
+.ap-theme input { position: absolute; opacity: 0; pointer-events: none; }
+.ap-theme span { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 6px; border: 1px solid var(--line); border-radius: 12px; font-weight: 700; font-size: .88rem; }
+.ap-theme input:checked + span { border-color: #174a32; box-shadow: 0 0 0 2px rgba(23,74,50,.25); }
+.ap-theme input:focus-visible + span { outline: 2px solid #174a32; outline-offset: 2px; }
+.ap-sw { width: 100%; height: 34px; border-radius: 8px; border: 1px solid #d5ded4; display: block; }
+.ap-sw-light { background: linear-gradient(#fbfaf6 70%, #174a32 70%); }
+.ap-sw-dark { background: linear-gradient(#141a17 70%, #3f9a6b 70%); }
+.ap-sw-system { background: linear-gradient(90deg, #fbfaf6 50%, #141a17 50%); }
+.ap-theme-form.is-live .ap-theme-save { display: none; }
