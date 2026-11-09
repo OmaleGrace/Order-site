@@ -169,6 +169,7 @@ var (
 	VendorAILimiter   = NewLimiter(30, 15*time.Minute)
 	MessageAILimiter  = NewLimiter(30, 15*time.Minute)
 	PayLimiter        = NewLimiter(20, time.Hour)
+	PushLimiter       = NewLimiter(30, time.Hour)
 	LoginFailsByEmail = NewLimiter(5, 15*time.Minute)
 	ForgotByEmail     = NewLimiter(3, time.Hour)
 )

@@ -176,3 +176,4 @@ html body .ap-hero a.account-button.secondary { color: #fff; }
 
 .ap-remove-btn { color: #b3261e; border-color: #ecc9c4; }
 .ap-remove-btn:hover { background: #fdf1f0; }
+.ap-push-actions { justify-content: flex-start; margin-top: 10px; }

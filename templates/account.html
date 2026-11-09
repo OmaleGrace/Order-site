@@ -6,7 +6,7 @@
     <title>My Account | {{brandName}}</title>
     <link rel="stylesheet" href="/static/css/base.css?v=83892b3a">
     <link rel="stylesheet" href="/static/css/account.css?v=c444d463">
-    <link rel="stylesheet" href="/static/css/account-pro.css?v=c78588e1">
+    <link rel="stylesheet" href="/static/css/account-pro.css?v=p3">
     <link rel="stylesheet" href="/static/css/ui.css?v=215b13d2">
 </head>
 <body data-w="wide">
@@ -149,6 +149,18 @@
                     <a href="/help"><span>Help and support</span><b>&rarr;</b></a>
                     <a href="/help?tour=1" data-app-guide-open><span>Take the app tour</span><b>&rarr;</b></a>
                 </nav>
+            </section>
+
+            <section class="ap-card" data-push-panel>
+                <header class="ap-card-head"><h2>Phone notifications</h2></header>
+                <p class="ap-muted">Order updates and shop replies on your lock screen, even when the app is closed.</p>
+                <p class="ap-small" data-push-status aria-live="polite">Checking&hellip;</p>
+                <div class="ap-actions ap-push-actions">
+                    <button type="button" class="account-button primary" data-push-on hidden>Turn on</button>
+                    <button type="button" class="account-button secondary" data-push-test hidden>Send a test</button>
+                    <button type="button" class="account-button secondary" data-push-off hidden>Turn off</button>
+                </div>
+                <p class="ap-small" data-push-msg role="status"></p>
             </section>
 
             <section class="ap-card">

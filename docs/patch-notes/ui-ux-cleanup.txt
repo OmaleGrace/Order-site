@@ -1,0 +1,11 @@
+UI/UX cleanup (measured in a real browser at 375px and 1280px across all 54 pages)
+-----------------------------------------------------------------------------------
+Small tap targets 192 -> 36 | inputs under 16px (iPhone zoom) 34 -> 1 | unlabelled fields 11 -> 0
+Low-contrast text 27 -> 3 | text under 12px 183 -> 23 | sideways overflow 0 -> 0
+- static/css/ui.css: new "Touch comfort and readability" layer (44px controls, 16px fields on phones,
+  instant taps, pressed/disabled button states, balanced headings, reduced-motion support).
+- 32 stylesheets: muted greys darkened to #5b6a61, white-on-orange buttons/badges darkened, amber notice
+  text darkened, every font size under 12px raised to 12px.
+- Templates: aria-labels on 5 unlabelled controls. ui.css is now ?v=4 and every changed stylesheet had its
+  ?v= bumped so the installed app fetches the new files.
+Left as is: decorative star ratings (graphics need only 3:1), file pickers, admin table tick boxes.

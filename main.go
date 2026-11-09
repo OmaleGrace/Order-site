@@ -2,6 +2,7 @@ package main
 
 import (
 	"Order-site/alerts"
+	"Order-site/push"
 	"context"
 	"fmt"
 	"net/http"
@@ -49,6 +50,11 @@ func main() {
 
 	// Email the owner when something breaks (set ALERT_EMAIL; see alerts/alerts.go).
 	alerts.Install()
+	if err := push.Init(); err != nil {
+		fmt.Println("Push notifications are off:", err, "(run `go run ./cmd/vapid-keys` and set the keys to turn them on)")
+	} else {
+		fmt.Println("Push notifications are on")
+	}
 	stopWatch := make(chan struct{})
 	defer close(stopWatch)
 	alerts.WatchDB(db, stopWatch)
@@ -85,6 +91,11 @@ func main() {
 	)
 
 	mux.HandleFunc("GET /healthz", h.Health)
+	mux.HandleFunc("GET /push/key", middleware.Logging(h.PushKey))
+	mux.HandleFunc("GET /push/status", middleware.Logging(h.PushStatus))
+	mux.HandleFunc("POST /push/subscribe", middleware.Logging(middleware.RateLimit(middleware.PushLimiter, h.PushSubscribe)))
+	mux.HandleFunc("POST /push/unsubscribe", middleware.Logging(h.PushUnsubscribe))
+	mux.HandleFunc("POST /push/test", middleware.Logging(middleware.RateLimit(middleware.PushLimiter, h.PushTest)))
 	mux.HandleFunc("GET /{$}", middleware.Logging(h.Home))
 	mux.HandleFunc("GET /about", middleware.Logging(h.PublicPage))
 	mux.HandleFunc("GET /guides", middleware.Logging(h.PublicPage))

@@ -1,0 +1,29 @@
+First-launch app guide
+----------------------
+Files: static/js/app-guide.js, static/css/app-guide.css (linked from templates/partials/head-common.html and
+scripts-common.html, so every page except error and rider-portal has it).
+When it shows: once, on the first open of the installed app (home-screen launch) on a customer page
+(/, /menu, /vendors, /account, /favorites, /orders); right after the phone reports "appinstalled"; whenever a
+button with data-app-guide-open is tapped (added to the Help and Account pages); or on any page ending ?tour=1.
+It never shows over checkout, payment, login, vendor, admin or rider pages.
+Skip/Escape/finishing all remember "seen" in the phone's localStorage (key laikihub.guide.v1).
+Edit the steps: the STEPS list at the top of app-guide.js. Show it again to everyone: change the key to ...v2.
+
+Update: vendor and rider guides
+-------------------------------
+static/js/app-guide.js now holds three guides (customer, vendor, rider), chosen by page:
+  /vendor/...  -> vendor guide  (auto: first installed-app visit to /vendor/dashboard or /vendor/orders)
+  /rider/...   -> rider guide   (auto: first time a rider opens their delivery link; no install needed)
+  everything else -> customer guide (unchanged)
+Each remembers "seen" separately: laikihub.guide.v1 (customer), laikihub.guide.vendor.v1, laikihub.guide.rider.v1.
+Buttons: data-app-guide-open="vendor" / "rider" (vendor dashboard "App tour", rider page "How this page works");
+a plain data-app-guide-open picks the guide from the page. ?tour=1 previews whichever guide fits the page.
+Also fixed: templates/rider-portal.html still said "ENIE" (old brand) in the title, header, footer and one error
+message; it now uses the site brand name and logo.
+
+Update: time-of-day greeting
+----------------------------
+templates/vendor-dashboard.html used to say "Good evening" at any hour. It now uses
+<span data-greeting>Welcome back</span> and static/js/greeting.js sets Good morning (5:00-11:59),
+Good afternoon (12:00-16:59) or Good evening (17:00-4:59) from the visitor's own phone clock.
+To use it on another page, add the same span and load greeting.js.

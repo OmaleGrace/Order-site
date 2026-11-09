@@ -3,7 +3,9 @@ package handlers
 import (
 	"Order-site/errors"
 	"Order-site/middleware"
+	"Order-site/push"
 	"Order-site/render"
+	"Order-site/safe"
 	"database/sql"
 	"html/template"
 	"net/http"
@@ -23,6 +25,16 @@ type Notification struct {
 
 func createNotification(db *sql.DB, userID int, kind, title, message, link string) error {
 	_, err := db.Exec(`INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1,$2,$3,$4,$5)`, userID, kind, title, message, link)
+	if err == nil && push.Enabled() {
+		// The same alert also goes to the person's phone (if they turned notifications on).
+		go func() {
+			defer safe.Recover("push notification")
+			if link == "" || link[0] != '/' {
+				link = "/notifications"
+			}
+			push.NotifyUser(db, userID, push.Payload{Title: title, Body: message, URL: link})
+		}()
+	}
 	return err
 }
 

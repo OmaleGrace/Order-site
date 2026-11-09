@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"Order-site/push"
+	"Order-site/safe"
 	"database/sql"
 	"encoding/json"
 	"html/template"
@@ -569,6 +571,7 @@ func (h *Handlers) SendMessage(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "Could not send message", http.StatusInternalServerError)
 		return
 	}
+	h.pushNewMessage(threadID, userID, body)
 	http.Redirect(w, r, "/messages/"+strconv.Itoa(threadID), http.StatusSeeOther)
 }
 
@@ -604,4 +607,38 @@ func validateChatMessage(raw string) (string, bool) {
 		return "", false
 	}
 	return body, true
+}
+
+// pushNewMessage tells the other person in a conversation that a message arrived, on their phone.
+func (h *Handlers) pushNewMessage(threadID, senderID int, body string) {
+	if !push.Enabled() {
+		return
+	}
+	go func() {
+		defer safe.Recover("push new message")
+		var customerID, ownerID int
+		var senderName, shopName string
+		err := h.DB.QueryRow(`
+			SELECT t.customer_id, v.owner_user_id, COALESCE(s.name, ''), v.name
+			FROM message_threads t
+			JOIN vendors v ON v.id = t.vendor_id
+			LEFT JOIN users s ON s.id = $2
+			WHERE t.id = $1`, threadID, senderID).Scan(&customerID, &ownerID, &senderName, &shopName)
+		if err != nil {
+			return
+		}
+		to, from := ownerID, senderName
+		if senderID == ownerID {
+			to, from = customerID, shopName
+		}
+		if to == senderID || to == 0 {
+			return
+		}
+		push.NotifyUser(h.DB, to, push.Payload{
+			Title: "New message from " + from,
+			Body:  truncateChatPreview(body, 140),
+			URL:   "/messages/" + strconv.Itoa(threadID),
+			Tag:   "msg-" + strconv.Itoa(threadID),
+		})
+	}()
 }

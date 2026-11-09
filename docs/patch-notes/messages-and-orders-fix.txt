@@ -1,0 +1,11 @@
+Messages page rebuilt, orders page scrolling fixed
+--------------------------------------------------
+Messages: inbox cards no longer overflow on phones (long names/previews are truncated), search box,
+unread badge, shop name shown only when it differs from the contact. Chat: fixed-height card with its
+own scroll (first bubble was clipped), tidier bubbles, quick-reply chips, send button, Enter to send
+(Shift+Enter = new line), double-send guard. Files: templates/messages.html,
+static/css/pages/messages.css, static/js/pages/messages.js.
+Orders: the page reloaded itself every 15 seconds while an order was live (jumped to the top and closed
+open panels). It now checks quietly and reloads only when an order's status changes. The rider map
+no longer steals finger swipes until it is tapped. Files: templates/orders.html,
+static/css/orders.css, static/js/pages/orders.js.
