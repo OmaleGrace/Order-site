@@ -1,0 +1,204 @@
+/* LaikiHub design system v1 - one shared layer for every page (customer, vendor, rider, admin).
+   Loaded from the head-common partial, so it reaches every template. It only adds and refines
+   styles: no markup, route or form behaviour depends on it. Selectors start with "html body" so
+   they win over page stylesheets without !important. Dark mode rules sit at the bottom. */
+:root{
+  --ds-forest:#164b35;--ds-forest-700:#103823;--ds-forest-500:#2a6b4a;--ds-forest-100:#e6f0e8;
+  --ds-orange:#e87932;--ds-orange-600:#c85f12;--ds-orange-100:#fff0e2;
+  --ds-cream:#f7f6ef;--ds-paper:#fffefa;--ds-line:#e8e5da;--ds-ink:#1b2b22;--ds-muted:#617067;
+  --ds-ok:#1d7a4d;--ds-ok-bg:#e3f4ea;--ds-warn:#9a5b00;--ds-warn-bg:#fff2d6;
+  --ds-bad:#a8321f;--ds-bad-bg:#fde8e4;--ds-info:#1f5f8b;--ds-info-bg:#e3f0fa;
+  --ds-r-sm:10px;--ds-r:16px;--ds-r-lg:24px;
+  --ds-shadow-1:0 1px 2px rgba(20,45,30,.05),0 4px 14px rgba(20,45,30,.05);
+  --ds-shadow-2:0 2px 6px rgba(20,45,30,.06),0 16px 36px rgba(20,45,30,.10);
+  --ds-ease:cubic-bezier(.2,.7,.2,1);
+  --ds-safe-b:env(safe-area-inset-bottom,0px);--ds-safe-t:env(safe-area-inset-top,0px);
+}
+
+/* ---- Page foundations ---- */
+html body{background:var(--ds-cream);color:var(--ds-ink);overflow-x:hidden;-webkit-tap-highlight-color:transparent;text-rendering:optimizeLegibility}
+html body img,html body video,html body svg{max-width:100%}
+html body :where(h1,h2,h3){text-wrap:balance}
+html body :where(p,li){text-wrap:pretty}
+html body ::selection{background:var(--ds-orange-100);color:var(--ds-forest-700)}
+html body a:where(:not(.btn):not(.button):not(.btn-primary):not(.btn-secondary):not(.btn-outline)):hover{color:var(--ds-forest-500)}
+html body :focus-visible{outline:3px solid rgba(232,115,31,.6);outline-offset:2px;border-radius:6px}
+.ds-sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ds-skip{position:fixed;left:12px;top:-60px;z-index:3000;background:var(--ds-forest);color:#fff;padding:10px 16px;border-radius:var(--ds-r-sm);transition:top .2s var(--ds-ease)}
+.ds-skip:focus{top:calc(10px + var(--ds-safe-t))}
+
+/* ---- Buttons ---- */
+html body :is(.btn,.button,.btn-primary,.btn-secondary,.btn-outline,.ds-btn){
+  min-height:44px;border-radius:999px;font-weight:700;letter-spacing:-.005em;cursor:pointer;
+  transition:transform .16s var(--ds-ease),box-shadow .16s var(--ds-ease),background-color .16s,border-color .16s,color .16s}
+html body :is(.btn-primary,.ds-btn-primary){background:var(--ds-forest);border:1px solid var(--ds-forest);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.12) inset,0 6px 16px rgba(23,74,50,.20)}
+html body :is(.btn-primary,.ds-btn-primary):hover{background:var(--ds-forest-700)}
+html body .ds-btn-accent{background:var(--ds-orange);border:1px solid var(--ds-orange);color:#fff;box-shadow:0 6px 16px rgba(232,115,31,.28)}
+html body .ds-btn-accent:hover{background:var(--ds-orange-600)}
+html body .ds-btn-ghost{background:transparent;border:1px solid var(--ds-line);color:var(--ds-forest)}
+html body .ds-btn-ghost:hover{background:var(--ds-forest-100)}
+html body :is(.btn,.button,.btn-primary,.ds-btn):active:not(:disabled){transform:translateY(0) scale(.98);box-shadow:none}
+html body :is(button,.btn,.button)[aria-busy="true"],html body .is-loading{position:relative;color:transparent!important;pointer-events:none}
+html body :is(button,.btn,.button)[aria-busy="true"]::after,html body .is-loading::after{
+  content:"";position:absolute;inset:0;margin:auto;width:18px;height:18px;border-radius:50%;
+  border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;animation:ds-spin .7s linear infinite}
+
+/* ---- Cards and dashboard widgets ---- */
+html body :is(.card,.panel,.stat,.tile,.ds-card){border-radius:var(--ds-r);background:var(--ds-paper);border:1px solid var(--ds-line);box-shadow:var(--ds-shadow-1)}
+html body :is(.shop-card,.menu-card,.dish-card,.vendor-card,.tile,.quick-link):hover{box-shadow:var(--ds-shadow-2);transform:translateY(-2px)}
+html body :is(.shop-card,.menu-card,.dish-card,.vendor-card,.tile,.quick-link){transition:box-shadow .2s var(--ds-ease),transform .2s var(--ds-ease)}
+html body .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:14px}
+html body .stat{padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+html body .stat strong{font-variant-numeric:tabular-nums;color:var(--ds-forest)}
+html body .stat span,html body .stat small{color:var(--ds-muted);font-size:.86rem}
+html body :is(.card,.panel,.section-card){padding:clamp(16px,2.4vw,24px)}
+
+/* ---- Badges and status chips ---- */
+html body :is(.badge,.status,.pill,.chip,.ds-badge){display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:.78rem;font-weight:750;line-height:1.4;white-space:nowrap;background:var(--ds-forest-100);color:var(--ds-forest)}
+html body :is(.badge,.status,.pill,.ds-badge):is(.ok,.success,.paid,.delivered,.completed,.approved,.active,.ds-ok){background:var(--ds-ok-bg);color:var(--ds-ok)}
+html body :is(.badge,.status,.pill,.ds-badge):is(.warn,.pending,.preparing,.processing,.ds-warn){background:var(--ds-warn-bg);color:var(--ds-warn)}
+html body :is(.badge,.status,.pill,.ds-badge):is(.bad,.danger,.error,.failed,.cancelled,.rejected,.ds-bad){background:var(--ds-bad-bg);color:var(--ds-bad)}
+html body :is(.badge,.status,.pill,.ds-badge):is(.info,.ds-info,.out-for-delivery,.on-the-way){background:var(--ds-info-bg);color:var(--ds-info)}
+
+/* ---- Forms ---- */
+html body :is(input,select,textarea):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]){border-radius:var(--ds-r-sm);border:1.5px solid #d9ddd2;background:#fff;transition:border-color .16s,box-shadow .16s}
+html body :is(input,select,textarea):hover:not(:focus):not(:disabled){border-color:#bcc7bb}
+html body :is(input,select,textarea):focus{border-color:var(--ds-forest);box-shadow:0 0 0 4px rgba(23,74,50,.12)}
+html body :is(input,select,textarea):user-invalid{border-color:var(--ds-bad);box-shadow:0 0 0 4px rgba(168,50,31,.10)}
+html body :is(input,select,textarea):user-valid:not(:placeholder-shown):not(:focus){border-color:#8dbfa4}
+html body :is(input[type=checkbox],input[type=radio]){accent-color:var(--ds-forest);width:20px;height:20px}
+html body :is(.field-error,.form-error,.error-text){color:var(--ds-bad);font-size:.85rem;font-weight:600;margin-top:4px}
+/* 16px text stops iOS zooming into focused fields */
+@media (max-width:760px){html body :is(input,select,textarea){font-size:16px}}
+
+/* ---- Tables: scroll inside their wrapper, never the page ---- */
+html body main :is(.scroll,.table-wrap,.table){max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+html body table{border-collapse:separate;border-spacing:0;width:100%}
+html body :is(th){font-size:.78rem;font-weight:750;color:var(--ds-muted);text-align:left;background:#f4f1e8;padding:11px 14px;position:sticky;top:0}
+html body td{padding:13px 14px;border-top:1px solid var(--ds-line);vertical-align:middle}
+html body tbody tr{transition:background-color .12s}
+html body tbody tr:hover{background:rgba(23,74,50,.035)}
+html body :is(td,th):is(.num,.amount){text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---- Modals and dropdowns ---- */
+html body dialog{border:0;border-radius:var(--ds-r-lg);padding:0;box-shadow:var(--ds-shadow-2);max-width:min(560px,calc(100vw - 24px));width:100%;color:var(--ds-ink);background:var(--ds-paper)}
+html body dialog::backdrop{background:rgba(14,30,21,.55);backdrop-filter:blur(3px)}
+html body dialog[open]{animation:ds-pop .22s var(--ds-ease)}
+html body :is(details.dropdown,.dropdown-menu,[role=menu]){border-radius:var(--ds-r);border:1px solid var(--ds-line);box-shadow:var(--ds-shadow-2);background:var(--ds-paper)}
+@media (max-width:640px){
+  html body dialog{margin:auto auto 0;border-radius:var(--ds-r-lg) var(--ds-r-lg) 0 0;max-width:100vw;padding-bottom:var(--ds-safe-b)}
+  html body dialog[open]{animation:ds-sheet .28s var(--ds-ease)}
+}
+
+/* ---- Empty and loading states ---- */
+html body :is(.empty,.empty-state,.ds-empty){text-align:center;padding:clamp(28px,6vw,56px) 20px;border:1.5px dashed #d3d9cd;border-radius:var(--ds-r);background:var(--ds-paper);color:var(--ds-muted)}
+html body :is(.empty,.empty-state,.ds-empty) :is(h2,h3){color:var(--ds-ink);margin:0 0 6px}
+.ds-skeleton{display:block;min-height:1em;border-radius:8px;background:linear-gradient(90deg,#ece9df 25%,#f6f3ea 37%,#ece9df 63%);background-size:400% 100%;animation:ds-shimmer 1.3s ease infinite}
+.ds-skeleton.is-circle{border-radius:50%}
+.ds-skeleton.is-card{min-height:140px;border-radius:var(--ds-r)}
+
+/* ---- Toasts (window.LaikiUI.toast) ---- */
+.ds-toasts{position:fixed;z-index:2500;left:12px;right:12px;bottom:calc(76px + var(--ds-safe-b));display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.ds-toast{pointer-events:auto;display:flex;align-items:center;gap:10px;max-width:440px;width:100%;padding:12px 16px;border-radius:14px;background:var(--ds-forest-700);color:#fff;font-weight:600;font-size:.94rem;box-shadow:var(--ds-shadow-2);animation:ds-toast-in .28s var(--ds-ease)}
+.ds-toast.is-leaving{animation:ds-toast-out .2s ease forwards}
+.ds-toast[data-type=error]{background:var(--ds-bad)}
+.ds-toast[data-type=success]{background:var(--ds-ok)}
+.ds-toast[data-type=warn]{background:var(--ds-warn)}
+.ds-toast button{margin-left:auto;background:none;border:0;color:inherit;font-size:1.2rem;line-height:1;min-height:32px;min-width:32px;cursor:pointer;opacity:.8}
+@media (min-width:900px){.ds-toasts{left:auto;right:24px;bottom:24px;align-items:flex-end}}
+
+/* ---- Navigation: portals, bottom bar, sidebar ---- */
+html body :is(.top,.vendor-header,.admin-header){padding-top:max(var(--ds-safe-t),0px)}
+html body .bottom-nav{padding-bottom:var(--ds-safe-b);border-top:1px solid var(--ds-line)}
+html body .bottom-nav a{min-height:56px;justify-content:center;font-weight:650;transition:color .16s}
+html body .bottom-nav a.active{color:var(--ds-forest)}
+html body .bottom-nav a.active .bn-icon{transform:translateY(-2px) scale(1.08)}
+html body .bn-icon{transition:transform .2s var(--ds-ease)}
+html body .bn-badge{background:var(--ds-orange);color:#fff}
+html body.has-bottom-nav{padding-bottom:calc(76px + var(--ds-safe-b))}
+html body .portal-nav a[aria-current=page],html body .portal-nav a.active{color:var(--ds-forest);border-bottom:0;background:var(--ds-forest-100);border-radius:999px;padding-inline:14px}
+html body .portal-nav a{border-radius:999px;padding-inline:12px}
+
+/* ---- Marketplace (home, menu, shops) ---- */
+html body .hero-home{border-radius:0 0 32px 32px}
+html body .home-section{padding-block:clamp(28px,5vw,64px)}
+html body .home-section .section-head h2{font-size:clamp(1.45rem,3vw,2.2rem)}
+html body .dish-card img,html body .menu-card img,html body .shop-card img{aspect-ratio:4/3;object-fit:cover;width:100%;border-radius:var(--ds-r) var(--ds-r) 0 0}
+html body :is(.price,.amount,.total){font-variant-numeric:tabular-nums;font-weight:800;color:var(--ds-forest)}
+html body .ds-testimonials{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px;max-width:var(--lh-content,1240px);margin:0 auto}
+html body .ds-quote{margin:0;padding:22px;border-radius:var(--ds-r);background:var(--ds-paper);border:1px solid var(--ds-line);box-shadow:var(--ds-shadow-1);display:flex;flex-direction:column;gap:14px}
+html body .ds-quote p{margin:0;font-size:1.02rem;line-height:1.6}
+html body .ds-quote footer{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--ds-muted)}
+html body .ds-quote footer strong{color:var(--ds-ink)}
+html body .ds-quote .ds-avatar{width:38px;height:38px;border-radius:50%;background:var(--ds-forest-100);color:var(--ds-forest);display:grid;place-items:center;font-weight:800}
+
+/* ---- Rider screens: big targets, thumb-reachable actions ---- */
+html body :is(.rider,.rider-portal,.page[data-rider]) :is(button,.btn){min-height:52px;font-size:1.02rem}
+html body.rider-screen :is(select,input){min-height:52px}
+
+/* ---- Phones ---- */
+@media (max-width:760px){
+  html body main{padding:16px 14px calc(24px + var(--ds-safe-b))}
+  html body :is(button,.btn,.button,a.btn){min-height:46px}
+  html body :is(.grid,.cards,.tiles,.stats){gap:12px}
+  html body :is(.row,.actions,.btn-row){flex-wrap:wrap}
+  html body pre,html body code{white-space:pre-wrap;word-break:break-word}
+}
+@media (max-width:420px){html body h1{font-size:clamp(1.6rem,8vw,2rem)}}
+
+/* ---- Motion ---- */
+@keyframes ds-spin{to{transform:rotate(360deg)}}
+@keyframes ds-shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+@keyframes ds-pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes ds-sheet{from{transform:translateY(100%)}to{transform:none}}
+@keyframes ds-toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes ds-toast-out{to{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media print{.ds-toasts,.bottom-nav{display:none!important}}
+
+/* ---- Dark mode (html[data-theme=dark] is set by theme.js) ---- */
+html[data-theme="dark"]{--ds-cream:#0f1512;--ds-paper:#18211c;--ds-line:#2c3830;--ds-ink:#e3ece6;--ds-muted:#9bab9f;--ds-forest-100:#1f3328;--ds-orange-100:#3a2616}
+html[data-theme="dark"] body :is(.btn-primary,.ds-btn-primary){background:#2a7a52;border-color:#2a7a52}
+html[data-theme="dark"] body .ds-btn-ghost{color:#aee4cb}
+html[data-theme="dark"] body :is(.badge,.status,.pill,.chip,.ds-badge){background:#1f3328;color:#aee4cb}
+html[data-theme="dark"] body :is(.badge,.status,.pill,.ds-badge):is(.ok,.success,.paid,.delivered,.completed,.approved,.active,.ds-ok){background:#173a28;color:#7fd6a5}
+html[data-theme="dark"] body :is(.badge,.status,.pill,.ds-badge):is(.warn,.pending,.preparing,.processing,.ds-warn){background:#3b2d10;color:#f0c46a}
+html[data-theme="dark"] body :is(.badge,.status,.pill,.ds-badge):is(.bad,.danger,.error,.failed,.cancelled,.rejected,.ds-bad){background:#40201b;color:#f1a496}
+html[data-theme="dark"] body :is(.badge,.status,.pill,.ds-badge):is(.info,.ds-info,.out-for-delivery,.on-the-way){background:#18303f;color:#8cc4ea}
+html[data-theme="dark"] body :is(th){background:#1d2822}
+html[data-theme="dark"] body :is(input,select,textarea):not([type=checkbox]):not([type=radio]){border-color:#34413a}
+html[data-theme="dark"] body dialog{background:var(--ds-paper)}
+html[data-theme="dark"] .ds-skeleton{background:linear-gradient(90deg,#1b2620 25%,#25322a 37%,#1b2620 63%);background-size:400% 100%}
+html[data-theme="dark"] body .ds-quote,html[data-theme="dark"] body :is(.empty,.empty-state,.ds-empty){background:var(--ds-paper)}
+
+/* ---- Icons: inline SVG, one size and stroke everywhere (see static/js/icons.js) ---- */
+.ds-icon{width:1.25em;height:1.25em;flex:none;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em}
+html body .bn-icon .ds-icon{width:24px;height:24px}
+
+/* ---- Branded launch screen (installed app only, once per session) ---- */
+.ds-launch{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;background:var(--ds-forest);color:#fff;transition:opacity .35s var(--ds-ease),visibility .35s}
+.ds-launch.is-done{opacity:0;visibility:hidden}
+.ds-launch-mark{display:grid;gap:14px;justify-items:center;font-weight:800;font-size:1.25rem;letter-spacing:-.02em}
+.ds-launch-mark img{width:72px;height:72px;border-radius:20px;animation:ds-breathe 1.4s ease-in-out infinite}
+@keyframes ds-breathe{50%{transform:scale(1.06)}}
+
+/* ---- Image placeholders: shimmer shows until the photo arrives ---- */
+html body img:not([src$=".svg"]):not(.no-ph){background:linear-gradient(90deg,#ece9df 25%,#f6f3ea 37%,#ece9df 63%);background-size:400% 100%}
+html body img.is-loaded{background:none}
+html[data-theme="dark"] body img:not([src$=".svg"]):not(.no-ph){background-color:#1b2620}
+
+/* ---- Product tour ---- */
+.ds-tour-hole{position:fixed;z-index:3500;border-radius:14px;box-shadow:0 0 0 9999px rgba(14,30,21,.62),0 0 0 3px var(--ds-orange);pointer-events:none;transition:all .28s var(--ds-ease)}
+.ds-tour-card{position:fixed;z-index:3600;left:12px;right:12px;bottom:calc(12px + var(--ds-safe-b));max-width:380px;margin-inline:auto;background:var(--ds-paper);color:var(--ds-ink);border-radius:var(--ds-r-lg);padding:18px 18px 14px;box-shadow:var(--ds-shadow-2);animation:ds-pop .22s var(--ds-ease)}
+@media (min-width:760px){.ds-tour-card{left:auto;right:auto;margin:0}}
+.ds-tour-card h3{margin:0 0 6px;font-size:1.08rem}
+.ds-tour-card p{margin:0 0 14px;color:var(--ds-muted);font-size:.95rem}
+.ds-tour-bar{height:4px;border-radius:9px;background:var(--ds-line);margin-bottom:12px;overflow:hidden}
+.ds-tour-bar i{display:block;height:100%;background:var(--ds-orange);transition:width .28s var(--ds-ease)}
+.ds-tour-actions{display:flex;gap:8px;align-items:center}
+.ds-tour-actions .ds-tour-skip{margin-right:auto;background:none;border:0;color:var(--ds-muted);font-weight:650;cursor:pointer;min-height:44px;padding:0 6px}
+.ds-tour-actions button:not(.ds-tour-skip){padding:0 18px}
+.ds-tour-fab{position:fixed;z-index:900;right:14px;bottom:calc(86px + var(--ds-safe-b));width:44px;height:44px;border-radius:50%;border:1px solid var(--ds-line);background:var(--ds-paper);color:var(--ds-forest);display:grid;place-items:center;box-shadow:var(--ds-shadow-1);cursor:pointer}
+@media (min-width:900px){.ds-tour-fab{bottom:20px}}

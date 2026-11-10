@@ -25,7 +25,7 @@ import sys
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 CSS_DIR = os.path.join(ROOT, "static", "css")
 OUT = os.path.join(CSS_DIR, "dark.css")
-SKIP_FILES = {"dark.css", "dark-fixes.css"}
+SKIP_FILES = {"dark.css", "dark-fixes.css", "design-system.css"}
 D = 'html[data-theme="dark"]'
 
 # ---------------------------------------------------------------- colour helpers

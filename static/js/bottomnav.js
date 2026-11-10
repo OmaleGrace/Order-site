@@ -2,10 +2,10 @@
     var path = location.pathname;
 
     var tabs = [
-        { href: '/menu', label: 'Menu', icon: '🍽️', active: path.indexOf('/menu') === 0 },
-        { href: '/cart', label: 'Cart', icon: '🛒', active: path.indexOf('/cart') === 0, badge: true },
-        { href: '/orders', label: 'Orders', icon: '📦', active: path.indexOf('/orders') === 0 },
-        { href: '/account', label: 'Account', icon: '👤', active: path.indexOf('/account') === 0 }
+        { href: '/menu', label: 'Menu', icon: 'menu', active: path.indexOf('/menu') === 0 },
+        { href: '/cart', label: 'Cart', icon: 'cart', active: path.indexOf('/cart') === 0, badge: true },
+        { href: '/orders', label: 'Orders', icon: 'orders', active: path.indexOf('/orders') === 0 },
+        { href: '/account', label: 'Account', icon: 'user', active: path.indexOf('/account') === 0 }
     ];
 
     var nav = document.createElement('nav');
@@ -13,7 +13,7 @@
     nav.setAttribute('aria-label', 'Main');
     nav.innerHTML = tabs.map(function (t) {
         return '<a href="' + t.href + '"' + (t.active ? ' class="active"' : '') + '>' +
-            '<span class="bn-icon">' + t.icon +
+            '<span class="bn-icon">' + (window.LaikiIcons ? window.LaikiIcons.svg(t.icon) : '') +
             (t.badge ? '<span class="bn-badge" hidden>0</span>' : '') +
             '</span><span>' + t.label + '</span></a>';
     }).join('');
