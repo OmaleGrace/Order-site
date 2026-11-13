@@ -21,6 +21,28 @@
 
 <main class="ap-page ap-page-narrow">
     <nav class="ap-crumbs" aria-label="Breadcrumb"><a href="/account">My account</a><span aria-hidden="true">/</span><a href="/account/edit#phone">Edit profile</a><span aria-hidden="true">/</span><span>Verify phone</span></nav>
+    {{if .Firebase}}
+    <section class="ap-card ap-verify" id="fb-verify" data-phone="{{.PhoneE164}}" data-pin="{{.PinID}}">
+        <h1 class="ap-title">Verify your phone</h1>
+        <p class="ap-muted">We will text a 6-digit code to <strong>{{.PhoneE164}}</strong>.</p>
+        <div id="fb-recaptcha"></div>
+        <p id="fb-status" class="ap-muted" role="status" aria-live="polite"></p>
+        <div class="ap-actions">
+            <a href="/account/edit#phone" class="account-button secondary">Use a different number</a>
+            <button type="button" id="fb-send" class="account-button primary">Send code</button>
+        </div>
+        <form id="fb-code-form" class="ap-form" hidden>
+            <div class="ap-field">
+                <label for="fb-code">Verification code</label>
+                <input type="text" id="fb-code" class="ap-code-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" required>
+            </div>
+            <div class="ap-actions">
+                <button type="button" id="fb-resend" class="account-button secondary" disabled>Send again</button>
+                <button type="submit" id="fb-confirm" class="account-button primary">Verify and save</button>
+            </div>
+        </form>
+    </section>
+    {{else}}
     <section class="ap-card ap-verify">
         <h1 class="ap-title">Verify your phone</h1>
         <p class="ap-muted">We sent a 6-digit code to <strong>{{.Phone}}</strong>. It can take a minute to arrive.</p>
@@ -34,11 +56,21 @@
             <div class="ap-actions"><a href="/account/edit#phone" class="account-button secondary">Use a different number</a><button type="submit" class="account-button primary">Verify and save</button></div>
         </form>
     </section>
+    {{end}}
 </main>
 
 <script src="/static/js/notification-bell.js?v=a32a1c0f"></script>
 <script src="/static/js/nav-active.js?v=e62c3453"></script>
+
 {{template "site-footer"}}
 {{template "scripts-common"}}
+
+{{if .Firebase}}
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="/static/js/firebase-config.js"></script>
+<script src="/static/js/phone-otp.js"></script>
+{{end}}
+
 </body>
 </html>

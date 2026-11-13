@@ -193,3 +193,20 @@ func TestHashTokenStable(t *testing.T) {
 		t.Error("HashToken misbehaves")
 	}
 }
+
+func TestFirebaseCSPOnlyOnPhoneVerifyPages(t *testing.T) {
+	t.Setenv("ADSENSE_PUBLISHER_ID", "")
+	h := SecurityHeaders(ok)
+
+	phone := do(h, "POST", "/account/phone/send-otp", nil).Header().Get("Content-Security-Policy")
+	for _, want := range []string{"https://www.gstatic.com", "https://www.google.com", "https://identitytoolkit.googleapis.com", "https://securetoken.googleapis.com", "frame-ancestors 'none'"} {
+		if !strings.Contains(phone, want) {
+			t.Errorf("phone page CSP is missing %s", want)
+		}
+	}
+
+	other := do(h, "GET", "/login", nil).Header().Get("Content-Security-Policy")
+	if strings.Contains(other, "googleapis.com") || strings.Contains(other, "gstatic.com") {
+		t.Error("Firebase must not be allowed outside the phone verification pages")
+	}
+}

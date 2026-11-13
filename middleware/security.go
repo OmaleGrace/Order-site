@@ -69,6 +69,22 @@ const (
 		"form-action 'self' https://checkout.paystack.com https://*.paystack.com"
 )
 
+// firebasePhoneCSP is the strict policy plus what Firebase phone sign-in needs: its scripts,
+// Google's reCAPTCHA (the check that stops bots from running up SMS costs), and the Firebase
+// Auth servers. It applies only to the phone verification pages.
+var firebasePhoneCSP = strings.NewReplacer(
+	"script-src 'self' 'unsafe-inline' https://unpkg.com;",
+	"script-src 'self' 'unsafe-inline' https://unpkg.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net;",
+	"connect-src 'self';",
+	"connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google.com https://www.recaptcha.net;",
+	"frame-src https://www.openstreetmap.org;",
+	"frame-src https://www.google.com https://www.recaptcha.net https://*.firebaseapp.com;",
+).Replace(strictCSP)
+
+func isPhoneVerifyPage(path string) bool {
+	return strings.HasPrefix(path, "/account/phone/")
+}
+
 // SecurityHeaders adds the browser protections to every response.
 func SecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +99,8 @@ func SecurityHeaders(next http.Handler) http.Handler {
 		csp := strictCSP
 		if adsenseEnabled() && isAdPage(r.URL.Path) {
 			csp = adsenseCSP
+		} else if isPhoneVerifyPage(r.URL.Path) {
+			csp = firebasePhoneCSP
 		}
 		h.Set("Content-Security-Policy", csp)
 

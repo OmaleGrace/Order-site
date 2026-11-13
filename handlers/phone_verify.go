@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"Order-site/errors"
+	"Order-site/firebaseauth"
 	"Order-site/middleware"
 	"Order-site/render"
 	"Order-site/sms"
@@ -63,7 +64,15 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pinID, err := sms.SendOTP(phone)
+	// With Firebase, the browser sends the text message itself. We only record which number
+	// this person asked to verify, then check Firebase's proof in FirebaseVerifyPhone.
+	useFirebase := firebaseauth.Enabled()
+	var pinID string
+	if useFirebase {
+		pinID, err = newFirebaseVerificationID()
+	} else {
+		pinID, err = sms.SendOTP(phone)
+	}
 	if err != nil {
 		fmt.Println("Send OTP error:", err)
 		errors.Render(w, "Could not send verification code. Please check the number and try again.", http.StatusInternalServerError)
@@ -88,11 +97,15 @@ func (h *Handlers) SendPhoneOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Phone string
-		PinID string
+		Phone     string
+		PhoneE164 string
+		PinID     string
+		Firebase  bool
 	}{
-		Phone: phone,
-		PinID: pinID,
+		Phone:     phone,
+		PhoneE164: "+" + phone,
+		PinID:     pinID,
+		Firebase:  useFirebase,
 	}
 
 	tmpl.Execute(w, data)

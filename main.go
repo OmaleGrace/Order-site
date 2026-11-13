@@ -329,6 +329,12 @@ func main() {
 			middleware.RequireLogin(db, h.VerifyPhoneOTP),
 		),
 	)
+	mux.HandleFunc(
+		"POST /account/phone/firebase-verify",
+		middleware.Logging(
+			middleware.RequireLogin(db, h.FirebaseVerifyPhone),
+		),
+	)
 	// Any address that matches no other route gets the styled 404 page
 	mux.HandleFunc("/", middleware.Logging(func(w http.ResponseWriter, r *http.Request) {
 		errors.Render(w, "We couldn't find the page you were looking for.", http.StatusNotFound)

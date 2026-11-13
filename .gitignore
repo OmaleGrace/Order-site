@@ -15,3 +15,7 @@ grace_kitchen_backup.sql
 # any real environment file (only .env.example is tracked)
 .env.*
 !.env.example
+
+# Firebase service account keys: these are secrets. Never commit them.
+*firebase-adminsdk*.json
+serviceAccount*.json
